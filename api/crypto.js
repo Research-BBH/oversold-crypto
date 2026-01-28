@@ -20,34 +20,91 @@ const calcMomentum = (c1h, c24h, c7d, c30d) => {
   return Math.max(0, Math.min(100, momentum));
 };
 
-// Generate realistic sparkline from price changes
+// Generate detailed sparkline with hourly data points for 7 days (168 points)
 const genSparkline = (c1h, c24h, c7d, seed) => {
+  const HOURS = 168; // 7 days * 24 hours
   const points = [];
-  const rand = (i) => Math.abs(Math.sin(seed * 9999 + i * 7777)) % 1;
   
-  // Start price (7 days ago)
-  const start = 100;
-  // End price (now)
-  const end = start * (1 + (c7d || 0) / 100);
-  // Mid price (24h ago)
-  const mid = end / (1 + (c24h || 0) / 100);
+  // Seeded random for consistent results per coin
+  const rand = (i) => {
+    const x = Math.sin(seed * 9999 + i * 7777) * 10000;
+    return x - Math.floor(x);
+  };
   
-  for (let i = 0; i < 24; i++) {
-    const t = i / 23;
-    let price;
-    
-    if (t < 0.85) {
-      // First 85% of week: start to mid
-      price = start + (mid - start) * (t / 0.85);
-    } else {
-      // Last 15% (24h): mid to end
-      price = mid + (end - mid) * ((t - 0.85) / 0.15);
+  // Calculate key price levels (working backwards from current = 100)
+  const now = 100;
+  const h1Ago = now / (1 + (c1h || 0) / 100);        // 1 hour ago
+  const h24Ago = now / (1 + (c24h || 0) / 100);      // 24 hours ago  
+  const d7Ago = now / (1 + (c7d || 0) / 100);        // 7 days ago
+  
+  // Estimate intermediate points using available data
+  // Day 3-4 estimate (roughly halfway between 7d and 24h)
+  const d3Ago = d7Ago + (h24Ago - d7Ago) * 0.7;
+  
+  // Key timestamps (in hours from start)
+  // 0 = 7 days ago, 144 = 24h ago, 167 = 1h ago, 168 = now
+  const keyPoints = [
+    { hour: 0, price: d7Ago },
+    { hour: 72, price: d7Ago + (d3Ago - d7Ago) * 0.5 },  // ~4.5 days ago
+    { hour: 120, price: d3Ago },                          // ~2 days ago
+    { hour: 144, price: h24Ago },                         // 24h ago
+    { hour: 167, price: h1Ago },                          // 1h ago
+    { hour: 168, price: now },                            // now
+  ];
+  
+  // Generate hourly points with cubic interpolation + noise
+  for (let h = 0; h < HOURS; h++) {
+    // Find surrounding key points
+    let p0, p1;
+    for (let i = 0; i < keyPoints.length - 1; i++) {
+      if (h >= keyPoints[i].hour && h <= keyPoints[i + 1].hour) {
+        p0 = keyPoints[i];
+        p1 = keyPoints[i + 1];
+        break;
+      }
     }
     
-    // Add some noise for realism
-    const noise = (rand(i) - 0.5) * Math.abs(c7d || 5) * 0.15;
-    points.push(price + noise);
+    if (!p0 || !p1) {
+      p0 = keyPoints[0];
+      p1 = keyPoints[1];
+    }
+    
+    // Linear interpolation between key points
+    const t = (h - p0.hour) / (p1.hour - p0.hour || 1);
+    
+    // Smooth easing for more natural movement
+    const eased = t * t * (3 - 2 * t); // smoothstep
+    let price = p0.price + (p1.price - p0.price) * eased;
+    
+    // Add realistic noise (more volatile = more noise)
+    const volatility = Math.abs(c7d || 5) * 0.008;
+    const noise = (rand(h) - 0.5) * volatility * price;
+    
+    // Add micro-trends (small waves within the larger trend)
+    const microTrend = Math.sin(h * 0.3 + seed) * volatility * price * 0.3;
+    
+    price += noise + microTrend;
+    
+    // Ensure price stays positive
+    points.push(Math.max(price, 0.001));
   }
+  
+  // Smooth the data slightly to reduce jaggedness
+  const smoothed = [];
+  for (let i = 0; i < points.length; i++) {
+    if (i === 0 || i === points.length - 1) {
+      smoothed.push(points[i]);
+    } else {
+      // Simple 3-point moving average
+      smoothed.push((points[i-1] + points[i] + points[i+1]) / 3);
+    }
+  }
+  
+  // Ensure endpoints match our known values
+  smoothed[0] = d7Ago;
+  smoothed[smoothed.length - 1] = now;
+  
+  return smoothed;
   
   return points;
 };
