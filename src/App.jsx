@@ -268,14 +268,17 @@ export default function App() {
           </div>
           <div className="flex gap-2">
             <select value={sortBy} onChange={e => { setSortBy(e.target.value); setPreset(null); }}
-              className="bg-white/5 border border-white/10 rounded-xl px-4 py-2.5 text-sm focus:outline-none cursor-pointer">
-              <option value="rsi_asc">RSI ↑ (Oversold first)</option>
-              <option value="rsi_desc">RSI ↓ (Overbought first)</option>
-              <option value="change24h_asc">24h % ↑</option>
-              <option value="change24h_desc">24h % ↓</option>
-              <option value="change7d_asc">7d % ↑</option>
-              <option value="mcap_desc">Market Cap ↓</option>
-              <option value="rank_asc">Rank ↑</option>
+              className="bg-gray-900 border border-white/10 rounded-xl px-4 py-2.5 text-sm focus:outline-none cursor-pointer text-white appearance-none min-w-[180px]"
+              style={{ backgroundImage: `url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 24 24' stroke='%239ca3af'%3E%3Cpath stroke-linecap='round' stroke-linejoin='round' stroke-width='2' d='M19 9l-7 7-7-7'%3E%3C/path%3E%3C/svg%3E")`, backgroundRepeat: 'no-repeat', backgroundPosition: 'right 12px center', backgroundSize: '16px', paddingRight: '40px' }}>
+              <option value="rsi_asc" className="bg-gray-900 py-2">RSI ↑ (Oversold first)</option>
+              <option value="rsi_desc" className="bg-gray-900 py-2">RSI ↓ (Overbought first)</option>
+              <option value="change24h_asc" className="bg-gray-900 py-2">24h % ↑ (Losers)</option>
+              <option value="change24h_desc" className="bg-gray-900 py-2">24h % ↓ (Gainers)</option>
+              <option value="change7d_asc" className="bg-gray-900 py-2">7d % ↑ (Losers)</option>
+              <option value="change7d_desc" className="bg-gray-900 py-2">7d % ↓ (Gainers)</option>
+              <option value="mcap_desc" className="bg-gray-900 py-2">Market Cap ↓</option>
+              <option value="volume_desc" className="bg-gray-900 py-2">Volume ↓</option>
+              <option value="rank_asc" className="bg-gray-900 py-2">Rank ↑</option>
             </select>
             <button onClick={() => setShowWL(w => !w)} className={`px-4 py-2.5 rounded-xl text-sm font-medium transition-all ${showWL ? 'bg-yellow-500 text-black' : 'bg-white/5 text-gray-400 hover:bg-white/10 border border-white/5'}`}>
               ⭐ {watchlist.size}
@@ -321,7 +324,13 @@ export default function App() {
                     className={`grid grid-cols-8 lg:grid-cols-12 gap-3 px-5 py-3.5 border-b border-white/5 hover:bg-white/[0.04] cursor-pointer transition-colors ${watched ? 'bg-yellow-500/[0.04]' : ''}`}>
                     <div className="col-span-3 flex items-center gap-3">
                       <span className="text-xs text-gray-600 w-5 text-right">{t.rank}</span>
-                      <div className="w-9 h-9 rounded-full bg-gradient-to-br from-gray-700 to-gray-800 flex items-center justify-center text-sm font-bold shrink-0">{t.symbol?.charAt(0)}</div>
+                      <img 
+                        src={`https://s2.coinmarketcap.com/static/img/coins/64x64/${t.cmcId}.png`} 
+                        alt={t.symbol}
+                        className="w-9 h-9 rounded-full shrink-0 bg-gray-800"
+                        onError={(e) => { e.target.style.display = 'none'; e.target.nextSibling.style.display = 'flex'; }}
+                      />
+                      <div className="w-9 h-9 rounded-full bg-gradient-to-br from-gray-700 to-gray-800 items-center justify-center text-sm font-bold shrink-0 hidden">{t.symbol?.charAt(0)}</div>
                       <div className="min-w-0">
                         <div className="flex items-center gap-1.5">
                           <span className="font-semibold">{t.symbol}</span>
@@ -369,7 +378,13 @@ export default function App() {
           <div className="fixed inset-0 bg-black/90 backdrop-blur-sm z-50 flex items-center justify-center p-4" onClick={() => setSel(null)}>
             <div className="bg-[#12121a] border border-white/10 rounded-2xl p-6 max-w-lg w-full max-h-[90vh] overflow-y-auto shadow-2xl" onClick={e => e.stopPropagation()}>
               <div className="flex items-center gap-4 mb-5">
-                <div className="w-16 h-16 rounded-2xl bg-gradient-to-br from-gray-700 to-gray-800 flex items-center justify-center text-2xl font-bold">{sel.symbol?.charAt(0)}</div>
+                <img 
+                  src={`https://s2.coinmarketcap.com/static/img/coins/64x64/${sel.cmcId}.png`}
+                  alt={sel.symbol}
+                  className="w-16 h-16 rounded-2xl bg-gray-800"
+                  onError={(e) => { e.target.style.display = 'none'; e.target.nextSibling.style.display = 'flex'; }}
+                />
+                <div className="w-16 h-16 rounded-2xl bg-gradient-to-br from-gray-700 to-gray-800 items-center justify-center text-2xl font-bold hidden">{sel.symbol?.charAt(0)}</div>
                 <div className="flex-1">
                   <div className="flex items-center gap-2">
                     <h2 className="text-2xl font-bold">{sel.name}</h2>
