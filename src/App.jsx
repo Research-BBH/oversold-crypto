@@ -787,7 +787,7 @@ export default function App() {
               <div className="col-span-1 text-right">7D</div>
               <div className="col-span-2 text-center">RSI (14)</div>
               <div className="col-span-2 text-right">Chart</div>
-              <div className="col-span-1 text-center">Actions</div>
+              <div className="col-span-1 text-center">Watch</div>
             </div>
 
             <div className="max-h-[58vh] overflow-y-auto">
@@ -811,11 +811,23 @@ export default function App() {
                       <div className="w-9 h-9 rounded-full bg-gradient-to-br from-gray-700 to-gray-800 items-center justify-center text-sm font-bold shrink-0 hidden">{t.symbol?.charAt(0)}</div>
                       <div className="min-w-0">
                         <div className="flex items-center gap-1.5">
-                          <span className="font-semibold">{t.symbol}</span>
+                          <a 
+                            href={`#/token/${t.id}`}
+                            onClick={(e) => e.stopPropagation()}
+                            className="font-semibold hover:text-orange-400 transition-colors"
+                          >
+                            {t.symbol}
+                          </a>
                           {t.rsi !== null && t.rsi < 25 && <span className="text-xs" title="Oversold">🔴</span>}
                           {t.rsi !== null && t.rsi > 75 && <span className="text-xs" title="Overbought">🟢</span>}
                         </div>
-                        <p className="text-xs text-gray-500 truncate">{t.name}</p>
+                        <a 
+                          href={`#/token/${t.id}`}
+                          onClick={(e) => e.stopPropagation()}
+                          className="text-xs text-gray-500 truncate block hover:text-gray-300 transition-colors"
+                        >
+                          {t.name}
+                        </a>
                       </div>
                     </div>
                     <div className="col-span-2 text-right self-center font-mono text-sm">{fmtP(t.price)}</div>
@@ -835,19 +847,10 @@ export default function App() {
                     <div className="col-span-2 self-center hidden lg:flex justify-end">
                       <Spark data={t.sparkline} color={sparkColor} h={24}/>
                     </div>
-                    <div className="col-span-1 self-center flex justify-center gap-2">
-                      <button 
-                        onClick={e => openTokenPage(t.id, e)} 
-                        className="p-1.5 rounded-lg hover:bg-white/10 text-gray-500 hover:text-white transition-colors"
-                        title="Open in new tab"
-                      >
-                        <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14" />
-                        </svg>
-                      </button>
+                    <div className="col-span-1 self-center flex justify-center">
                       <button 
                         onClick={e => toggleWatch(t.id, e)} 
-                        className={`text-lg hover:scale-110 transition-transform ${watched ? 'text-yellow-400' : 'text-gray-600 hover:text-yellow-400'}`}
+                        className={`text-xl hover:scale-110 transition-transform ${watched ? 'text-yellow-400' : 'text-gray-600 hover:text-yellow-400'}`}
                         title={watched ? 'Remove from watchlist' : 'Add to watchlist'}
                       >
                         {watched ? '★' : '☆'}
