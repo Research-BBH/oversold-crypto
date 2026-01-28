@@ -813,7 +813,9 @@ export default function App() {
                         <div className="flex items-center gap-1.5">
                           <a 
                             href={`#/token/${t.id}`}
-                            onClick={(e) => e.stopPropagation()}
+                            onClick={(e) => { e.preventDefault(); e.stopPropagation(); }}
+                            onMouseDown={(e) => { if (e.button === 1) e.stopPropagation(); }}
+                            onAuxClick={(e) => { if (e.button === 1) { e.stopPropagation(); window.open(`${window.location.pathname}#/token/${t.id}`, '_blank'); } }}
                             className="font-semibold hover:text-orange-400 transition-colors"
                           >
                             {t.symbol}
@@ -823,7 +825,9 @@ export default function App() {
                         </div>
                         <a 
                           href={`#/token/${t.id}`}
-                          onClick={(e) => e.stopPropagation()}
+                          onClick={(e) => { e.preventDefault(); e.stopPropagation(); }}
+                          onMouseDown={(e) => { if (e.button === 1) e.stopPropagation(); }}
+                          onAuxClick={(e) => { if (e.button === 1) { e.stopPropagation(); window.open(`${window.location.pathname}#/token/${t.id}`, '_blank'); } }}
                           className="text-xs text-gray-500 truncate block hover:text-gray-300 transition-colors"
                         >
                           {t.name}
