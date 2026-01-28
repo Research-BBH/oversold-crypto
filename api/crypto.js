@@ -1,10 +1,43 @@
 // ==================================================
-// FILE: api/crypto.js (FIXED VERSION)
+// FILE: api/crypto.js (FIXED VERSION 2)
 // ==================================================
-// Put this file inside the "api" folder
 
 export const config = {
   runtime: 'edge',
+  regions: ['iad1'], // Use specific region for better performance
+};
+
+// Hardcoded mapping for top 100 coins (CoinCap uses these IDs)
+const COINCAP_IDS = {
+  'BTC': 'bitcoin', 'ETH': 'ethereum', 'USDT': 'tether', 'BNB': 'binance-coin',
+  'XRP': 'xrp', 'USDC': 'usd-coin', 'SOL': 'solana', 'ADA': 'cardano',
+  'DOGE': 'dogecoin', 'TRX': 'tron', 'TON': 'toncoin', 'DOT': 'polkadot',
+  'MATIC': 'polygon', 'LTC': 'litecoin', 'WBTC': 'wrapped-bitcoin',
+  'BCH': 'bitcoin-cash', 'SHIB': 'shiba-inu', 'LINK': 'chainlink',
+  'AVAX': 'avalanche', 'DAI': 'multi-collateral-dai', 'XLM': 'stellar',
+  'UNI': 'uniswap', 'LEO': 'unus-sed-leo', 'ATOM': 'cosmos', 'OKB': 'okb',
+  'ETC': 'ethereum-classic', 'XMR': 'monero', 'HBAR': 'hedera-hashgraph',
+  'FIL': 'filecoin', 'ICP': 'internet-computer', 'CRO': 'crypto-com-coin',
+  'APT': 'aptos', 'LDO': 'lido-dao', 'NEAR': 'near-protocol', 'ARB': 'arbitrum',
+  'VET': 'vechain', 'OP': 'optimism', 'MKR': 'maker', 'AAVE': 'aave',
+  'GRT': 'the-graph', 'INJ': 'injective-protocol', 'ALGO': 'algorand',
+  'FTM': 'fantom', 'QNT': 'quant', 'EOS': 'eos', 'EGLD': 'elrond',
+  'SAND': 'the-sandbox', 'MANA': 'decentraland', 'AXS': 'axie-infinity',
+  'XTZ': 'tezos', 'THETA': 'theta', 'FLOW': 'flow', 'RUNE': 'thorchain',
+  'IMX': 'immutable-x', 'NEO': 'neo', 'GALA': 'gala', 'KAVA': 'kava',
+  'CRV': 'curve-dao-token', 'STX': 'stacks', 'MINA': 'mina',
+  'XDC': 'xdc-network', 'CAKE': 'pancakeswap', 'PEPE': 'pepe',
+  'SUI': 'sui', 'RNDR': 'render-token', 'FET': 'fetch', 'AGIX': 'singularitynet',
+  'OCEAN': 'ocean-protocol', 'WLD': 'worldcoin', 'TAO': 'bittensor',
+  'BONK': 'bonk', 'FLOKI': 'floki-inu', 'WIF': 'dogwifhat', 'SEI': 'sei',
+  'TIA': 'celestia', 'JUP': 'jupiter', 'STRK': 'starknet', 'PYTH': 'pyth-network',
+  'ENS': 'ethereum-name-service', 'COMP': 'compound', 'SNX': 'synthetix-network-token',
+  'ZEC': 'zcash', 'IOTA': 'iota', 'KCS': 'kucoin-token', '1INCH': '1inch',
+  'ENJ': 'enjin-coin', 'CHZ': 'chiliz', 'BAT': 'basic-attention-token',
+  'ZIL': 'zilliqa', 'DASH': 'dash', 'WAVES': 'waves', 'CELO': 'celo',
+  'GMT': 'stepn', 'BLUR': 'blur', 'MASK': 'mask-network', 'YFI': 'yearn-finance',
+  'SUSHI': 'sushi', 'ANKR': 'ankr', 'LRC': 'loopring', 'ONE': 'harmony',
+  'HOT': 'holotoken', 'QTUM': 'qtum', 'OMG': 'omg', 'ZRX': '0x',
 };
 
 const calcRSI = (prices, period = 14) => {
@@ -44,27 +77,12 @@ export default async function handler(req) {
     );
     
     if (!cmcRes.ok) {
-      const errorText = await cmcRes.text();
-      throw new Error(`CMC API error: ${cmcRes.status} - ${errorText}`);
+      throw new Error(`CMC API error: ${cmcRes.status}`);
     }
     
     const cmcData = await cmcRes.json();
 
-    // 2. Fetch token list from CoinCap to map IDs
-    let symbolToCapId = {};
-    try {
-      const ccListRes = await fetch('https://api.coincap.io/v2/assets?limit=200');
-      if (ccListRes.ok) {
-        const ccList = await ccListRes.json();
-        ccList.data.forEach(c => {
-          symbolToCapId[c.symbol.toUpperCase()] = c.id;
-        });
-      }
-    } catch (e) {
-      console.log('CoinCap list fetch failed, continuing without RSI');
-    }
-
-    // 3. Process CMC tokens
+    // 2. Process CMC tokens with CoinCap ID mapping
     const tokens = cmcData.data.map(coin => ({
       id: coin.slug,
       cmcId: coin.id,
@@ -78,66 +96,66 @@ export default async function handler(req) {
       change24h: coin.quote.USD.percent_change_24h,
       change7d: coin.quote.USD.percent_change_7d,
       change30d: coin.quote.USD.percent_change_30d,
-      change90d: coin.quote.USD.percent_change_90d,
       supply: coin.circulating_supply,
       maxSupply: coin.max_supply,
       dominance: coin.quote.USD.market_cap_dominance,
-      capId: symbolToCapId[coin.symbol] || null,
+      capId: COINCAP_IDS[coin.symbol] || coin.slug,
       rsi: null,
       sparkline: null,
     }));
 
-    // 4. Fetch historical data from CoinCap for RSI (top 50 only to avoid timeout)
-    const tokensWithCapId = tokens.filter(t => t.capId).slice(0, 50);
+    // 3. Fetch RSI data from CoinCap (top 30 coins to avoid timeout)
+    const tokensToFetch = tokens.slice(0, 30);
     
-    const historyPromises = tokensWithCapId.map(async (token) => {
-      try {
-        const controller = new AbortController();
-        const timeoutId = setTimeout(() => controller.abort(), 4000);
-        
-        const histRes = await fetch(
-          `https://api.coincap.io/v2/assets/${token.capId}/history?interval=h1`,
-          { signal: controller.signal }
-        );
-        
-        clearTimeout(timeoutId);
-        
-        if (!histRes.ok) return null;
-        const histData = await histRes.json();
-        
-        if (!histData.data || histData.data.length < 20) return null;
-        
-        const prices = histData.data.slice(-168).map(h => parseFloat(h.priceUsd));
-        const rsi = calcRSI(prices, 14);
-        const sparkline = prices.slice(-48);
-        
-        return { symbol: token.symbol, rsi, sparkline };
-      } catch (e) {
-        return null;
-      }
-    });
+    const results = await Promise.allSettled(
+      tokensToFetch.map(async (token) => {
+        try {
+          const res = await fetch(
+            `https://api.coincap.io/v2/assets/${token.capId}/history?interval=h2`,
+            { 
+              headers: { 'Accept-Encoding': 'gzip' },
+            }
+          );
+          
+          if (!res.ok) return { symbol: token.symbol, rsi: null, sparkline: null };
+          
+          const data = await res.json();
+          if (!data.data || data.data.length < 20) {
+            return { symbol: token.symbol, rsi: null, sparkline: null };
+          }
+          
+          const prices = data.data.slice(-84).map(h => parseFloat(h.priceUsd));
+          const rsi = calcRSI(prices, 14);
+          const sparkline = prices.slice(-24);
+          
+          return { symbol: token.symbol, rsi, sparkline };
+        } catch (e) {
+          return { symbol: token.symbol, rsi: null, sparkline: null };
+        }
+      })
+    );
 
-    const historyResults = await Promise.all(historyPromises);
-    
-    // Update tokens with RSI data
-    historyResults.forEach(result => {
-      if (result) {
-        const idx = tokens.findIndex(t => t.symbol === result.symbol);
+    // 4. Update tokens with RSI data
+    let rsiCount = 0;
+    results.forEach(result => {
+      if (result.status === 'fulfilled' && result.value && result.value.rsi !== null) {
+        const idx = tokens.findIndex(t => t.symbol === result.value.symbol);
         if (idx !== -1) {
-          tokens[idx].rsi = result.rsi;
-          tokens[idx].sparkline = result.sparkline;
+          tokens[idx].rsi = result.value.rsi;
+          tokens[idx].sparkline = result.value.sparkline;
+          rsiCount++;
         }
       }
     });
 
-    // 5. Return combined data
+    // 5. Return data
     return new Response(
       JSON.stringify({
         tokens,
         timestamp: new Date().toISOString(),
         stats: {
           total: tokens.length,
-          withRSI: tokens.filter(t => t.rsi !== null).length,
+          withRSI: rsiCount,
           cmcCredits: cmcData.status.credit_count,
         }
       }),
@@ -146,12 +164,12 @@ export default async function handler(req) {
         headers: { 
           'Content-Type': 'application/json',
           'Cache-Control': 's-maxage=60, stale-while-revalidate=300',
+          'Access-Control-Allow-Origin': '*',
         } 
       }
     );
 
   } catch (error) {
-    console.error('API Error:', error);
     return new Response(
       JSON.stringify({ error: error.message }),
       { status: 500, headers: { 'Content-Type': 'application/json' } }
