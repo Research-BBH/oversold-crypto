@@ -113,6 +113,8 @@ export default function App() {
   const [lastUpdate, setLastUpdate] = useState(null);
   const [apiStats, setApiStats] = useState(null);
 
+  const [rsiFilter, setRsiFilter] = useState(null);
+
   const fetchData = useCallback(async () => {
     try {
       setError(null);
@@ -139,6 +141,15 @@ export default function App() {
 
   useEffect(() => { fetchData(); const i = setInterval(fetchData, 180000); return () => clearInterval(i); }, [fetchData]);
 
+  const resetFilters = () => {
+    setSearch('');
+    setCat('all');
+    setPreset(null);
+    setShowWL(false);
+    setRsiFilter(null);
+    setSortBy('rsi_asc');
+  };
+
   const toggleWatch = useCallback((id, e) => {
     e?.stopPropagation();
     setWatchlist(p => { const n = new Set(p); n.has(id) ? n.delete(id) : n.add(id); return n; });
@@ -150,6 +161,12 @@ export default function App() {
     if (cat !== 'all') r = r.filter(t => t.category === cat);
     if (showWL) r = r.filter(t => watchlist.has(t.id));
     if (preset) { const p = PRESETS.find(x => x.id === preset); if (p) r = r.filter(p.filter); }
+    
+    // RSI category filter
+    if (rsiFilter === 'extreme') r = r.filter(t => t.rsi !== null && t.rsi < 20);
+    else if (rsiFilter === 'oversold') r = r.filter(t => t.rsi !== null && t.rsi >= 20 && t.rsi < 30);
+    else if (rsiFilter === 'neutral') r = r.filter(t => t.rsi !== null && t.rsi >= 30 && t.rsi < 70);
+    else if (rsiFilter === 'overbought') r = r.filter(t => t.rsi !== null && t.rsi >= 70);
 
     const activeSort = preset ? PRESETS.find(x => x.id === preset)?.sort || sortBy : sortBy;
     const [field, dir] = activeSort.split('_');
@@ -160,7 +177,7 @@ export default function App() {
       return dir === 'asc' ? va - vb : vb - va;
     });
     return r;
-  }, [tokens, search, cat, sortBy, showWL, watchlist, preset]);
+  }, [tokens, search, cat, sortBy, showWL, watchlist, preset, rsiFilter]);
 
   const stats = useMemo(() => {
     const withRSI = tokens.filter(t => t.rsi !== null);
@@ -192,7 +209,7 @@ export default function App() {
       <div className="relative z-10 max-w-7xl mx-auto px-4 py-6">
         <header className="flex flex-col lg:flex-row lg:items-center justify-between gap-4 mb-6">
           <div>
-            <h1 className="text-4xl font-black tracking-tight">
+            <h1 onClick={resetFilters} className="text-4xl font-black tracking-tight cursor-pointer hover:opacity-80 transition-opacity">
               <span className="bg-gradient-to-r from-red-500 via-orange-500 to-yellow-500 bg-clip-text text-transparent">OVERSOLD</span>
               <span className="text-gray-600">.crypto</span>
             </h1>
@@ -232,7 +249,15 @@ export default function App() {
             {k:'neutral',color:'gray',label:'NEUTRAL',sub:'RSI 30-70'},
             {k:'overbought',color:'green',label:'OVERBOUGHT',sub:'RSI > 70'},
           ].map(s => (
-            <div key={s.k} className={`bg-${s.color}-500/10 border border-${s.color}-500/20 rounded-xl p-4 text-center transition-transform hover:scale-[1.02]`}>
+            <div 
+              key={s.k} 
+              onClick={() => { setRsiFilter(rsiFilter === s.k ? null : s.k); setPreset(null); }}
+              className={`bg-${s.color}-500/10 border-2 rounded-xl p-4 text-center transition-all cursor-pointer hover:scale-[1.03] ${
+                rsiFilter === s.k 
+                  ? `border-${s.color}-500 shadow-lg shadow-${s.color}-500/20` 
+                  : `border-${s.color}-500/20 hover:border-${s.color}-500/50`
+              }`}
+            >
               <p className={`text-3xl font-bold text-${s.color}-400`}>{stats[s.k]}</p>
               <p className="text-xs text-gray-400 mt-1 font-medium">{s.label}</p>
               <p className="text-[10px] text-gray-600">{s.sub}</p>
@@ -240,9 +265,25 @@ export default function App() {
           ))}
         </div>
 
+        {/* Active filter indicator */}
+        {rsiFilter && (
+          <div className="flex items-center gap-2 mb-4 px-4 py-2 bg-white/5 rounded-xl w-fit">
+            <span className="text-sm text-gray-400">
+              Showing: <span className="text-white font-medium capitalize">{rsiFilter}</span> tokens
+            </span>
+            <button 
+              onClick={() => setRsiFilter(null)}
+              className="text-gray-400 hover:text-white ml-2 text-lg"
+              title="Clear filter"
+            >
+              ✕
+            </button>
+          </div>
+        )}
+
         <div className="flex gap-2 mb-4 overflow-x-auto pb-1 scrollbar-hide">
           {PRESETS.map(p => (
-            <button key={p.id} onClick={() => setPreset(preset === p.id ? null : p.id)}
+            <button key={p.id} onClick={() => { setPreset(preset === p.id ? null : p.id); setRsiFilter(null); }}
               className={`px-4 py-2 rounded-xl text-sm whitespace-nowrap transition-all font-medium ${
                 preset === p.id ? 'bg-gradient-to-r from-orange-500 to-red-500 text-white shadow-lg shadow-orange-500/20' 
                 : 'bg-white/5 text-gray-400 hover:bg-white/10 border border-white/5'}`}>
