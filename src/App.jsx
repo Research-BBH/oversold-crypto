@@ -171,18 +171,88 @@ const DetailChart = ({ data, basePrice, symbol, change7d }) => {
         />
         
         {/* High point marker */}
-        <circle cx={highX} cy={highY} r="4" fill="#22c55e" stroke="#0a0a0f" strokeWidth="2"/>
-        <text x={highX > W/2 ? highX - 5 : highX + 5} y={highY - 8} 
-          textAnchor={highX > W/2 ? "end" : "start"} fill="#22c55e" fontSize="9" fontWeight="600">
-          High
-        </text>
+        {(() => {
+          // Smart positioning for High label
+          const labelW = 32;
+          const nearLeft = highX < PAD.left + 40;
+          const nearRight = highX > PAD.left + chartW - 40;
+          const nearTop = highY < PAD.top + 20;
+          
+          let textX = highX;
+          let textY = highY - 12;
+          let anchor = "middle";
+          
+          if (nearLeft) {
+            textX = highX + 8;
+            anchor = "start";
+          } else if (nearRight) {
+            textX = highX - 8;
+            anchor = "end";
+          }
+          
+          if (nearTop) {
+            textY = highY + 18; // Move below the point instead
+          }
+          
+          return (
+            <g>
+              <circle cx={highX} cy={highY} r="5" fill="#22c55e" stroke="#0a0a0f" strokeWidth="2"/>
+              <rect 
+                x={anchor === "middle" ? textX - labelW/2 : anchor === "start" ? textX - 2 : textX - labelW + 2}
+                y={textY - 10}
+                width={labelW}
+                height="14"
+                rx="3"
+                fill="#22c55e"
+              />
+              <text x={textX} y={textY} textAnchor={anchor} fill="#0a0a0f" fontSize="9" fontWeight="700">
+                High
+              </text>
+            </g>
+          );
+        })()}
         
         {/* Low point marker */}
-        <circle cx={lowX} cy={lowY} r="4" fill="#ef4444" stroke="#0a0a0f" strokeWidth="2"/>
-        <text x={lowX > W/2 ? lowX - 5 : lowX + 5} y={lowY + 14} 
-          textAnchor={lowX > W/2 ? "end" : "start"} fill="#ef4444" fontSize="9" fontWeight="600">
-          Low
-        </text>
+        {(() => {
+          // Smart positioning for Low label
+          const labelW = 28;
+          const nearLeft = lowX < PAD.left + 40;
+          const nearRight = lowX > PAD.left + chartW - 40;
+          const nearBottom = lowY > PAD.top + chartH - 20;
+          
+          let textX = lowX;
+          let textY = lowY + 18;
+          let anchor = "middle";
+          
+          if (nearLeft) {
+            textX = lowX + 8;
+            anchor = "start";
+          } else if (nearRight) {
+            textX = lowX - 8;
+            anchor = "end";
+          }
+          
+          if (nearBottom) {
+            textY = lowY - 12; // Move above the point instead
+          }
+          
+          return (
+            <g>
+              <circle cx={lowX} cy={lowY} r="5" fill="#ef4444" stroke="#0a0a0f" strokeWidth="2"/>
+              <rect 
+                x={anchor === "middle" ? textX - labelW/2 : anchor === "start" ? textX - 2 : textX - labelW + 2}
+                y={textY - 10}
+                width={labelW}
+                height="14"
+                rx="3"
+                fill="#ef4444"
+              />
+              <text x={textX} y={textY} textAnchor={anchor} fill="#0a0a0f" fontSize="9" fontWeight="700">
+                Low
+              </text>
+            </g>
+          );
+        })()}
         
         {/* Current price dashed line */}
         <line 
