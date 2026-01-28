@@ -110,14 +110,6 @@ const DetailChart = ({ data, basePrice, symbol, change7d }) => {
     return '$' + p.toExponential(2);
   };
   
-  // Calculate high/low points
-  const highIdx = data.indexOf(max);
-  const lowIdx = data.indexOf(min);
-  const highX = PAD.left + (highIdx / (data.length - 1)) * chartW;
-  const highY = PAD.top + chartH - ((startPrice * (max / 100) - paddedMin) / paddedRange) * chartH;
-  const lowX = PAD.left + (lowIdx / (data.length - 1)) * chartW;
-  const lowY = PAD.top + chartH - ((startPrice * (min / 100) - paddedMin) / paddedRange) * chartH;
-  
   // Current price Y position
   const currentY = PAD.top + chartH - ((endPrice - paddedMin) / paddedRange) * chartH;
   
@@ -170,101 +162,11 @@ const DetailChart = ({ data, basePrice, symbol, change7d }) => {
           points={pts.join(' ')}
         />
         
-        {/* High point marker */}
-        {(() => {
-          // Smart positioning for High label
-          const labelW = 32;
-          const nearLeft = highX < PAD.left + 40;
-          const nearRight = highX > PAD.left + chartW - 40;
-          const nearTop = highY < PAD.top + 20;
-          
-          let textX = highX;
-          let textY = highY - 12;
-          let anchor = "middle";
-          
-          if (nearLeft) {
-            textX = highX + 8;
-            anchor = "start";
-          } else if (nearRight) {
-            textX = highX - 8;
-            anchor = "end";
-          }
-          
-          if (nearTop) {
-            textY = highY + 18; // Move below the point instead
-          }
-          
-          return (
-            <g>
-              <circle cx={highX} cy={highY} r="5" fill="#22c55e" stroke="#0a0a0f" strokeWidth="2"/>
-              <rect 
-                x={anchor === "middle" ? textX - labelW/2 : anchor === "start" ? textX - 2 : textX - labelW + 2}
-                y={textY - 10}
-                width={labelW}
-                height="14"
-                rx="3"
-                fill="#22c55e"
-              />
-              <text x={textX} y={textY} textAnchor={anchor} fill="#0a0a0f" fontSize="9" fontWeight="700">
-                High
-              </text>
-            </g>
-          );
-        })()}
-        
-        {/* Low point marker */}
-        {(() => {
-          // Smart positioning for Low label
-          const labelW = 28;
-          const nearLeft = lowX < PAD.left + 40;
-          const nearRight = lowX > PAD.left + chartW - 40;
-          const nearBottom = lowY > PAD.top + chartH - 20;
-          
-          let textX = lowX;
-          let textY = lowY + 18;
-          let anchor = "middle";
-          
-          if (nearLeft) {
-            textX = lowX + 8;
-            anchor = "start";
-          } else if (nearRight) {
-            textX = lowX - 8;
-            anchor = "end";
-          }
-          
-          if (nearBottom) {
-            textY = lowY - 12; // Move above the point instead
-          }
-          
-          return (
-            <g>
-              <circle cx={lowX} cy={lowY} r="5" fill="#ef4444" stroke="#0a0a0f" strokeWidth="2"/>
-              <rect 
-                x={anchor === "middle" ? textX - labelW/2 : anchor === "start" ? textX - 2 : textX - labelW + 2}
-                y={textY - 10}
-                width={labelW}
-                height="14"
-                rx="3"
-                fill="#ef4444"
-              />
-              <text x={textX} y={textY} textAnchor={anchor} fill="#0a0a0f" fontSize="9" fontWeight="700">
-                Low
-              </text>
-            </g>
-          );
-        })()}
-        
         {/* Current price dashed line */}
         <line 
           x1={PAD.left} y1={currentY} x2={PAD.left + chartW} y2={currentY}
-          stroke={color} strokeWidth="1" strokeDasharray="4,2" opacity="0.6"
+          stroke={color} strokeWidth="1" strokeDasharray="4,2" opacity="0.5"
         />
-        
-        {/* Current price label */}
-        <rect x={W - 56} y={currentY - 9} width="54" height="18" rx="3" fill={color}/>
-        <text x={W - 29} y={currentY + 4} textAnchor="middle" fill="white" fontSize="9" fontWeight="bold">
-          {fmtAxis(endPrice)}
-        </text>
       </svg>
       
       {/* Chart stats bar */}
