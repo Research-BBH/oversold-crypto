@@ -289,7 +289,7 @@ export default function App() {
           <div className="text-center py-24">
             <div className="w-14 h-14 border-4 border-orange-500/30 border-t-orange-500 rounded-full animate-spin mx-auto"/>
             <p className="text-gray-400 mt-5">Loading market data...</p>
-            <p className="text-gray-600 text-sm mt-1">Fetching from CoinMarketCap + CoinCap</p>
+            <p className="text-gray-600 text-sm mt-1">Fetching from CoinMarketCap...</p>
           </div>
         ) : error ? (
           <div className="text-center py-20 bg-red-500/10 border border-red-500/20 rounded-2xl">
@@ -360,7 +360,7 @@ export default function App() {
 
             <div className="px-5 py-3 border-t border-white/10 bg-white/[0.02] flex flex-col sm:flex-row justify-between gap-2 text-xs text-gray-500">
               <span>{filtered.length} tokens • {stats.withRSI} with RSI data</span>
-              <span>Data: CoinMarketCap (prices) + CoinCap (RSI) • Auto-refresh 3min</span>
+              <span>Data: CoinMarketCap • Auto-refresh 3min</span>
             </div>
           </div>
         )}
@@ -434,8 +434,8 @@ export default function App() {
         )}
 
         <footer className="text-center text-gray-600 text-xs mt-8 pb-4">
-          <p>Hybrid data: CoinMarketCap (market data) + CoinCap (historical prices for RSI)</p>
-          <p className="mt-1">RSI calculated from 168 hours of real price data • Not financial advice</p>
+          <p>Data from CoinMarketCap • Momentum score based on price changes</p>
+          <p className="mt-1">Momentum score calculated from 1h/24h/7d/30d price changes • Not financial advice</p>
         </footer>
       </div>
     </div>
