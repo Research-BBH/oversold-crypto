@@ -238,6 +238,243 @@ const RSIMeter = ({value}) => {
   );
 };
 
+// Large chart for full page view
+const FullPageChart = ({ data, basePrice, symbol, change7d }) => {
+  if (!data?.length || data.length < 2) {
+    return <div className="w-full h-80 bg-gray-800/30 rounded-xl animate-pulse flex items-center justify-center text-gray-500">No chart data</div>;
+  }
+  
+  const W = 800, H = 400;
+  const PAD = { top: 30, right: 80, bottom: 50, left: 20 };
+  const chartW = W - PAD.left - PAD.right;
+  const chartH = H - PAD.top - PAD.bottom;
+  
+  const endPrice = basePrice;
+  const startPrice = endPrice / (1 + (change7d || 0) / 100);
+  
+  const min = Math.min(...data);
+  const max = Math.max(...data);
+  
+  const priceMin = startPrice * (min / 100);
+  const priceMax = startPrice * (max / 100);
+  const priceRange = priceMax - priceMin || priceMin * 0.01;
+  
+  const paddedMin = priceMin - priceRange * 0.1;
+  const paddedMax = priceMax + priceRange * 0.1;
+  const paddedRange = paddedMax - paddedMin;
+  
+  const priceLevels = [0, 0.2, 0.4, 0.6, 0.8, 1].map(t => paddedMax - paddedRange * t);
+  const timeLabels = ['7d ago', '6d', '5d', '4d', '3d', '2d', '1d', 'Now'];
+  
+  const pts = data.map((v, i) => {
+    const x = PAD.left + (i / (data.length - 1)) * chartW;
+    const actualPrice = startPrice * (v / 100);
+    const y = PAD.top + chartH - ((actualPrice - paddedMin) / paddedRange) * chartH;
+    return `${x},${y}`;
+  });
+  
+  const areaPath = `M${PAD.left},${PAD.top + chartH} ` + 
+    pts.map((p) => `L${p}`).join(' ') + 
+    ` L${PAD.left + chartW},${PAD.top + chartH} Z`;
+  
+  const isUp = data[data.length - 1] >= data[0];
+  const color = isUp ? '#22c55e' : '#ef4444';
+  
+  const fmtAxis = (p) => {
+    if (p >= 1000) return '$' + (p/1000).toFixed(1) + 'k';
+    if (p >= 1) return '$' + p.toFixed(2);
+    if (p >= 0.01) return '$' + p.toFixed(4);
+    if (p >= 0.0001) return '$' + p.toFixed(6);
+    return '$' + p.toExponential(2);
+  };
+  
+  const currentY = PAD.top + chartH - ((endPrice - paddedMin) / paddedRange) * chartH;
+  
+  return (
+    <div className="w-full">
+      <svg viewBox={`0 0 ${W} ${H}`} className="w-full h-auto">
+        <defs>
+          <linearGradient id="fullChartGrad" x1="0" y1="0" x2="0" y2="1">
+            <stop offset="0%" stopColor={color} stopOpacity="0.3"/>
+            <stop offset="100%" stopColor={color} stopOpacity="0"/>
+          </linearGradient>
+        </defs>
+        
+        {/* Horizontal grid lines */}
+        {priceLevels.map((price, i) => {
+          const y = PAD.top + (i / 5) * chartH;
+          return (
+            <g key={i}>
+              <line x1={PAD.left} y1={y} x2={PAD.left + chartW} y2={y} stroke="rgba(255,255,255,0.08)" strokeDasharray="4,4"/>
+              <text x={W - 10} y={y + 4} textAnchor="end" fill="rgba(255,255,255,0.5)" fontSize="12">{fmtAxis(price)}</text>
+            </g>
+          );
+        })}
+        
+        {/* Vertical time grid */}
+        {timeLabels.map((label, i) => {
+          const x = PAD.left + (i / (timeLabels.length - 1)) * chartW;
+          return (
+            <g key={i}>
+              <line x1={x} y1={PAD.top} x2={x} y2={PAD.top + chartH} stroke="rgba(255,255,255,0.05)"/>
+              <text x={x} y={H - 15} textAnchor="middle" fill="rgba(255,255,255,0.5)" fontSize="12">{label}</text>
+            </g>
+          );
+        })}
+        
+        <path d={areaPath} fill="url(#fullChartGrad)"/>
+        <polyline fill="none" stroke={color} strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" points={pts.join(' ')}/>
+        
+        {/* Current price line */}
+        <line x1={PAD.left} y1={currentY} x2={PAD.left + chartW} y2={currentY} stroke={color} strokeWidth="1" strokeDasharray="6,3" opacity="0.6"/>
+      </svg>
+      
+      {/* Stats bar */}
+      <div className="flex justify-between items-center mt-4 px-2">
+        <div className="flex gap-6 text-sm">
+          <span className="text-gray-400">
+            <span className="inline-block w-2.5 h-2.5 rounded-full bg-green-500 mr-2"></span>
+            High: <span className="text-white font-semibold">{fmtAxis(startPrice * (max / 100))}</span>
+          </span>
+          <span className="text-gray-400">
+            <span className="inline-block w-2.5 h-2.5 rounded-full bg-red-500 mr-2"></span>
+            Low: <span className="text-white font-semibold">{fmtAxis(startPrice * (min / 100))}</span>
+          </span>
+        </div>
+        <span className="text-sm text-gray-400">
+          Spread: <span className={`font-semibold ${isUp ? 'text-green-400' : 'text-red-400'}`}>{((max - min) / min * 100).toFixed(2)}%</span>
+        </span>
+      </div>
+    </div>
+  );
+};
+
+// Full page token detail view
+const TokenDetailPage = ({ token, onBack }) => {
+  if (!token) return null;
+  
+  const rs = rsiStyle(token.rsi);
+  
+  return (
+    <div className="min-h-screen bg-[#0a0a0f] text-white">
+      <div className="max-w-6xl mx-auto px-6 py-8">
+        {/* Header */}
+        <div className="flex items-center gap-4 mb-8">
+          <button onClick={onBack} className="p-2 rounded-lg bg-white/5 hover:bg-white/10 transition-colors">
+            <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 19l-7-7m0 0l7-7m-7 7h18" />
+            </svg>
+          </button>
+          <img 
+            src={`https://s2.coinmarketcap.com/static/img/coins/64x64/${token.cmcId}.png`}
+            alt={token.symbol}
+            className="w-16 h-16 rounded-2xl bg-gray-800"
+            onError={(e) => { e.target.style.display = 'none'; }}
+          />
+          <div className="flex-1">
+            <div className="flex items-center gap-3">
+              <h1 className="text-3xl font-bold">{token.name}</h1>
+              <span className="text-xl text-gray-400">{token.symbol}</span>
+              <span className="px-2 py-1 rounded bg-white/10 text-sm text-gray-400">Rank #{token.rank}</span>
+            </div>
+            <div className="flex items-center gap-4 mt-2">
+              <span className="text-2xl font-bold">{fmtP(token.price)}</span>
+              <span className={`text-lg font-semibold ${token.change24h >= 0 ? 'text-green-400' : 'text-red-400'}`}>
+                {token.change24h >= 0 ? '+' : ''}{token.change24h?.toFixed(2)}% (24h)
+              </span>
+            </div>
+          </div>
+        </div>
+
+        {/* Main content grid */}
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+          {/* Chart section - 2 cols */}
+          <div className="lg:col-span-2 bg-white/5 rounded-2xl p-6 border border-white/10">
+            <div className="flex justify-between items-center mb-6">
+              <h2 className="text-xl font-semibold">7-Day Price Chart</h2>
+              <span className={`px-3 py-1 rounded-lg text-sm font-medium ${token.change7d >= 0 ? 'bg-green-500/20 text-green-400' : 'bg-red-500/20 text-red-400'}`}>
+                {token.change7d >= 0 ? '+' : ''}{token.change7d?.toFixed(2)}%
+              </span>
+            </div>
+            <FullPageChart data={token.sparkline} basePrice={token.price} symbol={token.symbol} change7d={token.change7d}/>
+            <p className="text-xs text-gray-500 mt-4 text-center">* Chart shows estimated trend based on % changes. For accurate data, visit CoinMarketCap or TradingView.</p>
+          </div>
+
+          {/* RSI & Stats - 1 col */}
+          <div className="space-y-6">
+            {/* RSI Card */}
+            <div className="bg-white/5 rounded-2xl p-6 border border-white/10">
+              <div className="flex justify-between items-center mb-4">
+                <h2 className="text-lg font-semibold">Momentum Score (RSI-like)</h2>
+                <div className="flex items-center gap-2">
+                  <span className={`w-3 h-3 rounded-full ${rs.dot}`}/>
+                  <span className={`text-2xl font-bold ${rs.text}`}>{token.rsi !== null ? token.rsi.toFixed(1) : 'N/A'}</span>
+                </div>
+              </div>
+              <RSIMeter value={token.rsi}/>
+              <div className={`mt-4 p-3 rounded-xl ${rs.bg} border ${rs.text}`}>
+                <span className="font-semibold">{rs.label}</span>
+                <p className="text-sm opacity-80 mt-1">
+                  {token.rsi < 30 ? 'This token may be oversold. Consider researching for potential opportunities.' :
+                   token.rsi > 70 ? 'This token may be overbought. Consider taking profits or waiting for a pullback.' :
+                   'This token is in neutral territory.'}
+                </p>
+              </div>
+            </div>
+
+            {/* Price Changes */}
+            <div className="bg-white/5 rounded-2xl p-6 border border-white/10">
+              <h2 className="text-lg font-semibold mb-4">Price Changes</h2>
+              <div className="grid grid-cols-2 gap-3">
+                {[{l:'1 Hour', v:token.change1h},{l:'24 Hours', v:token.change24h},{l:'7 Days', v:token.change7d},{l:'30 Days', v:token.change30d}].map(x => (
+                  <div key={x.l} className="bg-white/5 rounded-xl p-4 text-center">
+                    <p className="text-xs text-gray-500 mb-1">{x.l}</p>
+                    <p className={`text-lg font-bold ${(x.v||0) >= 0 ? 'text-green-400' : 'text-red-400'}`}>
+                      {x.v != null ? `${x.v >= 0 ? '+' : ''}${x.v.toFixed(2)}%` : '--'}
+                    </p>
+                  </div>
+                ))}
+              </div>
+            </div>
+          </div>
+        </div>
+
+        {/* Market Data */}
+        <div className="mt-6 bg-white/5 rounded-2xl p-6 border border-white/10">
+          <h2 className="text-lg font-semibold mb-4">Market Data</h2>
+          <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-4">
+            {[
+              {icon:'💰', label:'Price', value:fmtP(token.price)},
+              {icon:'📊', label:'Market Cap', value:'$'+fmt(token.mcap)},
+              {icon:'📈', label:'24h Volume', value:'$'+fmt(token.volume)},
+              {icon:'🔄', label:'Vol/MCap', value:token.volMcap?.toFixed(2)+'%'},
+              {icon:'💎', label:'Circulating Supply', value:fmt(token.supply) + ' ' + token.symbol},
+              {icon:'🏆', label:'Dominance', value:(token.dominance||0).toFixed(3)+'%'},
+            ].map(x => (
+              <div key={x.label} className="bg-white/5 rounded-xl p-4">
+                <p className="text-xs text-gray-500 mb-2">{x.icon} {x.label}</p>
+                <p className="text-lg font-bold truncate" title={x.value}>{x.value}</p>
+              </div>
+            ))}
+          </div>
+        </div>
+
+        {/* External Links */}
+        <div className="mt-6 flex gap-4">
+          <a href={`https://coinmarketcap.com/currencies/${token.id}/`} target="_blank" rel="noreferrer" 
+            className="flex-1 py-4 bg-blue-500/20 hover:bg-blue-500/30 rounded-xl text-center text-blue-400 font-medium transition-colors text-lg">
+            View on CoinMarketCap ↗
+          </a>
+          <a href={`https://www.tradingview.com/symbols/${token.symbol}USD`} target="_blank" rel="noreferrer" 
+            className="flex-1 py-4 bg-emerald-500/20 hover:bg-emerald-500/30 rounded-xl text-center text-emerald-400 font-medium transition-colors text-lg">
+            View on TradingView ↗
+          </a>
+        </div>
+      </div>
+    </div>
+  );
+};
+
 const API_URL = '/api/crypto';
 
 export default function App() {
@@ -253,8 +490,36 @@ export default function App() {
   const [preset, setPreset] = useState(null);
   const [lastUpdate, setLastUpdate] = useState(null);
   const [apiStats, setApiStats] = useState(null);
-
   const [rsiFilter, setRsiFilter] = useState(null);
+  
+  // Hash routing for full page token view
+  const [pageTokenId, setPageTokenId] = useState(null);
+  
+  // Parse hash on load and hash change
+  useEffect(() => {
+    const parseHash = () => {
+      const hash = window.location.hash;
+      if (hash.startsWith('#/token/')) {
+        setPageTokenId(hash.replace('#/token/', ''));
+      } else {
+        setPageTokenId(null);
+      }
+    };
+    parseHash();
+    window.addEventListener('hashchange', parseHash);
+    return () => window.removeEventListener('hashchange', parseHash);
+  }, []);
+
+  // Open token in new tab
+  const openTokenPage = (tokenId, e) => {
+    e.stopPropagation();
+    window.open(`${window.location.pathname}#/token/${tokenId}`, '_blank');
+  };
+
+  // Go back to main list
+  const goBack = () => {
+    window.location.hash = '';
+  };
 
   const fetchData = useCallback(async () => {
     try {
@@ -339,6 +604,37 @@ export default function App() {
     const blob = new Blob([[h,...rows].map(r=>r.join(',')).join('\n')],{type:'text/csv'});
     const a = document.createElement('a'); a.href = URL.createObjectURL(blob); a.download = `oversold_${Date.now()}.csv`; a.click();
   }, [filtered]);
+
+  // If we're on a token detail page, render that instead
+  const pageToken = pageTokenId ? tokens.find(t => t.id === pageTokenId) : null;
+  
+  if (pageTokenId) {
+    if (loading) {
+      return (
+        <div className="min-h-screen bg-[#0a0a0f] text-white flex items-center justify-center">
+          <div className="text-center">
+            <div className="w-12 h-12 border-4 border-orange-500 border-t-transparent rounded-full animate-spin mx-auto mb-4"/>
+            <p className="text-gray-400">Loading token data...</p>
+          </div>
+        </div>
+      );
+    }
+    if (!pageToken) {
+      return (
+        <div className="min-h-screen bg-[#0a0a0f] text-white flex items-center justify-center">
+          <div className="text-center">
+            <p className="text-4xl mb-4">😕</p>
+            <p className="text-xl mb-2">Token not found</p>
+            <p className="text-gray-400 mb-4">"{pageTokenId}" is not in the top 150 tokens</p>
+            <button onClick={goBack} className="px-6 py-2 bg-orange-500 rounded-lg hover:bg-orange-600 transition-colors">
+              Back to list
+            </button>
+          </div>
+        </div>
+      );
+    }
+    return <TokenDetailPage token={pageToken} onBack={goBack} />;
+  }
 
   return (
     <div className="min-h-screen bg-[#0a0a0f] text-white selection:bg-orange-500/30">
@@ -490,8 +786,8 @@ export default function App() {
               <div className="col-span-1 text-right">24H</div>
               <div className="col-span-1 text-right">7D</div>
               <div className="col-span-2 text-center">RSI (14)</div>
-              <div className="col-span-2 text-right">48H Chart</div>
-              <div className="col-span-1 text-center">Watch</div>
+              <div className="col-span-2 text-right">Chart</div>
+              <div className="col-span-1 text-center">Actions</div>
             </div>
 
             <div className="max-h-[58vh] overflow-y-auto">
@@ -539,8 +835,21 @@ export default function App() {
                     <div className="col-span-2 self-center hidden lg:flex justify-end">
                       <Spark data={t.sparkline} color={sparkColor} h={24}/>
                     </div>
-                    <div className="col-span-1 self-center text-center">
-                      <button onClick={e => toggleWatch(t.id, e)} className={`text-xl hover:scale-110 transition-transform ${watched ? 'text-yellow-400' : 'text-gray-600 hover:text-yellow-400'}`}>
+                    <div className="col-span-1 self-center flex justify-center gap-2">
+                      <button 
+                        onClick={e => openTokenPage(t.id, e)} 
+                        className="p-1.5 rounded-lg hover:bg-white/10 text-gray-500 hover:text-white transition-colors"
+                        title="Open in new tab"
+                      >
+                        <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14" />
+                        </svg>
+                      </button>
+                      <button 
+                        onClick={e => toggleWatch(t.id, e)} 
+                        className={`text-lg hover:scale-110 transition-transform ${watched ? 'text-yellow-400' : 'text-gray-600 hover:text-yellow-400'}`}
+                        title={watched ? 'Remove from watchlist' : 'Add to watchlist'}
+                      >
                         {watched ? '★' : '☆'}
                       </button>
                     </div>
@@ -635,7 +944,16 @@ export default function App() {
                 <a href={`https://coinmarketcap.com/currencies/${sel.id}/`} target="_blank" rel="noreferrer" className="flex-1 py-3 bg-blue-500/20 hover:bg-blue-500/30 rounded-xl text-center text-blue-400 font-medium transition-colors">CoinMarketCap ↗</a>
                 <a href={`https://www.tradingview.com/symbols/${sel.symbol}USD`} target="_blank" rel="noreferrer" className="flex-1 py-3 bg-emerald-500/20 hover:bg-emerald-500/30 rounded-xl text-center text-emerald-400 font-medium transition-colors">TradingView ↗</a>
               </div>
-              <button onClick={() => setSel(null)} className="w-full mt-3 py-3 bg-white/10 hover:bg-white/15 rounded-xl font-medium transition-colors">Close</button>
+              <button 
+                onClick={(e) => { openTokenPage(sel.id, e); setSel(null); }} 
+                className="w-full mt-3 py-3 bg-orange-500/20 hover:bg-orange-500/30 rounded-xl text-orange-400 font-medium transition-colors flex items-center justify-center gap-2"
+              >
+                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14" />
+                </svg>
+                Open Full Page in New Tab
+              </button>
+              <button onClick={() => setSel(null)} className="w-full mt-2 py-3 bg-white/10 hover:bg-white/15 rounded-xl font-medium transition-colors">Close</button>
             </div>
           </div>
         )}
