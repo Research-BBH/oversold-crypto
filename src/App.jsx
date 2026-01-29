@@ -43,6 +43,251 @@ const PRESETS = [
   {id:'volume',name:'🔥 High Volume',filter:()=>true,sort:'volMcap_desc'},
 ];
 
+// Login Modal Component
+const LoginModal = ({ onClose }) => {
+  const handleGoogleLogin = () => {
+    // TODO: Implement actual Google OAuth
+    // For now, show alert that this feature requires backend setup
+    alert('Google Sign-In requires backend OAuth configuration. This is a UI preview.');
+  };
+
+  return (
+    <div className="fixed inset-0 bg-black/90 backdrop-blur-sm z-50 flex items-center justify-center p-4" onClick={onClose}>
+      <div className="bg-[#1a1a24] border border-white/10 rounded-2xl p-8 max-w-md w-full shadow-2xl" onClick={e => e.stopPropagation()}>
+        <div className="text-center mb-8">
+          <h2 className="text-2xl font-bold mb-2">Sign in to Oversold</h2>
+          <p className="text-gray-400">Create a watchlist to track your favorite assets</p>
+        </div>
+        
+        <button 
+          onClick={handleGoogleLogin}
+          className="w-full flex items-center justify-center gap-3 bg-white/10 hover:bg-white/15 border border-white/20 rounded-xl py-3.5 px-4 font-medium transition-all hover:scale-[1.02]"
+        >
+          <svg className="w-5 h-5" viewBox="0 0 24 24">
+            <path fill="#4285F4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"/>
+            <path fill="#34A853" d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z"/>
+            <path fill="#FBBC05" d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z"/>
+            <path fill="#EA4335" d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z"/>
+          </svg>
+          Continue with Google
+        </button>
+        
+        <p className="text-center text-gray-500 text-sm mt-6">
+          By signing in, you agree to our <a href="#/terms" className="text-orange-400 hover:underline">Terms of Service</a>
+        </p>
+        
+        <button 
+          onClick={onClose}
+          className="w-full mt-4 py-2 text-gray-400 hover:text-white transition-colors text-sm"
+        >
+          Cancel
+        </button>
+      </div>
+    </div>
+  );
+};
+
+// Methodology Page Component
+const MethodologyPage = ({ onBack }) => {
+  return (
+    <div className="min-h-screen bg-[#0a0a0f] text-white">
+      <div className="fixed inset-0 pointer-events-none">
+        <div className="absolute top-0 left-1/3 w-[800px] h-[800px] bg-red-600/5 rounded-full blur-[120px]"/>
+        <div className="absolute bottom-0 right-1/3 w-[800px] h-[800px] bg-orange-500/5 rounded-full blur-[120px]"/>
+      </div>
+      
+      <div className="relative z-10 max-w-4xl mx-auto px-4 py-8">
+        <button 
+          onClick={onBack}
+          className="flex items-center gap-2 text-gray-400 hover:text-white mb-8 transition-colors"
+        >
+          <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
+          </svg>
+          Back to Dashboard
+        </button>
+
+        <h1 className="text-4xl font-black mb-2">
+          <span className="bg-gradient-to-r from-red-500 via-orange-500 to-yellow-500 bg-clip-text text-transparent">Methodology</span>
+        </h1>
+        <p className="text-gray-400 text-lg mb-12">How we calculate RSI and analyze cryptocurrency markets</p>
+
+        {/* How It Works Section */}
+        <div className="grid md:grid-cols-3 gap-6 mb-12">
+          <div className="bg-white/5 border border-white/10 rounded-2xl p-6">
+            <div className="w-12 h-12 bg-orange-500/20 rounded-xl flex items-center justify-center mb-4">
+              <svg className="w-6 h-6 text-orange-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />
+              </svg>
+            </div>
+            <h3 className="text-xl font-bold mb-2">RSI Analysis</h3>
+            <p className="text-gray-400 text-sm">
+              We calculate the 14-day Relative Strength Index (RSI) for the top 1000 cryptocurrencies daily to identify oversold (RSI &lt; 30) and overbought (RSI &gt; 70) conditions.
+            </p>
+          </div>
+          
+          <div className="bg-white/5 border border-white/10 rounded-2xl p-6">
+            <div className="w-12 h-12 bg-green-500/20 rounded-xl flex items-center justify-center mb-4">
+              <svg className="w-6 h-6 text-green-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+              </svg>
+            </div>
+            <h3 className="text-xl font-bold mb-2">Real-Time Data</h3>
+            <p className="text-gray-400 text-sm">
+              Data is refreshed every minute from CoinGecko's API, providing you with up-to-date price movements, volume, and market cap information for accurate analysis.
+            </p>
+          </div>
+          
+          <div className="bg-white/5 border border-white/10 rounded-2xl p-6">
+            <div className="w-12 h-12 bg-blue-500/20 rounded-xl flex items-center justify-center mb-4">
+              <svg className="w-6 h-6 text-blue-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 5a2 2 0 012-2h10a2 2 0 012 2v16l-7-3.5L5 21V5z" />
+              </svg>
+            </div>
+            <h3 className="text-xl font-bold mb-2">Personal Watchlist</h3>
+            <p className="text-gray-400 text-sm">
+              Sign in with Google to save tickers to your personal watchlist. Track your favorite cryptocurrencies and export to CSV format for further analysis.
+            </p>
+          </div>
+        </div>
+
+        {/* RSI Calculation Section */}
+        <div className="bg-white/5 border border-white/10 rounded-2xl p-8 mb-8">
+          <h2 className="text-2xl font-bold mb-6">Understanding RSI Calculation</h2>
+          
+          <div className="space-y-6">
+            <div>
+              <h3 className="text-lg font-semibold text-orange-400 mb-3">What is RSI?</h3>
+              <p className="text-gray-300 leading-relaxed">
+                The Relative Strength Index (RSI) is a momentum oscillator developed by J. Welles Wilder in 1978. 
+                It measures the speed and magnitude of price movements on a scale from 0 to 100, helping traders 
+                identify potential overbought or oversold conditions in the market.
+              </p>
+            </div>
+
+            <div>
+              <h3 className="text-lg font-semibold text-orange-400 mb-3">The Formula</h3>
+              <div className="bg-black/30 rounded-xl p-4 font-mono text-sm mb-4">
+                <p className="text-gray-300 mb-2">RSI = 100 - (100 / (1 + RS))</p>
+                <p className="text-gray-500">Where RS = Average Gain / Average Loss over 14 periods</p>
+              </div>
+              <p className="text-gray-300 leading-relaxed">
+                The calculation involves comparing the average gains to average losses over a 14-day period. 
+                This smoothed ratio is then normalized to create a value between 0 and 100.
+              </p>
+            </div>
+
+            <div>
+              <h3 className="text-lg font-semibold text-orange-400 mb-3">Step-by-Step Calculation</h3>
+              <ol className="list-decimal list-inside space-y-2 text-gray-300">
+                <li>Calculate price changes for each period (Close - Previous Close)</li>
+                <li>Separate gains (positive changes) and losses (negative changes)</li>
+                <li>Calculate the first Average Gain: Sum of Gains over 14 periods / 14</li>
+                <li>Calculate the first Average Loss: Sum of Losses over 14 periods / 14</li>
+                <li>For subsequent periods, use smoothed averages:</li>
+              </ol>
+              <div className="bg-black/30 rounded-xl p-4 font-mono text-sm mt-3">
+                <p className="text-gray-300">Avg Gain = [(Prev Avg Gain) × 13 + Current Gain] / 14</p>
+                <p className="text-gray-300">Avg Loss = [(Prev Avg Loss) × 13 + Current Loss] / 14</p>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        {/* Interpretation Section */}
+        <div className="bg-white/5 border border-white/10 rounded-2xl p-8 mb-8">
+          <h2 className="text-2xl font-bold mb-6">Interpreting RSI Values</h2>
+          
+          <div className="grid md:grid-cols-2 gap-6">
+            <div className="bg-red-500/10 border border-red-500/20 rounded-xl p-5">
+              <div className="flex items-center gap-3 mb-3">
+                <span className="w-3 h-3 rounded-full bg-red-500"/>
+                <h3 className="font-bold text-red-400">Oversold (RSI &lt; 30)</h3>
+              </div>
+              <p className="text-gray-300 text-sm">
+                Indicates the asset may be undervalued. Selling pressure has been dominant, 
+                potentially creating buying opportunities. Consider researching for potential entry points.
+              </p>
+            </div>
+            
+            <div className="bg-orange-500/10 border border-orange-500/20 rounded-xl p-5">
+              <div className="flex items-center gap-3 mb-3">
+                <span className="w-3 h-3 rounded-full bg-orange-500"/>
+                <h3 className="font-bold text-orange-400">Extreme (RSI &lt; 20)</h3>
+              </div>
+              <p className="text-gray-300 text-sm">
+                Extremely oversold conditions. The asset has experienced significant selling pressure. 
+                These conditions often precede sharp rebounds, but always do additional research.
+              </p>
+            </div>
+            
+            <div className="bg-gray-500/10 border border-gray-500/20 rounded-xl p-5">
+              <div className="flex items-center gap-3 mb-3">
+                <span className="w-3 h-3 rounded-full bg-gray-500"/>
+                <h3 className="font-bold text-gray-400">Neutral (RSI 30-70)</h3>
+              </div>
+              <p className="text-gray-300 text-sm">
+                The asset is in neutral territory with balanced buying and selling pressure. 
+                No extreme conditions detected. Watch for trends developing toward either extreme.
+              </p>
+            </div>
+            
+            <div className="bg-green-500/10 border border-green-500/20 rounded-xl p-5">
+              <div className="flex items-center gap-3 mb-3">
+                <span className="w-3 h-3 rounded-full bg-green-500"/>
+                <h3 className="font-bold text-green-400">Overbought (RSI &gt; 70)</h3>
+              </div>
+              <p className="text-gray-300 text-sm">
+                Indicates the asset may be overvalued. Buying pressure has been dominant. 
+                Consider taking profits or waiting for a pullback before entering new positions.
+              </p>
+            </div>
+          </div>
+        </div>
+
+        {/* Data Sources Section */}
+        <div className="bg-white/5 border border-white/10 rounded-2xl p-8 mb-8">
+          <h2 className="text-2xl font-bold mb-6">Data Sources & Limitations</h2>
+          
+          <div className="space-y-4 text-gray-300">
+            <p>
+              <strong className="text-white">Data Provider:</strong> All market data is sourced from CoinGecko's 
+              comprehensive cryptocurrency API, providing coverage for the top 1000 tokens by market capitalization.
+            </p>
+            <p>
+              <strong className="text-white">Update Frequency:</strong> Data is refreshed automatically every 60 seconds 
+              to ensure you have access to near real-time market conditions.
+            </p>
+            <p>
+              <strong className="text-white">RSI Period:</strong> We use the standard 14-period RSI as recommended by 
+              J. Welles Wilder, the original creator of the indicator.
+            </p>
+            <p className="text-gray-400 text-sm mt-4 p-4 bg-yellow-500/10 border border-yellow-500/20 rounded-xl">
+              <strong className="text-yellow-400">⚠️ Important:</strong> RSI is just one indicator among many. 
+              It should not be used in isolation for trading decisions. Always combine RSI with other technical 
+              indicators, fundamental analysis, and proper risk management. Past performance does not guarantee future results.
+            </p>
+          </div>
+        </div>
+
+        {/* Footer */}
+        <footer className="text-center py-8 border-t border-white/10">
+          <p className="text-gray-500 text-sm mb-4">
+            Nothing on this site is financial advice. For educational and entertainment purposes only.
+          </p>
+          <div className="flex items-center justify-center gap-6 text-sm">
+            <a href="#/terms" className="text-gray-400 hover:text-white transition-colors">Terms of Service</a>
+            <span className="text-gray-700">|</span>
+            <a href="#/privacy" className="text-gray-400 hover:text-white transition-colors">Privacy Policy</a>
+            <span className="text-gray-700">|</span>
+            <span className="text-orange-400">Methodology</span>
+          </div>
+        </footer>
+      </div>
+    </div>
+  );
+};
+
 const Spark = ({ data, color, h = 24 }) => {
   if (!data?.length || data.length < 2) return <div className="w-20 h-6 bg-gray-800/30 rounded animate-pulse"/>;
   const min = Math.min(...data), max = Math.max(...data), range = max - min || 1;
@@ -488,9 +733,11 @@ export default function App() {
   const [apiStats, setApiStats] = useState(null);
   const [rsiFilter, setRsiFilter] = useState(null);
   const [rsiSortDir, setRsiSortDir] = useState('desc'); // 'desc' = highest first, 'asc' = lowest first
+  const [showLoginModal, setShowLoginModal] = useState(false);
   
-  // Hash routing for full page token view
+  // Hash routing for pages
   const [pageTokenId, setPageTokenId] = useState(null);
+  const [currentPage, setCurrentPage] = useState('home'); // 'home', 'methodology', 'terms', 'privacy'
   
   // Parse hash on load and hash change
   useEffect(() => {
@@ -498,8 +745,19 @@ export default function App() {
       const hash = window.location.hash;
       if (hash.startsWith('#/token/')) {
         setPageTokenId(hash.replace('#/token/', ''));
+        setCurrentPage('token');
+      } else if (hash === '#/methodology') {
+        setPageTokenId(null);
+        setCurrentPage('methodology');
+      } else if (hash === '#/terms') {
+        setPageTokenId(null);
+        setCurrentPage('terms');
+      } else if (hash === '#/privacy') {
+        setPageTokenId(null);
+        setCurrentPage('privacy');
       } else {
         setPageTokenId(null);
+        setCurrentPage('home');
       }
     };
     parseHash();
@@ -639,6 +897,11 @@ export default function App() {
     return <TokenDetailPage token={pageToken} onBack={goBack} />;
   }
 
+  // Show Methodology page
+  if (currentPage === 'methodology') {
+    return <MethodologyPage onBack={() => window.location.hash = ''} />;
+  }
+
   return (
     <div className="min-h-screen bg-[#0a0a0f] text-white selection:bg-orange-500/30">
       <div className="fixed inset-0 pointer-events-none">
@@ -679,6 +942,15 @@ export default function App() {
                 </span>
               </div>
             </div>
+            <button 
+              onClick={() => setShowLoginModal(true)}
+              className="bg-white/5 hover:bg-white/10 border border-white/10 px-4 py-2.5 rounded-xl text-sm font-medium transition-all flex items-center gap-2"
+            >
+              <svg className="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
+              </svg>
+              Sign In
+            </button>
           </div>
         </header>
 
@@ -1015,11 +1287,23 @@ export default function App() {
           </div>
         )}
 
-        <footer className="text-center text-gray-600 text-xs mt-8 pb-4">
-          <p>Data from CoinGecko • Momentum score based on price changes</p>
-          <p className="mt-1">Momentum score calculated from 1h/24h/7d/30d price changes • Not financial advice</p>
+        <footer className="text-center py-8 mt-8 border-t border-white/10">
+          <p className="text-gray-500 text-sm mb-4">
+            Nothing on this site is financial advice. For educational and entertainment purposes only.
+          </p>
+          <div className="flex items-center justify-center gap-6 text-sm">
+            <a href="#/terms" className="text-gray-400 hover:text-white transition-colors">Terms of Service</a>
+            <span className="text-gray-700">|</span>
+            <a href="#/privacy" className="text-gray-400 hover:text-white transition-colors">Privacy Policy</a>
+            <span className="text-gray-700">|</span>
+            <a href="#/methodology" className="text-gray-400 hover:text-white transition-colors">Methodology</a>
+          </div>
+          <p className="text-gray-600 text-xs mt-4">Data from CoinGecko • RSI calculated using 14-period standard formula</p>
         </footer>
       </div>
+
+      {/* Login Modal */}
+      {showLoginModal && <LoginModal onClose={() => setShowLoginModal(false)} />}
     </div>
   );
 }
