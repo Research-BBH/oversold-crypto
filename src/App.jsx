@@ -397,7 +397,7 @@ const TokenDetailPage = ({ token, onBack }) => {
               </span>
             </div>
             <FullPageChart data={token.sparkline} basePrice={token.price} symbol={token.symbol} change7d={token.change7d}/>
-            <p className="text-xs text-gray-500 mt-4 text-center">* Chart shows estimated trend based on % changes. For accurate data, visit CoinGecko or TradingView.</p>
+            <p className="text-xs text-gray-500 mt-4 text-center">* Chart shows estimated trend based on % changes. For accurate data, visit CoinGecko.</p>
           </div>
 
           {/* RSI & Stats - 1 col */}
@@ -460,14 +460,10 @@ const TokenDetailPage = ({ token, onBack }) => {
         </div>
 
         {/* External Links */}
-        <div className="mt-6 flex gap-4">
+        <div className="mt-6">
           <a href={`https://coingecko.com/en/coins/${token.id}`} target="_blank" rel="noreferrer" 
-            className="flex-1 py-4 bg-blue-500/20 hover:bg-blue-500/30 rounded-xl text-center text-blue-400 font-medium transition-colors text-lg">
+            className="block w-full py-4 bg-green-500/20 hover:bg-green-500/30 rounded-xl text-center text-green-400 font-medium transition-colors text-lg">
             View on CoinGecko ↗
-          </a>
-          <a href={`https://www.tradingview.com/symbols/${token.symbol}USD`} target="_blank" rel="noreferrer" 
-            className="flex-1 py-4 bg-emerald-500/20 hover:bg-emerald-500/30 rounded-xl text-center text-emerald-400 font-medium transition-colors text-lg">
-            View on TradingView ↗
           </a>
         </div>
       </div>
@@ -940,18 +936,15 @@ export default function App() {
                 </div>
               )}
 
-              <div className="flex gap-3">
-                <a href={`https://www.coingecko.com/en/coins/${sel.id}`} target="_blank" rel="noreferrer" className="flex-1 py-3 bg-blue-500/20 hover:bg-blue-500/30 rounded-xl text-center text-blue-400 font-medium transition-colors">CoinGecko ↗</a>
-                <a href={`https://www.tradingview.com/symbols/${sel.symbol}USD`} target="_blank" rel="noreferrer" className="flex-1 py-3 bg-emerald-500/20 hover:bg-emerald-500/30 rounded-xl text-center text-emerald-400 font-medium transition-colors">TradingView ↗</a>
-              </div>
+              <a href={`https://www.coingecko.com/en/coins/${sel.id}`} target="_blank" rel="noreferrer" className="block w-full py-3 bg-green-500/20 hover:bg-green-500/30 rounded-xl text-center text-green-400 font-medium transition-colors">View on CoinGecko ↗</a>
               <button 
                 onClick={(e) => { openTokenPage(sel.id, e); setSel(null); }} 
                 className="w-full mt-3 py-3 bg-orange-500/20 hover:bg-orange-500/30 rounded-xl text-orange-400 font-medium transition-colors flex items-center justify-center gap-2"
               >
                 <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14" />
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />
                 </svg>
-                Open Full Page in New Tab
+                View Detailed Analysis
               </button>
               <button onClick={() => setSel(null)} className="w-full mt-2 py-3 bg-white/10 hover:bg-white/15 rounded-xl font-medium transition-colors">Close</button>
             </div>
