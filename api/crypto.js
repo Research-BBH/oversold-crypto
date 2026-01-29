@@ -1,167 +1,144 @@
 // ==================================================
-// FILE: api/crypto.js (CMC ONLY - 100% RELIABLE)
+// FILE: api/crypto.js (CoinGecko API with Real RSI)
 // ==================================================
 
 export const config = {
   runtime: 'edge',
 };
 
-// Calculate momentum score from price changes (similar to RSI)
-const calcMomentum = (c1h, c24h, c7d, c30d) => {
-  if (c1h == null || c24h == null || c7d == null) return null;
+// Calculate actual RSI from price data
+// RSI = 100 - (100 / (1 + RS))
+// RS = Average Gain / Average Loss over N periods
+const calculateRSI = (prices, period = 14) => {
+  if (!prices || prices.length < period + 1) return null;
   
-  // Weight: recent changes matter more
-  const weighted = (c1h * 0.2) + (c24h * 0.35) + (c7d * 0.3) + ((c30d || 0) * 0.15);
-  
-  // Convert to 0-100 scale (like RSI)
-  // -20% avg = ~20 RSI, 0% = 50 RSI, +20% avg = ~80 RSI
-  const momentum = 50 + (weighted * 2);
-  
-  return Math.max(0, Math.min(100, momentum));
-};
-
-// Generate detailed sparkline with hourly data points for 7 days (168 points)
-const genSparkline = (c1h, c24h, c7d, seed) => {
-  const HOURS = 168; // 7 days * 24 hours
-  const points = [];
-  
-  // Seeded random for consistent results per coin
-  const rand = (i) => {
-    const x = Math.sin(seed * 9999 + i * 7777) * 10000;
-    return x - Math.floor(x);
-  };
-  
-  // Calculate key price levels (working backwards from current = 100)
-  const now = 100;
-  const h1Ago = now / (1 + (c1h || 0) / 100);        // 1 hour ago
-  const h24Ago = now / (1 + (c24h || 0) / 100);      // 24 hours ago  
-  const d7Ago = now / (1 + (c7d || 0) / 100);        // 7 days ago
-  
-  // Estimate intermediate points using available data
-  // Day 3-4 estimate (roughly halfway between 7d and 24h)
-  const d3Ago = d7Ago + (h24Ago - d7Ago) * 0.7;
-  
-  // Key timestamps (in hours from start)
-  // 0 = 7 days ago, 144 = 24h ago, 167 = 1h ago, 168 = now
-  const keyPoints = [
-    { hour: 0, price: d7Ago },
-    { hour: 72, price: d7Ago + (d3Ago - d7Ago) * 0.5 },  // ~4.5 days ago
-    { hour: 120, price: d3Ago },                          // ~2 days ago
-    { hour: 144, price: h24Ago },                         // 24h ago
-    { hour: 167, price: h1Ago },                          // 1h ago
-    { hour: 168, price: now },                            // now
-  ];
-  
-  // Generate hourly points with cubic interpolation + noise
-  for (let h = 0; h < HOURS; h++) {
-    // Find surrounding key points
-    let p0, p1;
-    for (let i = 0; i < keyPoints.length - 1; i++) {
-      if (h >= keyPoints[i].hour && h <= keyPoints[i + 1].hour) {
-        p0 = keyPoints[i];
-        p1 = keyPoints[i + 1];
-        break;
-      }
-    }
-    
-    if (!p0 || !p1) {
-      p0 = keyPoints[0];
-      p1 = keyPoints[1];
-    }
-    
-    // Linear interpolation between key points
-    const t = (h - p0.hour) / (p1.hour - p0.hour || 1);
-    
-    // Smooth easing for more natural movement
-    const eased = t * t * (3 - 2 * t); // smoothstep
-    let price = p0.price + (p1.price - p0.price) * eased;
-    
-    // Add realistic noise (more volatile = more noise)
-    const volatility = Math.abs(c7d || 5) * 0.008;
-    const noise = (rand(h) - 0.5) * volatility * price;
-    
-    // Add micro-trends (small waves within the larger trend)
-    const microTrend = Math.sin(h * 0.3 + seed) * volatility * price * 0.3;
-    
-    price += noise + microTrend;
-    
-    // Ensure price stays positive
-    points.push(Math.max(price, 0.001));
+  // Calculate price changes
+  const changes = [];
+  for (let i = 1; i < prices.length; i++) {
+    changes.push(prices[i] - prices[i - 1]);
   }
   
-  // Smooth the data slightly to reduce jaggedness
-  const smoothed = [];
-  for (let i = 0; i < points.length; i++) {
-    if (i === 0 || i === points.length - 1) {
-      smoothed.push(points[i]);
+  // We need at least 'period' changes
+  if (changes.length < period) return null;
+  
+  // Use the most recent data for RSI calculation
+  // For 7-day hourly data (168 points), we'll use the last 'period' hours
+  const recentChanges = changes.slice(-period * 2); // Get more data for smoothing
+  
+  let avgGain = 0;
+  let avgLoss = 0;
+  
+  // Initial SMA for first 'period' changes
+  for (let i = 0; i < period; i++) {
+    const change = recentChanges[i] || 0;
+    if (change > 0) {
+      avgGain += change;
     } else {
-      // Simple 3-point moving average
-      smoothed.push((points[i-1] + points[i] + points[i+1]) / 3);
+      avgLoss += Math.abs(change);
     }
   }
   
-  // Ensure endpoints match our known values
-  smoothed[0] = d7Ago;
-  smoothed[smoothed.length - 1] = now;
+  avgGain /= period;
+  avgLoss /= period;
   
-  return smoothed;
+  // Apply smoothing for remaining changes (Wilder's smoothing)
+  for (let i = period; i < recentChanges.length; i++) {
+    const change = recentChanges[i] || 0;
+    const gain = change > 0 ? change : 0;
+    const loss = change < 0 ? Math.abs(change) : 0;
+    
+    avgGain = (avgGain * (period - 1) + gain) / period;
+    avgLoss = (avgLoss * (period - 1) + loss) / period;
+  }
   
-  return points;
+  if (avgLoss === 0) return 100; // No losses = RSI 100
+  
+  const rs = avgGain / avgLoss;
+  const rsi = 100 - (100 / (1 + rs));
+  
+  return Math.round(rsi * 10) / 10; // Round to 1 decimal
 };
 
 export default async function handler(req) {
-  const CMC_API_KEY = process.env.CMC_API_KEY;
+  const CG_API_KEY = process.env.COINGECKO_API_KEY;
   
-  if (!CMC_API_KEY) {
+  if (!CG_API_KEY) {
     return new Response(
-      JSON.stringify({ error: 'CMC_API_KEY not configured' }),
+      JSON.stringify({ error: 'COINGECKO_API_KEY not configured' }),
       { status: 500, headers: { 'Content-Type': 'application/json' } }
     );
   }
 
   try {
-    // Fetch from CoinMarketCap
-    const cmcRes = await fetch(
-      'https://pro-api.coinmarketcap.com/v1/cryptocurrency/listings/latest?limit=150&convert=USD',
+    // CoinGecko Pro API endpoint with sparkline data
+    // sparkline=true gives us 7 days of hourly price data (168 data points)
+    const cgRes = await fetch(
+      'https://pro-api.coingecko.com/api/v3/coins/markets?' + new URLSearchParams({
+        vs_currency: 'usd',
+        order: 'market_cap_desc',
+        per_page: '150',
+        page: '1',
+        sparkline: 'true',
+        price_change_percentage: '1h,24h,7d,30d',
+      }),
       {
         headers: {
-          'X-CMC_PRO_API_KEY': CMC_API_KEY,
+          'x-cg-pro-api-key': CG_API_KEY,
           'Accept': 'application/json',
         },
       }
     );
     
-    if (!cmcRes.ok) {
-      throw new Error(`CMC API error: ${cmcRes.status}`);
+    if (!cgRes.ok) {
+      const errorText = await cgRes.text();
+      throw new Error(`CoinGecko API error: ${cgRes.status} - ${errorText}`);
     }
     
-    const cmcData = await cmcRes.json();
+    const cgData = await cgRes.json();
+    
+    // Calculate total market cap for dominance
+    const totalMcap = cgData.reduce((sum, c) => sum + (c.market_cap || 0), 0);
 
     // Process tokens
-    const tokens = cmcData.data.map((coin, index) => {
-      const c1h = coin.quote.USD.percent_change_1h;
-      const c24h = coin.quote.USD.percent_change_24h;
-      const c7d = coin.quote.USD.percent_change_7d;
-      const c30d = coin.quote.USD.percent_change_30d;
+    const tokens = cgData.map((coin, index) => {
+      const sparklineData = coin.sparkline_in_7d?.price || [];
+      
+      // Calculate real RSI from sparkline data
+      const rsi = calculateRSI(sparklineData, 14);
+      
+      // Normalize sparkline to percentage scale (starting at 100) for chart compatibility
+      let normalizedSparkline = [];
+      if (sparklineData.length > 0) {
+        const startPrice = sparklineData[0];
+        normalizedSparkline = sparklineData.map(p => (p / startPrice) * 100);
+      }
       
       return {
-        id: coin.slug,
-        cmcId: coin.id,
-        symbol: coin.symbol,
+        id: coin.id,
+        cgId: coin.id,
+        symbol: coin.symbol?.toUpperCase(),
         name: coin.name,
-        rank: coin.cmc_rank,
-        price: coin.quote.USD.price,
-        mcap: coin.quote.USD.market_cap,
-        volume: coin.quote.USD.volume_24h,
-        change1h: c1h,
-        change24h: c24h,
-        change7d: c7d,
-        change30d: c30d,
+        rank: coin.market_cap_rank || index + 1,
+        price: coin.current_price,
+        mcap: coin.market_cap,
+        volume: coin.total_volume,
+        change1h: coin.price_change_percentage_1h_in_currency,
+        change24h: coin.price_change_percentage_24h_in_currency,
+        change7d: coin.price_change_percentage_7d_in_currency,
+        change30d: coin.price_change_percentage_30d_in_currency,
         supply: coin.circulating_supply,
         maxSupply: coin.max_supply,
-        dominance: coin.quote.USD.market_cap_dominance,
-        rsi: calcMomentum(c1h, c24h, c7d, c30d),
-        sparkline: genSparkline(c1h, c24h, c7d, coin.cmc_rank + index),
+        ath: coin.ath,
+        athChange: coin.ath_change_percentage,
+        athDate: coin.ath_date,
+        atl: coin.atl,
+        atlChange: coin.atl_change_percentage,
+        atlDate: coin.atl_date,
+        dominance: coin.market_cap ? (coin.market_cap / totalMcap) * 100 : 0,
+        rsi: rsi,
+        sparkline: normalizedSparkline,
+        sparklineRaw: sparklineData, // Keep raw prices for detailed view
+        image: coin.image, // CoinGecko provides image URLs directly
       };
     });
 
@@ -171,10 +148,11 @@ export default async function handler(req) {
       JSON.stringify({
         tokens,
         timestamp: new Date().toISOString(),
+        source: 'coingecko',
         stats: {
           total: tokens.length,
           withRSI: withRSI,
-          cmcCredits: cmcData.status.credit_count,
+          dataPoints: tokens[0]?.sparkline?.length || 0,
         }
       }),
       { 
@@ -188,6 +166,7 @@ export default async function handler(req) {
     );
 
   } catch (error) {
+    console.error('CoinGecko API Error:', error);
     return new Response(
       JSON.stringify({ error: error.message }),
       { status: 500, headers: { 'Content-Type': 'application/json' } }
