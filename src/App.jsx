@@ -166,33 +166,326 @@ const MethodologyPage = ({ onBack }) => (
       </button>
       <h1 className="text-4xl font-black mb-2"><span className="bg-gradient-to-r from-red-500 via-orange-500 to-yellow-500 bg-clip-text text-transparent">Methodology</span></h1>
       <p className="text-gray-400 text-lg mb-12">How we calculate RSI and analyze cryptocurrency markets</p>
+      
+      {/* Feature Cards */}
       <div className="grid md:grid-cols-3 gap-6 mb-12">
         <div className="bg-white/5 border border-white/10 rounded-2xl p-6">
           <div className="w-12 h-12 bg-orange-500/20 rounded-xl flex items-center justify-center mb-4"><svg className="w-6 h-6 text-orange-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" /></svg></div>
           <h3 className="text-xl font-bold mb-2">RSI Analysis</h3>
-          <p className="text-gray-400 text-sm">We calculate the 14-period RSI for the top 1000 cryptocurrencies to identify oversold and overbought conditions.</p>
+          <p className="text-gray-400 text-sm">We calculate the 14-day Relative Strength Index (RSI) for the top 1000 cryptocurrencies daily to identify oversold (RSI &lt; 30) and overbought (RSI &gt; 70) conditions.</p>
         </div>
         <div className="bg-white/5 border border-white/10 rounded-2xl p-6">
           <div className="w-12 h-12 bg-green-500/20 rounded-xl flex items-center justify-center mb-4"><svg className="w-6 h-6 text-green-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" /></svg></div>
           <h3 className="text-xl font-bold mb-2">Real-Time Data</h3>
-          <p className="text-gray-400 text-sm">Data is refreshed every minute from CoinGecko's API for accurate analysis.</p>
+          <p className="text-gray-400 text-sm">Data is refreshed every minute from CoinGecko's API, providing you with up-to-date price movements, volume, and market cap information for accurate analysis.</p>
         </div>
         <div className="bg-white/5 border border-white/10 rounded-2xl p-6">
           <div className="w-12 h-12 bg-blue-500/20 rounded-xl flex items-center justify-center mb-4"><svg className="w-6 h-6 text-blue-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 5a2 2 0 012-2h10a2 2 0 012 2v16l-7-3.5L5 21V5z" /></svg></div>
           <h3 className="text-xl font-bold mb-2">Personal Watchlist</h3>
-          <p className="text-gray-400 text-sm">Sign in with Google to save tickers to your personal watchlist.</p>
+          <p className="text-gray-400 text-sm">Sign in with Google to save tickers to your personal watchlist. Track your favorite cryptocurrencies and export to CSV format for further analysis.</p>
         </div>
       </div>
+
+      {/* Understanding RSI Calculation */}
       <div className="bg-white/5 border border-white/10 rounded-2xl p-8 mb-8">
-        <h2 className="text-2xl font-bold mb-6">Understanding RSI</h2>
-        <p className="text-gray-300 mb-4">RSI = 100 - (100 / (1 + RS)), where RS = Average Gain / Average Loss over 14 periods.</p>
-        <div className="grid md:grid-cols-2 gap-4">
-          <div className="bg-red-500/10 border border-red-500/20 rounded-xl p-4"><h3 className="font-bold text-red-400 mb-2">Oversold (RSI &lt; 30)</h3><p className="text-gray-300 text-sm">May indicate undervaluation and buying opportunities.</p></div>
-          <div className="bg-green-500/10 border border-green-500/20 rounded-xl p-4"><h3 className="font-bold text-green-400 mb-2">Overbought (RSI &gt; 70)</h3><p className="text-gray-300 text-sm">May indicate overvaluation. Consider taking profits.</p></div>
+        <h2 className="text-2xl font-bold mb-6">Understanding RSI Calculation</h2>
+        
+        <h3 className="text-orange-400 font-semibold text-lg mb-3">What is RSI?</h3>
+        <p className="text-gray-300 mb-6">The Relative Strength Index (RSI) is a momentum oscillator developed by J. Welles Wilder in 1978. It measures the speed and magnitude of price movements on a scale from 0 to 100, helping traders identify potential overbought or oversold conditions in the market.</p>
+        
+        <h3 className="text-orange-400 font-semibold text-lg mb-3">The Formula</h3>
+        <div className="bg-black/30 rounded-xl p-4 mb-4 font-mono text-sm">
+          <p className="text-white">RSI = 100 - (100 / (1 + RS))</p>
+          <p className="text-gray-500 mt-2">Where RS = Average Gain / Average Loss over 14 periods</p>
+        </div>
+        <p className="text-gray-300 mb-6">The calculation involves comparing the average gains to average losses over a 14-day period. This smoothed ratio is then normalized to create a value between 0 and 100.</p>
+        
+        <h3 className="text-orange-400 font-semibold text-lg mb-3">Step-by-Step Calculation</h3>
+        <ol className="text-gray-300 space-y-2 mb-6 list-decimal list-inside">
+          <li>Calculate price changes for each period (Close - Previous Close)</li>
+          <li>Separate gains (positive changes) and losses (negative changes)</li>
+          <li>Calculate the first Average Gain: Sum of Gains over 14 periods / 14</li>
+          <li>Calculate the first Average Loss: Sum of Losses over 14 periods / 14</li>
+          <li>For subsequent periods, use smoothed averages:</li>
+        </ol>
+        <div className="bg-black/30 rounded-xl p-4 mb-6 font-mono text-sm">
+          <p className="text-white">Avg Gain = [(Prev Avg Gain) × 13 + Current Gain] / 14</p>
+          <p className="text-white">Avg Loss = [(Prev Avg Loss) × 13 + Current Loss] / 14</p>
         </div>
       </div>
+
+      {/* Interpreting RSI Values */}
+      <div className="bg-white/5 border border-white/10 rounded-2xl p-8 mb-8">
+        <h2 className="text-2xl font-bold mb-6">Interpreting RSI Values</h2>
+        <div className="grid md:grid-cols-2 gap-4">
+          <div className="bg-orange-500/10 border border-orange-500/20 rounded-xl p-5">
+            <div className="flex items-center gap-2 mb-3">
+              <span className="w-3 h-3 rounded-full bg-orange-500"></span>
+              <h3 className="font-bold text-orange-400">Oversold (RSI &lt; 30)</h3>
+            </div>
+            <p className="text-gray-300 text-sm">Indicates the asset may be undervalued. Selling pressure has been dominant, potentially creating buying opportunities. Consider researching for potential entry points.</p>
+          </div>
+          <div className="bg-red-500/10 border border-red-500/20 rounded-xl p-5">
+            <div className="flex items-center gap-2 mb-3">
+              <span className="w-3 h-3 rounded-full bg-red-500"></span>
+              <h3 className="font-bold text-red-400">Extreme (RSI &lt; 20)</h3>
+            </div>
+            <p className="text-gray-300 text-sm">Extremely oversold conditions. The asset has experienced significant selling pressure. These conditions often precede sharp rebounds, but always do additional research.</p>
+          </div>
+          <div className="bg-gray-500/10 border border-gray-500/20 rounded-xl p-5">
+            <div className="flex items-center gap-2 mb-3">
+              <span className="w-3 h-3 rounded-full bg-gray-400"></span>
+              <h3 className="font-bold text-gray-300">Neutral (RSI 30-70)</h3>
+            </div>
+            <p className="text-gray-300 text-sm">The asset is in neutral territory with balanced buying and selling pressure. No extreme conditions detected. Watch for trends developing toward either extreme.</p>
+          </div>
+          <div className="bg-green-500/10 border border-green-500/20 rounded-xl p-5">
+            <div className="flex items-center gap-2 mb-3">
+              <span className="w-3 h-3 rounded-full bg-green-500"></span>
+              <h3 className="font-bold text-green-400">Overbought (RSI &gt; 70)</h3>
+            </div>
+            <p className="text-gray-300 text-sm">Indicates the asset may be overvalued. Buying pressure has been dominant. Consider taking profits or waiting for a pullback before entering new positions.</p>
+          </div>
+        </div>
+      </div>
+
+      {/* Data Sources & Limitations */}
+      <div className="bg-white/5 border border-white/10 rounded-2xl p-8 mb-8">
+        <h2 className="text-2xl font-bold mb-6">Data Sources & Limitations</h2>
+        <div className="space-y-4 text-gray-300">
+          <p><span className="text-white font-semibold">Data Provider:</span> All market data is sourced from CoinGecko's comprehensive cryptocurrency API, providing coverage for the top 1000 tokens by market capitalization.</p>
+          <p><span className="text-white font-semibold">Update Frequency:</span> Data is refreshed automatically every 60 seconds to ensure you have access to near real-time market conditions.</p>
+          <p><span className="text-white font-semibold">RSI Period:</span> We use the standard 14-period RSI as recommended by J. Welles Wilder, the original creator of the indicator.</p>
+        </div>
+        <div className="mt-6 bg-yellow-500/10 border border-yellow-500/30 rounded-xl p-4">
+          <div className="flex items-start gap-3">
+            <span className="text-yellow-500 text-xl">⚠️</span>
+            <div>
+              <p className="text-yellow-400 font-semibold">Important:</p>
+              <p className="text-gray-300 text-sm">RSI is just one indicator among many. It should not be used in isolation for trading decisions. Always combine RSI with other technical indicators, fundamental analysis, and proper risk management. Past performance does not guarantee future results.</p>
+            </div>
+          </div>
+        </div>
+      </div>
+
       <footer className="text-center py-8 border-t border-white/10">
-        <p className="text-gray-500 text-sm">Nothing on this site is financial advice. For educational purposes only.</p>
+        <p className="text-gray-500 text-sm mb-4">Nothing on this site is financial advice. For educational and entertainment purposes only.</p>
+        <div className="flex items-center justify-center gap-6 text-sm">
+          <a href="#/terms" className="text-gray-400 hover:text-white transition-colors">Terms of Service</a>
+          <span className="text-gray-700">|</span>
+          <a href="#/privacy" className="text-gray-400 hover:text-white transition-colors">Privacy Policy</a>
+          <span className="text-gray-700">|</span>
+          <span className="text-orange-400">Methodology</span>
+        </div>
+      </footer>
+    </div>
+  </div>
+);
+
+const TermsPage = ({ onBack }) => (
+  <div className="min-h-screen bg-[#0a0a0f] text-white">
+    <div className="fixed inset-0 pointer-events-none">
+      <div className="absolute top-0 left-1/3 w-[800px] h-[800px] bg-red-600/5 rounded-full blur-[120px]"/>
+      <div className="absolute bottom-0 right-1/3 w-[800px] h-[800px] bg-orange-500/5 rounded-full blur-[120px]"/>
+    </div>
+    <div className="relative z-10 max-w-4xl mx-auto px-4 py-8">
+      <button onClick={onBack} className="flex items-center gap-2 text-gray-400 hover:text-white mb-8 transition-colors">
+        <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" /></svg>
+        Back to Dashboard
+      </button>
+      <h1 className="text-4xl font-black mb-2"><span className="bg-gradient-to-r from-red-500 via-orange-500 to-yellow-500 bg-clip-text text-transparent">Terms of Service</span></h1>
+      <p className="text-gray-400 text-lg mb-8">Last updated: January 2025</p>
+
+      <div className="space-y-8">
+        <div className="bg-white/5 border border-white/10 rounded-2xl p-6">
+          <h2 className="text-xl font-bold mb-4">1. Acceptance of Terms</h2>
+          <p className="text-gray-300">By accessing and using OVERSOLD.crypto ("the Service"), you agree to be bound by these Terms of Service. If you do not agree to these terms, please do not use the Service.</p>
+        </div>
+
+        <div className="bg-white/5 border border-white/10 rounded-2xl p-6">
+          <h2 className="text-xl font-bold mb-4">2. Description of Service</h2>
+          <p className="text-gray-300 mb-3">OVERSOLD.crypto provides cryptocurrency market data and RSI (Relative Strength Index) analysis tools for educational and informational purposes. The Service includes:</p>
+          <ul className="text-gray-300 space-y-2 list-disc list-inside">
+            <li>Real-time cryptocurrency price data from CoinGecko</li>
+            <li>RSI calculations and market analysis</li>
+            <li>Personal watchlist functionality (requires sign-in)</li>
+            <li>Data export capabilities</li>
+          </ul>
+        </div>
+
+        <div className="bg-white/5 border border-white/10 rounded-2xl p-6">
+          <h2 className="text-xl font-bold mb-4">3. Not Financial Advice</h2>
+          <div className="bg-red-500/10 border border-red-500/30 rounded-xl p-4 mb-4">
+            <p className="text-red-400 font-semibold">⚠️ Important Disclaimer</p>
+          </div>
+          <p className="text-gray-300 mb-3">The information provided on this Service is for educational and entertainment purposes only and should NOT be construed as financial advice. Specifically:</p>
+          <ul className="text-gray-300 space-y-2 list-disc list-inside">
+            <li>We are not registered financial advisors or brokers</li>
+            <li>RSI and other indicators are tools, not guarantees of performance</li>
+            <li>Past performance does not indicate future results</li>
+            <li>Cryptocurrency investments are highly volatile and risky</li>
+            <li>You should consult with a qualified financial advisor before making investment decisions</li>
+          </ul>
+        </div>
+
+        <div className="bg-white/5 border border-white/10 rounded-2xl p-6">
+          <h2 className="text-xl font-bold mb-4">4. User Accounts</h2>
+          <p className="text-gray-300 mb-3">When you create an account using Google Sign-In:</p>
+          <ul className="text-gray-300 space-y-2 list-disc list-inside">
+            <li>You are responsible for maintaining the security of your account</li>
+            <li>You agree to provide accurate information</li>
+            <li>We reserve the right to suspend or terminate accounts that violate these terms</li>
+            <li>Your watchlist data is stored locally and synced to your account</li>
+          </ul>
+        </div>
+
+        <div className="bg-white/5 border border-white/10 rounded-2xl p-6">
+          <h2 className="text-xl font-bold mb-4">5. Intellectual Property</h2>
+          <p className="text-gray-300">All content, design, and functionality of the Service are the property of OVERSOLD.crypto and are protected by copyright and other intellectual property laws. You may not reproduce, distribute, or create derivative works without permission.</p>
+        </div>
+
+        <div className="bg-white/5 border border-white/10 rounded-2xl p-6">
+          <h2 className="text-xl font-bold mb-4">6. Data Accuracy</h2>
+          <p className="text-gray-300">While we strive to provide accurate data, we cannot guarantee the accuracy, completeness, or timeliness of information. Data is sourced from third-party providers (CoinGecko) and may contain errors or delays.</p>
+        </div>
+
+        <div className="bg-white/5 border border-white/10 rounded-2xl p-6">
+          <h2 className="text-xl font-bold mb-4">7. Limitation of Liability</h2>
+          <p className="text-gray-300">To the maximum extent permitted by law, OVERSOLD.crypto shall not be liable for any indirect, incidental, special, consequential, or punitive damages resulting from your use of the Service, including but not limited to financial losses from trading decisions.</p>
+        </div>
+
+        <div className="bg-white/5 border border-white/10 rounded-2xl p-6">
+          <h2 className="text-xl font-bold mb-4">8. Changes to Terms</h2>
+          <p className="text-gray-300">We reserve the right to modify these terms at any time. Continued use of the Service after changes constitutes acceptance of the new terms.</p>
+        </div>
+
+        <div className="bg-white/5 border border-white/10 rounded-2xl p-6">
+          <h2 className="text-xl font-bold mb-4">9. Contact</h2>
+          <p className="text-gray-300">If you have questions about these Terms of Service, please contact us through our website.</p>
+        </div>
+      </div>
+
+      <footer className="text-center py-8 mt-8 border-t border-white/10">
+        <div className="flex items-center justify-center gap-6 text-sm">
+          <span className="text-orange-400">Terms of Service</span>
+          <span className="text-gray-700">|</span>
+          <a href="#/privacy" className="text-gray-400 hover:text-white transition-colors">Privacy Policy</a>
+          <span className="text-gray-700">|</span>
+          <a href="#/methodology" className="text-gray-400 hover:text-white transition-colors">Methodology</a>
+        </div>
+      </footer>
+    </div>
+  </div>
+);
+
+const PrivacyPage = ({ onBack }) => (
+  <div className="min-h-screen bg-[#0a0a0f] text-white">
+    <div className="fixed inset-0 pointer-events-none">
+      <div className="absolute top-0 left-1/3 w-[800px] h-[800px] bg-red-600/5 rounded-full blur-[120px]"/>
+      <div className="absolute bottom-0 right-1/3 w-[800px] h-[800px] bg-orange-500/5 rounded-full blur-[120px]"/>
+    </div>
+    <div className="relative z-10 max-w-4xl mx-auto px-4 py-8">
+      <button onClick={onBack} className="flex items-center gap-2 text-gray-400 hover:text-white mb-8 transition-colors">
+        <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" /></svg>
+        Back to Dashboard
+      </button>
+      <h1 className="text-4xl font-black mb-2"><span className="bg-gradient-to-r from-red-500 via-orange-500 to-yellow-500 bg-clip-text text-transparent">Privacy Policy</span></h1>
+      <p className="text-gray-400 text-lg mb-8">Last updated: January 2025</p>
+
+      <div className="space-y-8">
+        <div className="bg-white/5 border border-white/10 rounded-2xl p-6">
+          <h2 className="text-xl font-bold mb-4">1. Information We Collect</h2>
+          <p className="text-gray-300 mb-4">We collect minimal information to provide our services:</p>
+          
+          <h3 className="text-orange-400 font-semibold mb-2">Account Information (if you sign in)</h3>
+          <ul className="text-gray-300 space-y-1 list-disc list-inside mb-4">
+            <li>Name (from Google)</li>
+            <li>Email address (from Google)</li>
+            <li>Profile picture (from Google)</li>
+            <li>Google account ID</li>
+          </ul>
+
+          <h3 className="text-orange-400 font-semibold mb-2">Usage Data</h3>
+          <ul className="text-gray-300 space-y-1 list-disc list-inside">
+            <li>Watchlist preferences (stored locally)</li>
+            <li>Theme preferences (dark/light mode)</li>
+          </ul>
+        </div>
+
+        <div className="bg-white/5 border border-white/10 rounded-2xl p-6">
+          <h2 className="text-xl font-bold mb-4">2. How We Use Your Information</h2>
+          <p className="text-gray-300 mb-3">We use the information we collect to:</p>
+          <ul className="text-gray-300 space-y-2 list-disc list-inside">
+            <li>Provide and maintain the Service</li>
+            <li>Save and sync your watchlist across sessions</li>
+            <li>Remember your display preferences</li>
+            <li>Improve our Service</li>
+          </ul>
+        </div>
+
+        <div className="bg-white/5 border border-white/10 rounded-2xl p-6">
+          <h2 className="text-xl font-bold mb-4">3. Data Storage</h2>
+          <div className="bg-green-500/10 border border-green-500/30 rounded-xl p-4 mb-4">
+            <p className="text-green-400 font-semibold">✓ Privacy-Focused Design</p>
+          </div>
+          <p className="text-gray-300 mb-3">We prioritize your privacy:</p>
+          <ul className="text-gray-300 space-y-2 list-disc list-inside">
+            <li><span className="text-white font-semibold">Local Storage:</span> Your watchlist and preferences are stored locally in your browser</li>
+            <li><span className="text-white font-semibold">No Tracking:</span> We do not use cookies for tracking or advertising</li>
+            <li><span className="text-white font-semibold">No Selling:</span> We never sell your personal information to third parties</li>
+            <li><span className="text-white font-semibold">Minimal Collection:</span> We only collect what's necessary for the Service to function</li>
+          </ul>
+        </div>
+
+        <div className="bg-white/5 border border-white/10 rounded-2xl p-6">
+          <h2 className="text-xl font-bold mb-4">4. Third-Party Services</h2>
+          <p className="text-gray-300 mb-3">We use the following third-party services:</p>
+          <ul className="text-gray-300 space-y-2 list-disc list-inside">
+            <li><span className="text-white font-semibold">Google Sign-In:</span> For authentication. Subject to Google's Privacy Policy.</li>
+            <li><span className="text-white font-semibold">CoinGecko API:</span> For cryptocurrency market data. Subject to CoinGecko's Privacy Policy.</li>
+          </ul>
+        </div>
+
+        <div className="bg-white/5 border border-white/10 rounded-2xl p-6">
+          <h2 className="text-xl font-bold mb-4">5. Data Security</h2>
+          <p className="text-gray-300">We implement appropriate security measures to protect your information. However, no method of transmission over the Internet is 100% secure, and we cannot guarantee absolute security.</p>
+        </div>
+
+        <div className="bg-white/5 border border-white/10 rounded-2xl p-6">
+          <h2 className="text-xl font-bold mb-4">6. Your Rights</h2>
+          <p className="text-gray-300 mb-3">You have the right to:</p>
+          <ul className="text-gray-300 space-y-2 list-disc list-inside">
+            <li>Access the personal information we hold about you</li>
+            <li>Delete your account and associated data</li>
+            <li>Clear your local storage at any time through your browser settings</li>
+            <li>Use the Service without signing in (with limited functionality)</li>
+          </ul>
+        </div>
+
+        <div className="bg-white/5 border border-white/10 rounded-2xl p-6">
+          <h2 className="text-xl font-bold mb-4">7. Children's Privacy</h2>
+          <p className="text-gray-300">Our Service is not intended for children under 18. We do not knowingly collect personal information from children under 18.</p>
+        </div>
+
+        <div className="bg-white/5 border border-white/10 rounded-2xl p-6">
+          <h2 className="text-xl font-bold mb-4">8. Changes to This Policy</h2>
+          <p className="text-gray-300">We may update this Privacy Policy from time to time. We will notify you of any changes by posting the new Privacy Policy on this page and updating the "Last updated" date.</p>
+        </div>
+
+        <div className="bg-white/5 border border-white/10 rounded-2xl p-6">
+          <h2 className="text-xl font-bold mb-4">9. Contact Us</h2>
+          <p className="text-gray-300">If you have questions about this Privacy Policy or our data practices, please contact us through our website.</p>
+        </div>
+      </div>
+
+      <footer className="text-center py-8 mt-8 border-t border-white/10">
+        <div className="flex items-center justify-center gap-6 text-sm">
+          <a href="#/terms" className="text-gray-400 hover:text-white transition-colors">Terms of Service</a>
+          <span className="text-gray-700">|</span>
+          <span className="text-orange-400">Privacy Policy</span>
+          <span className="text-gray-700">|</span>
+          <a href="#/methodology" className="text-gray-400 hover:text-white transition-colors">Methodology</a>
+        </div>
       </footer>
     </div>
   </div>
@@ -416,22 +709,6 @@ const RSIMeter = ({value}) => {
   );
 };
 
-const ThemeToggle = ({ darkMode, setDarkMode }) => (
-  <button
-    onClick={() => setDarkMode(!darkMode)}
-    className={`relative w-14 h-7 rounded-full transition-colors duration-300 ${darkMode ? 'bg-gray-700' : 'bg-orange-400'}`}
-    title={darkMode ? 'Switch to light mode' : 'Switch to dark mode'}
-  >
-    <div className={`absolute top-1 w-5 h-5 rounded-full transition-all duration-300 flex items-center justify-center ${darkMode ? 'left-1 bg-gray-900' : 'left-8 bg-white'}`}>
-      {darkMode ? (
-        <svg className="w-3 h-3 text-yellow-400" fill="currentColor" viewBox="0 0 20 20"><path d="M17.293 13.293A8 8 0 016.707 2.707a8.001 8.001 0 1010.586 10.586z"/></svg>
-      ) : (
-        <svg className="w-3 h-3 text-orange-500" fill="currentColor" viewBox="0 0 20 20"><path fillRule="evenodd" d="M10 2a1 1 0 011 1v1a1 1 0 11-2 0V3a1 1 0 011-1zm4 8a4 4 0 11-8 0 4 4 0 018 0zm-.464 4.95l.707.707a1 1 0 001.414-1.414l-.707-.707a1 1 0 00-1.414 1.414zm2.12-10.607a1 1 0 010 1.414l-.706.707a1 1 0 11-1.414-1.414l.707-.707a1 1 0 011.414 0zM17 11a1 1 0 100-2h-1a1 1 0 100 2h1zm-7 4a1 1 0 011 1v1a1 1 0 11-2 0v-1a1 1 0 011-1zM5.05 6.464A1 1 0 106.465 5.05l-.708-.707a1 1 0 00-1.414 1.414l.707.707zm1.414 8.486l-.707.707a1 1 0 01-1.414-1.414l.707-.707a1 1 0 011.414 1.414zM4 11a1 1 0 100-2H3a1 1 0 000 2h1z" clipRule="evenodd"/></svg>
-      )}
-    </div>
-  </button>
-);
-
 const FullPageChart = ({ data, basePrice, change7d }) => {
   if (!data?.length || data.length < 2) return <div className="w-full h-80 bg-gray-800/30 rounded-xl animate-pulse flex items-center justify-center text-gray-500">No chart data</div>;
   const W = 800, H = 400, PAD = { top: 30, right: 80, bottom: 50, left: 20 };
@@ -534,15 +811,6 @@ export default function App() {
   const [user, setUser] = useState(null);
   const [pageTokenId, setPageTokenId] = useState(null);
   const [currentPage, setCurrentPage] = useState('home');
-  const [darkMode, setDarkMode] = useState(() => {
-    const saved = localStorage.getItem('oversold_darkMode');
-    return saved !== null ? JSON.parse(saved) : true;
-  });
-
-  // Save dark mode preference
-  useEffect(() => {
-    localStorage.setItem('oversold_darkMode', JSON.stringify(darkMode));
-  }, [darkMode]);
 
   useEffect(() => {
     const savedUser = localStorage.getItem('oversold_user');
@@ -567,6 +835,8 @@ export default function App() {
       if (hash.startsWith('#/token/')) { setPageTokenId(hash.replace('#/token/', '')); setCurrentPage('token'); }
       else if (hash === '#/methodology') { setPageTokenId(null); setCurrentPage('methodology'); }
       else if (hash === '#/watchlist') { setPageTokenId(null); setCurrentPage('watchlist'); }
+      else if (hash === '#/terms') { setPageTokenId(null); setCurrentPage('terms'); }
+      else if (hash === '#/privacy') { setPageTokenId(null); setCurrentPage('privacy'); }
       else { setPageTokenId(null); setCurrentPage('home'); }
     };
     parseHash();
@@ -635,101 +905,102 @@ export default function App() {
     return <TokenDetailPage token={pageToken} onBack={goBack} />;
   }
   if (currentPage === 'methodology') return <MethodologyPage onBack={() => window.location.hash = ''} />;
+  if (currentPage === 'terms') return <TermsPage onBack={() => window.location.hash = ''} />;
+  if (currentPage === 'privacy') return <PrivacyPage onBack={() => window.location.hash = ''} />;
   if (currentPage === 'watchlist') { if (!user) { window.location.hash = ''; setShowLoginModal(true); return null; } return <WatchlistPage tokens={tokens} watchlist={watchlist} onRemove={toggleWatch} onBack={() => window.location.hash = ''} user={user} />; }
 
   return (
-    <div className={`min-h-screen transition-colors duration-300 ${darkMode ? 'bg-[#0a0a0f] text-white' : 'bg-gray-50 text-gray-900'} selection:bg-orange-500/30`}>
-      {darkMode && <div className="fixed inset-0 pointer-events-none"><div className="absolute top-0 left-1/3 w-[800px] h-[800px] bg-red-600/5 rounded-full blur-[120px]"/><div className="absolute bottom-0 right-1/3 w-[800px] h-[800px] bg-orange-500/5 rounded-full blur-[120px]"/></div>}
+    <div className="min-h-screen bg-[#0a0a0f] text-white selection:bg-orange-500/30">
+      <div className="fixed inset-0 pointer-events-none"><div className="absolute top-0 left-1/3 w-[800px] h-[800px] bg-red-600/5 rounded-full blur-[120px]"/><div className="absolute bottom-0 right-1/3 w-[800px] h-[800px] bg-orange-500/5 rounded-full blur-[120px]"/></div>
       <div className="relative z-10 max-w-7xl mx-auto px-4 py-6">
         <header className="flex flex-col lg:flex-row lg:items-center justify-between gap-4 mb-6">
           <div>
-            <h1 onClick={resetFilters} className="text-4xl font-black tracking-tight cursor-pointer hover:opacity-80 transition-opacity"><span className="bg-gradient-to-r from-red-500 via-orange-500 to-yellow-500 bg-clip-text text-transparent">OVERSOLD</span><span className={darkMode ? 'text-gray-600' : 'text-gray-400'}>.crypto</span></h1>
-            <div className="flex items-center gap-3 mt-2"><div className="flex items-center gap-1.5"><span className="w-2 h-2 bg-green-500 rounded-full animate-pulse"/><span className={`text-sm ${darkMode ? 'text-gray-400' : 'text-gray-500'}`}>Live</span></div><span className={darkMode ? 'text-gray-600' : 'text-gray-400'}>•</span><span className={`text-sm ${darkMode ? 'text-gray-500' : 'text-gray-500'}`}>{lastUpdate?.toLocaleTimeString() || 'Loading...'}</span>{apiStats && <><span className={darkMode ? 'text-gray-600' : 'text-gray-400'}>•</span><span className={`text-sm ${darkMode ? 'text-gray-500' : 'text-gray-500'}`}>{apiStats.withRSI}/{apiStats.total} RSI</span></>}</div>
+            <h1 onClick={resetFilters} className="text-4xl font-black tracking-tight cursor-pointer hover:opacity-80 transition-opacity"><span className="bg-gradient-to-r from-red-500 via-orange-500 to-yellow-500 bg-clip-text text-transparent">OVERSOLD</span><span className="text-gray-600">.crypto</span></h1>
+            <div className="flex items-center gap-3 mt-2"><div className="flex items-center gap-1.5"><span className="w-2 h-2 bg-green-500 rounded-full animate-pulse"/><span className="text-gray-400 text-sm">Live</span></div><span className="text-gray-600">•</span><span className="text-gray-500 text-sm">{lastUpdate?.toLocaleTimeString() || 'Loading...'}</span>{apiStats && <><span className="text-gray-600">•</span><span className="text-gray-500 text-sm">{apiStats.withRSI}/{apiStats.total} RSI</span></>}</div>
           </div>
           <div className="flex items-center gap-3 flex-wrap">
-            <ThemeToggle darkMode={darkMode} setDarkMode={setDarkMode} />
-            <div className={`${darkMode ? 'bg-white/5 border-white/10' : 'bg-white border-gray-200 shadow-sm'} border px-4 py-2.5 rounded-xl text-sm flex items-center gap-3`}><div><span className={darkMode ? 'text-gray-500' : 'text-gray-500'}>MCap</span> <span className="font-mono font-semibold">${fmt(stats.totalMcap)}</span></div><div className={`w-px h-4 ${darkMode ? 'bg-white/10' : 'bg-gray-200'}`}/><div><span className={darkMode ? 'text-gray-500' : 'text-gray-500'}>Avg RSI</span><span className={`font-mono font-semibold ml-1 ${stats.avgRsi<30?'text-red-400':stats.avgRsi>70?'text-green-400':darkMode?'text-gray-300':'text-gray-700'}`}>{stats.avgRsi.toFixed(0)}</span></div></div>
-            {user ? <UserMenu user={user} onLogout={handleLogout} watchlistCount={watchlist.size} /> : <button onClick={() => setShowLoginModal(true)} className={`${darkMode ? 'bg-white/5 hover:bg-white/10 border-white/10' : 'bg-white hover:bg-gray-50 border-gray-200 shadow-sm'} border px-4 py-2.5 rounded-xl text-sm font-medium transition-all flex items-center gap-2`}><svg className="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" /></svg>Sign In</button>}
+            <div className="bg-white/5 border border-white/10 px-4 py-2.5 rounded-xl text-sm flex items-center gap-3"><div><span className="text-gray-500">MCap</span> <span className="font-mono font-semibold">${fmt(stats.totalMcap)}</span></div><div className="w-px h-4 bg-white/10"/><div><span className="text-gray-500">Avg RSI</span><span className={`font-mono font-semibold ml-1 ${stats.avgRsi<30?'text-red-400':stats.avgRsi>70?'text-green-400':'text-gray-300'}`}>{stats.avgRsi.toFixed(0)}</span></div></div>
+            {user ? <UserMenu user={user} onLogout={handleLogout} watchlistCount={watchlist.size} /> : <button onClick={() => setShowLoginModal(true)} className="bg-white/5 hover:bg-white/10 border border-white/10 px-4 py-2.5 rounded-xl text-sm font-medium transition-all flex items-center gap-2"><svg className="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" /></svg>Sign In</button>}
           </div>
         </header>
 
         <div className="grid grid-cols-2 md:grid-cols-4 gap-3 mb-5">
           {[{k:'extreme',color:'red',label:'EXTREME',sub:'RSI < 20'},{k:'oversold',color:'orange',label:'OVERSOLD',sub:'RSI < 30'},{k:'neutral',color:'gray',label:'NEUTRAL',sub:'RSI 30-70'},{k:'overbought',color:'green',label:'OVERBOUGHT',sub:'RSI > 70'}].map(s => (
-            <div key={s.k} onClick={() => { setRsiFilter(rsiFilter === s.k ? null : s.k); setPreset(null); }} className={`${darkMode ? `bg-${s.color}-500/10` : `bg-${s.color}-50`} border-2 rounded-xl p-4 text-center transition-all cursor-pointer hover:scale-[1.03] ${rsiFilter === s.k ? `border-${s.color}-500 shadow-lg shadow-${s.color}-500/20` : `border-${s.color}-500/20 hover:border-${s.color}-500/50`}`}>
-              <p className={`text-3xl font-bold text-${s.color}-${darkMode ? '400' : '500'}`}>{stats[s.k]}</p><p className={`text-xs mt-1 font-medium ${darkMode ? 'text-gray-400' : 'text-gray-600'}`}>{s.label}</p><p className={`text-[10px] ${darkMode ? 'text-gray-600' : 'text-gray-400'}`}>{s.sub}</p>
+            <div key={s.k} onClick={() => { setRsiFilter(rsiFilter === s.k ? null : s.k); setPreset(null); }} className={`bg-${s.color}-500/10 border-2 rounded-xl p-4 text-center transition-all cursor-pointer hover:scale-[1.03] ${rsiFilter === s.k ? `border-${s.color}-500 shadow-lg shadow-${s.color}-500/20` : `border-${s.color}-500/20 hover:border-${s.color}-500/50`}`}>
+              <p className={`text-3xl font-bold text-${s.color}-400`}>{stats[s.k]}</p><p className="text-xs text-gray-400 mt-1 font-medium">{s.label}</p><p className="text-[10px] text-gray-600">{s.sub}</p>
             </div>
           ))}
         </div>
 
-        {rsiFilter && <div className={`flex items-center gap-3 mb-4 px-4 py-2 ${darkMode ? 'bg-white/5' : 'bg-white border border-gray-200'} rounded-xl w-fit`}><span className={`text-sm ${darkMode ? 'text-gray-400' : 'text-gray-600'}`}>Showing: <span className={`font-medium capitalize ${darkMode ? 'text-white' : 'text-gray-900'}`}>{rsiFilter}</span></span><div className={`flex items-center gap-1 border-l ${darkMode ? 'border-white/10' : 'border-gray-200'} pl-3`}><span className={`text-xs ${darkMode ? 'text-gray-500' : 'text-gray-500'}`}>Sort:</span><button onClick={() => setRsiSortDir(d => d === 'desc' ? 'asc' : 'desc')} className={`px-2 py-1 rounded-lg text-xs font-medium ${rsiSortDir === 'desc' ? 'bg-orange-500/20 text-orange-400 border border-orange-500/30' : 'bg-blue-500/20 text-blue-400 border border-blue-500/30'}`}>{rsiSortDir === 'desc' ? '↓ High→Low' : '↑ Low→High'}</button></div><button onClick={() => setRsiFilter(null)} className={`${darkMode ? 'text-gray-400 hover:text-white' : 'text-gray-400 hover:text-gray-600'} ml-1 text-lg`}>✕</button></div>}
+        {rsiFilter && <div className="flex items-center gap-3 mb-4 px-4 py-2 bg-white/5 rounded-xl w-fit"><span className="text-sm text-gray-400">Showing: <span className="text-white font-medium capitalize">{rsiFilter}</span></span><div className="flex items-center gap-1 border-l border-white/10 pl-3"><span className="text-xs text-gray-500">Sort:</span><button onClick={() => setRsiSortDir(d => d === 'desc' ? 'asc' : 'desc')} className={`px-2 py-1 rounded-lg text-xs font-medium ${rsiSortDir === 'desc' ? 'bg-orange-500/20 text-orange-400 border border-orange-500/30' : 'bg-blue-500/20 text-blue-400 border border-blue-500/30'}`}>{rsiSortDir === 'desc' ? '↓ High→Low' : '↑ Low→High'}</button></div><button onClick={() => setRsiFilter(null)} className="text-gray-400 hover:text-white ml-1 text-lg">✕</button></div>}
 
         <div className="flex gap-2 mb-4 overflow-x-auto pb-1 scrollbar-hide">
-          {PRESETS.map(p => <button key={p.id} onClick={() => { setPreset(preset === p.id ? null : p.id); setRsiFilter(null); }} className={`px-4 py-2 rounded-xl text-sm whitespace-nowrap transition-all font-medium ${preset === p.id ? 'bg-gradient-to-r from-orange-500 to-red-500 text-white shadow-lg shadow-orange-500/20' : darkMode ? 'bg-white/5 text-gray-400 hover:bg-white/10 border border-white/5' : 'bg-white text-gray-600 hover:bg-gray-50 border border-gray-200'}`}>{p.name}</button>)}
+          {PRESETS.map(p => <button key={p.id} onClick={() => { setPreset(preset === p.id ? null : p.id); setRsiFilter(null); }} className={`px-4 py-2 rounded-xl text-sm whitespace-nowrap transition-all font-medium ${preset === p.id ? 'bg-gradient-to-r from-orange-500 to-red-500 text-white shadow-lg shadow-orange-500/20' : 'bg-white/5 text-gray-400 hover:bg-white/10 border border-white/5'}`}>{p.name}</button>)}
         </div>
 
         <div className="flex flex-col lg:flex-row gap-3 mb-5">
-          <div className="relative flex-1"><input type="text" placeholder="Search tokens..." value={search} onChange={e => setSearch(e.target.value)} className={`w-full ${darkMode ? 'bg-white/5 border-white/10 text-white placeholder-gray-500' : 'bg-white border-gray-200 text-gray-900 placeholder-gray-400'} border rounded-xl px-4 py-3 pl-11 focus:outline-none focus:border-orange-500/50 transition-all`}/><span className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-500">🔍</span></div>
-          <div className="flex gap-2 overflow-x-auto">{CATS.map(c => <button key={c.id} onClick={() => setCat(c.id)} className={`px-4 py-2.5 rounded-xl text-sm whitespace-nowrap transition-all font-medium ${cat === c.id ? (darkMode ? 'bg-white text-gray-900' : 'bg-gray-900 text-white') : darkMode ? 'bg-white/5 text-gray-400 hover:bg-white/10 border border-white/5' : 'bg-white text-gray-600 hover:bg-gray-50 border border-gray-200'}`}>{c.icon} {c.name}</button>)}</div>
+          <div className="relative flex-1"><input type="text" placeholder="Search tokens..." value={search} onChange={e => setSearch(e.target.value)} className="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-3 pl-11 focus:outline-none focus:border-orange-500/50 transition-all"/><span className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-500">🔍</span></div>
+          <div className="flex gap-2 overflow-x-auto">{CATS.map(c => <button key={c.id} onClick={() => setCat(c.id)} className={`px-4 py-2.5 rounded-xl text-sm whitespace-nowrap transition-all font-medium ${cat === c.id ? 'bg-white text-gray-900' : 'bg-white/5 text-gray-400 hover:bg-white/10 border border-white/5'}`}>{c.icon} {c.name}</button>)}</div>
           <div className="flex gap-2">
-            <select value={sortBy} onChange={e => { setSortBy(e.target.value); setPreset(null); setRsiFilter(null); }} className={`${darkMode ? 'bg-gray-900 border-white/10 text-white' : 'bg-white border-gray-200 text-gray-900'} border rounded-xl px-4 py-2.5 text-sm focus:outline-none cursor-pointer appearance-none min-w-[180px]`} style={{ backgroundImage: `url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 24 24' stroke='%239ca3af'%3E%3Cpath stroke-linecap='round' stroke-linejoin='round' stroke-width='2' d='M19 9l-7 7-7-7'%3E%3C/path%3E%3C/svg%3E")`, backgroundRepeat: 'no-repeat', backgroundPosition: 'right 12px center', backgroundSize: '16px', paddingRight: '40px' }}>
+            <select value={sortBy} onChange={e => { setSortBy(e.target.value); setPreset(null); setRsiFilter(null); }} className="bg-gray-900 border border-white/10 rounded-xl px-4 py-2.5 text-sm focus:outline-none cursor-pointer text-white appearance-none min-w-[180px]" style={{ backgroundImage: `url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 24 24' stroke='%239ca3af'%3E%3Cpath stroke-linecap='round' stroke-linejoin='round' stroke-width='2' d='M19 9l-7 7-7-7'%3E%3C/path%3E%3C/svg%3E")`, backgroundRepeat: 'no-repeat', backgroundPosition: 'right 12px center', backgroundSize: '16px', paddingRight: '40px' }}>
               <option value="rank_asc">Rank ↑</option><option value="rank_desc">Rank ↓</option><option value="price_desc">Price ↓</option><option value="price_asc">Price ↑</option><option value="rsi_asc">RSI ↑ (Oversold)</option><option value="rsi_desc">RSI ↓ (Overbought)</option><option value="change24h_asc">24h % ↑</option><option value="change24h_desc">24h % ↓</option><option value="change7d_asc">7d % ↑</option><option value="change7d_desc">7d % ↓</option><option value="mcap_desc">MCap ↓</option><option value="volume_desc">Volume ↓</option>
             </select>
-            <button onClick={() => user ? setShowWL(w => !w) : setShowLoginModal(true)} className={`px-4 py-2.5 rounded-xl text-sm font-medium transition-all ${showWL ? 'bg-yellow-500 text-black' : darkMode ? 'bg-white/5 text-gray-400 hover:bg-white/10 border border-white/5' : 'bg-white text-gray-600 hover:bg-gray-50 border border-gray-200'}`}>⭐ {user ? watchlist.size : ''}</button>
-            <button onClick={exportCSV} className={`px-4 py-2.5 rounded-xl text-sm ${darkMode ? 'bg-white/5 text-gray-400 hover:bg-white/10 border border-white/5' : 'bg-white text-gray-600 hover:bg-gray-50 border border-gray-200'}`}>📥</button>
-            <button onClick={fetchData} className={`px-4 py-2.5 rounded-xl text-sm ${darkMode ? 'bg-white/5 text-gray-400 hover:bg-white/10 border border-white/5' : 'bg-white text-gray-600 hover:bg-gray-50 border border-gray-200'}`}>🔄</button>
+            <button onClick={() => user ? setShowWL(w => !w) : setShowLoginModal(true)} className={`px-4 py-2.5 rounded-xl text-sm font-medium transition-all ${showWL ? 'bg-yellow-500 text-black' : 'bg-white/5 text-gray-400 hover:bg-white/10 border border-white/5'}`}>⭐ {user ? watchlist.size : ''}</button>
+            <button onClick={exportCSV} className="px-4 py-2.5 rounded-xl text-sm bg-white/5 text-gray-400 hover:bg-white/10 border border-white/5">📥</button>
+            <button onClick={fetchData} className="px-4 py-2.5 rounded-xl text-sm bg-white/5 text-gray-400 hover:bg-white/10 border border-white/5">🔄</button>
           </div>
         </div>
 
-        {loading ? <div className="text-center py-24"><div className="w-14 h-14 border-4 border-orange-500/30 border-t-orange-500 rounded-full animate-spin mx-auto"/><p className={`mt-5 ${darkMode ? 'text-gray-400' : 'text-gray-500'}`}>Loading market data...</p></div>
+        {loading ? <div className="text-center py-24"><div className="w-14 h-14 border-4 border-orange-500/30 border-t-orange-500 rounded-full animate-spin mx-auto"/><p className="text-gray-400 mt-5">Loading market data...</p></div>
         : error ? <div className="text-center py-20 bg-red-500/10 border border-red-500/20 rounded-2xl"><p className="text-red-400 text-xl mb-2">⚠️ {error}</p><button onClick={fetchData} className="px-6 py-2.5 bg-red-500/20 hover:bg-red-500/30 rounded-xl font-medium">Retry</button></div>
         : (
-          <div className={`${darkMode ? 'bg-white/[0.03] border-white/10' : 'bg-white border-gray-200 shadow-sm'} backdrop-blur-sm rounded-2xl border overflow-hidden`}>
-            <div className={`hidden lg:grid grid-cols-12 gap-3 px-5 py-3 border-b ${darkMode ? 'border-white/10 text-gray-500' : 'border-gray-100 text-gray-500'} text-xs font-semibold uppercase tracking-wider`}>
-              <div className={`col-span-3 flex items-center gap-1 cursor-pointer ${darkMode ? 'hover:text-white' : 'hover:text-gray-900'} transition-colors group`} onClick={() => { setSortBy(sortBy === 'rank_asc' ? 'rank_desc' : 'rank_asc'); setPreset(null); setRsiFilter(null); }}><span>Token</span><span className={`transition-opacity ${sortBy.startsWith('rank') ? 'opacity-100 text-orange-400' : 'opacity-0 group-hover:opacity-50'}`}>{sortBy === 'rank_asc' ? '↑' : '↓'}</span></div>
-              <div className={`col-span-2 text-right flex items-center justify-end gap-1 cursor-pointer ${darkMode ? 'hover:text-white' : 'hover:text-gray-900'} transition-colors group`} onClick={() => { setSortBy(sortBy === 'price_desc' ? 'price_asc' : 'price_desc'); setPreset(null); setRsiFilter(null); }}><span>Price</span><span className={`transition-opacity ${sortBy.startsWith('price') ? 'opacity-100 text-orange-400' : 'opacity-0 group-hover:opacity-50'}`}>{sortBy === 'price_asc' ? '↑' : '↓'}</span></div>
-              <div className={`col-span-1 text-right flex items-center justify-end gap-1 cursor-pointer ${darkMode ? 'hover:text-white' : 'hover:text-gray-900'} transition-colors group`} onClick={() => { setSortBy(sortBy === 'change24h_desc' ? 'change24h_asc' : 'change24h_desc'); setPreset(null); setRsiFilter(null); }}><span>24H</span><span className={`transition-opacity ${sortBy.startsWith('change24h') ? 'opacity-100 text-orange-400' : 'opacity-0 group-hover:opacity-50'}`}>{sortBy === 'change24h_asc' ? '↑' : '↓'}</span></div>
-              <div className={`col-span-1 text-right flex items-center justify-end gap-1 cursor-pointer ${darkMode ? 'hover:text-white' : 'hover:text-gray-900'} transition-colors group`} onClick={() => { setSortBy(sortBy === 'change7d_desc' ? 'change7d_asc' : 'change7d_desc'); setPreset(null); setRsiFilter(null); }}><span>7D</span><span className={`transition-opacity ${sortBy.startsWith('change7d') ? 'opacity-100 text-orange-400' : 'opacity-0 group-hover:opacity-50'}`}>{sortBy === 'change7d_asc' ? '↑' : '↓'}</span></div>
-              <div className={`col-span-2 text-center flex items-center justify-center gap-1 cursor-pointer ${darkMode ? 'hover:text-white' : 'hover:text-gray-900'} transition-colors group`} onClick={() => { setSortBy(sortBy === 'rsi_desc' ? 'rsi_asc' : 'rsi_desc'); setPreset(null); setRsiFilter(null); }}><span>RSI (14)</span><span className={`transition-opacity ${sortBy.startsWith('rsi') ? 'opacity-100 text-orange-400' : 'opacity-0 group-hover:opacity-50'}`}>{sortBy === 'rsi_asc' ? '↑' : '↓'}</span></div>
+          <div className="bg-white/[0.03] backdrop-blur-sm rounded-2xl border border-white/10 overflow-hidden">
+            <div className="hidden lg:grid grid-cols-12 gap-3 px-5 py-3 border-b border-white/10 text-xs text-gray-500 font-semibold uppercase tracking-wider">
+              <div className="col-span-3 flex items-center gap-1 cursor-pointer hover:text-white transition-colors group" onClick={() => { setSortBy(sortBy === 'rank_asc' ? 'rank_desc' : 'rank_asc'); setPreset(null); setRsiFilter(null); }}><span>Token</span><span className={`transition-opacity ${sortBy.startsWith('rank') ? 'opacity-100 text-orange-400' : 'opacity-0 group-hover:opacity-50'}`}>{sortBy === 'rank_asc' ? '↑' : '↓'}</span></div>
+              <div className="col-span-2 text-right flex items-center justify-end gap-1 cursor-pointer hover:text-white transition-colors group" onClick={() => { setSortBy(sortBy === 'price_desc' ? 'price_asc' : 'price_desc'); setPreset(null); setRsiFilter(null); }}><span>Price</span><span className={`transition-opacity ${sortBy.startsWith('price') ? 'opacity-100 text-orange-400' : 'opacity-0 group-hover:opacity-50'}`}>{sortBy === 'price_asc' ? '↑' : '↓'}</span></div>
+              <div className="col-span-1 text-right flex items-center justify-end gap-1 cursor-pointer hover:text-white transition-colors group" onClick={() => { setSortBy(sortBy === 'change24h_desc' ? 'change24h_asc' : 'change24h_desc'); setPreset(null); setRsiFilter(null); }}><span>24H</span><span className={`transition-opacity ${sortBy.startsWith('change24h') ? 'opacity-100 text-orange-400' : 'opacity-0 group-hover:opacity-50'}`}>{sortBy === 'change24h_asc' ? '↑' : '↓'}</span></div>
+              <div className="col-span-1 text-right flex items-center justify-end gap-1 cursor-pointer hover:text-white transition-colors group" onClick={() => { setSortBy(sortBy === 'change7d_desc' ? 'change7d_asc' : 'change7d_desc'); setPreset(null); setRsiFilter(null); }}><span>7D</span><span className={`transition-opacity ${sortBy.startsWith('change7d') ? 'opacity-100 text-orange-400' : 'opacity-0 group-hover:opacity-50'}`}>{sortBy === 'change7d_asc' ? '↑' : '↓'}</span></div>
+              <div className="col-span-2 text-center flex items-center justify-center gap-1 cursor-pointer hover:text-white transition-colors group" onClick={() => { setSortBy(sortBy === 'rsi_desc' ? 'rsi_asc' : 'rsi_desc'); setPreset(null); setRsiFilter(null); }}><span>RSI (14)</span><span className={`transition-opacity ${sortBy.startsWith('rsi') ? 'opacity-100 text-orange-400' : 'opacity-0 group-hover:opacity-50'}`}>{sortBy === 'rsi_asc' ? '↑' : '↓'}</span></div>
               <div className="col-span-2 text-right">Chart</div>
               <div className="col-span-1 text-center">Actions</div>
             </div>
             <div className="max-h-[58vh] overflow-y-auto">
-              {filtered.length === 0 ? <div className="text-center py-16"><p className="text-4xl mb-3">🔍</p><p className={darkMode ? 'text-gray-400' : 'text-gray-500'}>No tokens match your filters</p></div>
+              {filtered.length === 0 ? <div className="text-center py-16"><p className="text-4xl mb-3">🔍</p><p className="text-gray-400">No tokens match your filters</p></div>
               : filtered.map(t => {
                 const rs = rsiStyle(t.rsi), watched = watchlist.has(t.id), sparkColor = t.sparkline?.length > 1 ? (t.sparkline[t.sparkline.length-1] >= t.sparkline[0] ? '#22c55e' : '#ef4444') : '#6b7280';
                 return (
-                  <div key={t.id} onClick={() => setSel(t)} className={`grid grid-cols-8 lg:grid-cols-12 gap-3 px-5 py-3.5 border-b ${darkMode ? 'border-white/5 hover:bg-white/[0.04]' : 'border-gray-100 hover:bg-gray-50'} cursor-pointer transition-colors ${watched ? (darkMode ? 'bg-yellow-500/[0.04]' : 'bg-yellow-50') : ''}`}>
-                    <div className="col-span-3 flex items-center gap-3"><span className={`text-xs w-5 text-right ${darkMode ? 'text-gray-600' : 'text-gray-400'}`}>{t.rank}</span><img src={t.image} alt={t.symbol} className="w-9 h-9 rounded-full shrink-0 bg-gray-800"/><div className="min-w-0"><div className="flex items-center gap-1.5"><span className="font-semibold">{t.symbol}</span>{t.rsi !== null && t.rsi < 25 && <span className="text-xs">🔴</span>}{t.rsi !== null && t.rsi > 75 && <span className="text-xs">🟢</span>}</div><p className={`text-xs truncate ${darkMode ? 'text-gray-500' : 'text-gray-500'}`}>{t.name}</p></div></div>
+                  <div key={t.id} onClick={() => setSel(t)} className={`grid grid-cols-8 lg:grid-cols-12 gap-3 px-5 py-3.5 border-b border-white/5 hover:bg-white/[0.04] cursor-pointer transition-colors ${watched ? 'bg-yellow-500/[0.04]' : ''}`}>
+                    <div className="col-span-3 flex items-center gap-3"><span className="text-xs text-gray-600 w-5 text-right">{t.rank}</span><img src={t.image} alt={t.symbol} className="w-9 h-9 rounded-full shrink-0 bg-gray-800"/><div className="min-w-0"><div className="flex items-center gap-1.5"><span className="font-semibold">{t.symbol}</span>{t.rsi !== null && t.rsi < 25 && <span className="text-xs">🔴</span>}{t.rsi !== null && t.rsi > 75 && <span className="text-xs">🟢</span>}</div><p className="text-xs text-gray-500 truncate">{t.name}</p></div></div>
                     <div className="col-span-2 text-right self-center font-mono text-sm">{fmtP(t.price)}</div>
-                    <div className="col-span-1 text-right self-center text-sm hidden lg:block"><span className={t.change24h >= 0 ? 'text-green-500' : 'text-red-500'}>{t.change24h >= 0 ? '+' : ''}{t.change24h?.toFixed(1)}%</span></div>
-                    <div className="col-span-1 text-right self-center text-sm"><span className={t.change7d >= 0 ? 'text-green-500' : 'text-red-500'}>{t.change7d >= 0 ? '+' : ''}{t.change7d?.toFixed(1)}%</span></div>
+                    <div className="col-span-1 text-right self-center text-sm hidden lg:block"><span className={t.change24h >= 0 ? 'text-green-400' : 'text-red-400'}>{t.change24h >= 0 ? '+' : ''}{t.change24h?.toFixed(1)}%</span></div>
+                    <div className="col-span-1 text-right self-center text-sm"><span className={t.change7d >= 0 ? 'text-green-400' : 'text-red-400'}>{t.change7d >= 0 ? '+' : ''}{t.change7d?.toFixed(1)}%</span></div>
                     <div className="col-span-2 self-center flex justify-center"><div className={`inline-flex items-center gap-2 px-3 py-1.5 rounded-lg border ${rs.bg} ${rs.text}`}><span className={`w-1.5 h-1.5 rounded-full ${rs.dot}`}/><span className="font-bold text-sm">{t.rsi !== null ? t.rsi.toFixed(0) : '--'}</span><span className="text-[10px] opacity-70 hidden sm:inline">{rs.label}</span></div></div>
                     <div className="col-span-2 self-center hidden lg:flex justify-end"><Spark data={t.sparkline} color={sparkColor} h={24}/></div>
-                    <div className="col-span-1 self-center flex justify-center gap-2"><button onClick={e => openTokenPage(t.id, e)} className={`p-1.5 rounded-lg ${darkMode ? 'hover:bg-white/10 text-gray-500 hover:text-white' : 'hover:bg-gray-100 text-gray-400 hover:text-gray-600'} transition-colors`}><svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14" /></svg></button><button onClick={e => toggleWatch(t.id, e)} className={`text-lg hover:scale-110 transition-transform ${watched ? 'text-yellow-400' : darkMode ? 'text-gray-600 hover:text-yellow-400' : 'text-gray-400 hover:text-yellow-500'}`}>{watched ? '★' : '☆'}</button></div>
+                    <div className="col-span-1 self-center flex justify-center gap-2"><button onClick={e => openTokenPage(t.id, e)} className="p-1.5 rounded-lg hover:bg-white/10 text-gray-500 hover:text-white transition-colors"><svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14" /></svg></button><button onClick={e => toggleWatch(t.id, e)} className={`text-lg hover:scale-110 transition-transform ${watched ? 'text-yellow-400' : 'text-gray-600 hover:text-yellow-400'}`}>{watched ? '★' : '☆'}</button></div>
                   </div>
                 );
               })}
             </div>
-            <div className={`px-5 py-3 border-t ${darkMode ? 'border-white/10 bg-white/[0.02] text-gray-500' : 'border-gray-100 bg-gray-50 text-gray-500'} flex flex-col sm:flex-row justify-between gap-2 text-xs`}><span>{filtered.length} tokens • {stats.withRSI} with RSI</span><span>Data: CoinGecko • RSI (14) • Auto-refresh 1min</span></div>
+            <div className="px-5 py-3 border-t border-white/10 bg-white/[0.02] flex flex-col sm:flex-row justify-between gap-2 text-xs text-gray-500"><span>{filtered.length} tokens • {stats.withRSI} with RSI</span><span>Data: CoinGecko • RSI (14) • Auto-refresh 1min</span></div>
           </div>
         )}
 
         {sel && (
-          <div className={`fixed inset-0 ${darkMode ? 'bg-black/90' : 'bg-black/50'} backdrop-blur-sm z-50 flex items-center justify-center p-4`} onClick={() => setSel(null)}>
-            <div className={`${darkMode ? 'bg-[#12121a] border-white/10 text-white' : 'bg-white border-gray-200 text-gray-900'} border rounded-2xl p-6 max-w-lg w-full max-h-[90vh] overflow-y-auto shadow-2xl`} onClick={e => e.stopPropagation()}>
-              <div className="flex items-center gap-4 mb-5"><img src={sel.image} alt={sel.symbol} className="w-16 h-16 rounded-2xl bg-gray-800"/><div className="flex-1"><div className="flex items-center gap-2"><h2 className="text-2xl font-bold">{sel.name}</h2><button onClick={e => toggleWatch(sel.id, e)} className={`text-xl ${watchlist.has(sel.id) ? 'text-yellow-400' : 'text-gray-400'}`}>{watchlist.has(sel.id) ? '★' : '☆'}</button></div><p className={darkMode ? 'text-gray-400' : 'text-gray-500'}>{sel.symbol} • Rank #{sel.rank}</p></div></div>
-              <div className={`${darkMode ? 'bg-white/5' : 'bg-gray-100'} rounded-xl p-4 mb-5`}><div className="flex justify-between items-center mb-3"><span className={darkMode ? 'text-gray-400' : 'text-gray-500'}>RSI (14)</span><div className="flex items-center gap-2"><span className={`w-2 h-2 rounded-full ${rsiStyle(sel.rsi).dot}`}/><span className={`text-2xl font-bold ${rsiStyle(sel.rsi).text}`}>{sel.rsi !== null ? sel.rsi.toFixed(1) : 'N/A'}</span><span className={`text-sm ${rsiStyle(sel.rsi).text} opacity-70`}>{rsiStyle(sel.rsi).label}</span></div></div><RSIMeter value={sel.rsi}/></div>
-              <div className="grid grid-cols-2 gap-3 mb-5">{[{icon:'💰', label:'Price', value:fmtP(sel.price)},{icon:'📊', label:'Market Cap', value:'$'+fmt(sel.mcap)},{icon:'📈', label:'24h Volume', value:'$'+fmt(sel.volume)},{icon:'🔄', label:'Vol/MCap', value:sel.volMcap?.toFixed(2)+'%'},{icon:'💎', label:'Circulating', value:fmt(sel.supply)},{icon:'🏆', label:'Dominance', value:(sel.dominance||0).toFixed(2)+'%'}].map(x => <div key={x.label} className={`${darkMode ? 'bg-white/5' : 'bg-gray-100'} rounded-xl p-3`}><p className={`text-xs mb-1 ${darkMode ? 'text-gray-500' : 'text-gray-500'}`}>{x.icon} {x.label}</p><p className="text-lg font-bold">{x.value}</p></div>)}</div>
-              <div className="grid grid-cols-4 gap-2 mb-5">{[{l:'1H', v:sel.change1h},{l:'24H', v:sel.change24h},{l:'7D', v:sel.change7d},{l:'30D', v:sel.change30d}].map(x => <div key={x.l} className={`${darkMode ? 'bg-white/5' : 'bg-gray-100'} rounded-xl p-3 text-center`}><p className={`text-[10px] mb-1 ${darkMode ? 'text-gray-500' : 'text-gray-500'}`}>{x.l}</p><p className={`font-bold ${(x.v||0) >= 0 ? 'text-green-500' : 'text-red-500'}`}>{x.v != null ? `${x.v >= 0 ? '+' : ''}${x.v.toFixed(1)}%` : '--'}</p></div>)}</div>
-              {sel.sparkline && sel.sparkline.length > 1 && <div className={`${darkMode ? 'bg-white/5' : 'bg-gray-100'} rounded-xl p-4 mb-5`}><div className="flex justify-between items-center mb-3"><p className={`text-sm font-medium ${darkMode ? 'text-gray-400' : 'text-gray-600'}`}>7-Day Chart</p><span className={`text-xs px-2 py-0.5 rounded ${sel.change7d >= 0 ? 'bg-green-500/20 text-green-500' : 'bg-red-500/20 text-red-500'}`}>{sel.change7d >= 0 ? '+' : ''}{sel.change7d?.toFixed(2)}%</span></div><DetailChart data={sel.sparkline} basePrice={sel.price} change7d={sel.change7d}/></div>}
-              <a href={`https://www.coingecko.com/en/coins/${sel.id}`} target="_blank" rel="noreferrer" className="block w-full py-3 bg-green-500/20 hover:bg-green-500/30 rounded-xl text-center text-green-500 font-medium transition-colors">View on CoinGecko ↗</a>
-              <button onClick={(e) => { openTokenPage(sel.id, e); setSel(null); }} className="w-full mt-3 py-3 bg-orange-500/20 hover:bg-orange-500/30 rounded-xl text-orange-500 font-medium transition-colors">View Detailed Analysis</button>
-              <button onClick={() => setSel(null)} className={`w-full mt-2 py-3 ${darkMode ? 'bg-white/10 hover:bg-white/15' : 'bg-gray-100 hover:bg-gray-200'} rounded-xl font-medium transition-colors`}>Close</button>
+          <div className="fixed inset-0 bg-black/90 backdrop-blur-sm z-50 flex items-center justify-center p-4" onClick={() => setSel(null)}>
+            <div className="bg-[#12121a] border border-white/10 rounded-2xl p-6 max-w-lg w-full max-h-[90vh] overflow-y-auto shadow-2xl" onClick={e => e.stopPropagation()}>
+              <div className="flex items-center gap-4 mb-5"><img src={sel.image} alt={sel.symbol} className="w-16 h-16 rounded-2xl bg-gray-800"/><div className="flex-1"><div className="flex items-center gap-2"><h2 className="text-2xl font-bold">{sel.name}</h2><button onClick={e => toggleWatch(sel.id, e)} className={`text-xl ${watchlist.has(sel.id) ? 'text-yellow-400' : 'text-gray-600'}`}>{watchlist.has(sel.id) ? '★' : '☆'}</button></div><p className="text-gray-400">{sel.symbol} • Rank #{sel.rank}</p></div></div>
+              <div className="bg-white/5 rounded-xl p-4 mb-5"><div className="flex justify-between items-center mb-3"><span className="text-gray-400">RSI (14)</span><div className="flex items-center gap-2"><span className={`w-2 h-2 rounded-full ${rsiStyle(sel.rsi).dot}`}/><span className={`text-2xl font-bold ${rsiStyle(sel.rsi).text}`}>{sel.rsi !== null ? sel.rsi.toFixed(1) : 'N/A'}</span><span className={`text-sm ${rsiStyle(sel.rsi).text} opacity-70`}>{rsiStyle(sel.rsi).label}</span></div></div><RSIMeter value={sel.rsi}/></div>
+              <div className="grid grid-cols-2 gap-3 mb-5">{[{icon:'💰', label:'Price', value:fmtP(sel.price)},{icon:'📊', label:'Market Cap', value:'$'+fmt(sel.mcap)},{icon:'📈', label:'24h Volume', value:'$'+fmt(sel.volume)},{icon:'🔄', label:'Vol/MCap', value:sel.volMcap?.toFixed(2)+'%'},{icon:'💎', label:'Circulating', value:fmt(sel.supply)},{icon:'🏆', label:'Dominance', value:(sel.dominance||0).toFixed(2)+'%'}].map(x => <div key={x.label} className="bg-white/5 rounded-xl p-3"><p className="text-xs text-gray-500 mb-1">{x.icon} {x.label}</p><p className="text-lg font-bold">{x.value}</p></div>)}</div>
+              <div className="grid grid-cols-4 gap-2 mb-5">{[{l:'1H', v:sel.change1h},{l:'24H', v:sel.change24h},{l:'7D', v:sel.change7d},{l:'30D', v:sel.change30d}].map(x => <div key={x.l} className="bg-white/5 rounded-xl p-3 text-center"><p className="text-[10px] text-gray-500 mb-1">{x.l}</p><p className={`font-bold ${(x.v||0) >= 0 ? 'text-green-400' : 'text-red-400'}`}>{x.v != null ? `${x.v >= 0 ? '+' : ''}${x.v.toFixed(1)}%` : '--'}</p></div>)}</div>
+              {sel.sparkline && sel.sparkline.length > 1 && <div className="bg-white/5 rounded-xl p-4 mb-5"><div className="flex justify-between items-center mb-3"><p className="text-sm text-gray-400 font-medium">7-Day Chart</p><span className={`text-xs px-2 py-0.5 rounded ${sel.change7d >= 0 ? 'bg-green-500/20 text-green-400' : 'bg-red-500/20 text-red-400'}`}>{sel.change7d >= 0 ? '+' : ''}{sel.change7d?.toFixed(2)}%</span></div><DetailChart data={sel.sparkline} basePrice={sel.price} change7d={sel.change7d}/></div>}
+              <a href={`https://www.coingecko.com/en/coins/${sel.id}`} target="_blank" rel="noreferrer" className="block w-full py-3 bg-green-500/20 hover:bg-green-500/30 rounded-xl text-center text-green-400 font-medium transition-colors">View on CoinGecko ↗</a>
+              <button onClick={(e) => { openTokenPage(sel.id, e); setSel(null); }} className="w-full mt-3 py-3 bg-orange-500/20 hover:bg-orange-500/30 rounded-xl text-orange-400 font-medium transition-colors">View Detailed Analysis</button>
+              <button onClick={() => setSel(null)} className="w-full mt-2 py-3 bg-white/10 hover:bg-white/15 rounded-xl font-medium transition-colors">Close</button>
             </div>
           </div>
         )}
 
-        <footer className={`text-center py-8 mt-8 border-t ${darkMode ? 'border-white/10' : 'border-gray-200'}`}><p className={`text-sm mb-4 ${darkMode ? 'text-gray-500' : 'text-gray-500'}`}>Nothing on this site is financial advice. For educational purposes only.</p><div className="flex items-center justify-center gap-6 text-sm"><a href="#/terms" className={`${darkMode ? 'text-gray-400 hover:text-white' : 'text-gray-500 hover:text-gray-900'} transition-colors`}>Terms</a><span className={darkMode ? 'text-gray-700' : 'text-gray-300'}>|</span><a href="#/privacy" className={`${darkMode ? 'text-gray-400 hover:text-white' : 'text-gray-500 hover:text-gray-900'} transition-colors`}>Privacy</a><span className={darkMode ? 'text-gray-700' : 'text-gray-300'}>|</span><a href="#/methodology" className={`${darkMode ? 'text-gray-400 hover:text-white' : 'text-gray-500 hover:text-gray-900'} transition-colors`}>Methodology</a></div><p className={`text-xs mt-4 ${darkMode ? 'text-gray-600' : 'text-gray-400'}`}>Data from CoinGecko • RSI (14)</p></footer>
+        <footer className="text-center py-8 mt-8 border-t border-white/10"><p className="text-gray-500 text-sm mb-4">Nothing on this site is financial advice. For educational purposes only.</p><div className="flex items-center justify-center gap-6 text-sm"><a href="#/terms" className="text-gray-400 hover:text-white transition-colors">Terms</a><span className="text-gray-700">|</span><a href="#/privacy" className="text-gray-400 hover:text-white transition-colors">Privacy</a><span className="text-gray-700">|</span><a href="#/methodology" className="text-gray-400 hover:text-white transition-colors">Methodology</a></div><p className="text-gray-600 text-xs mt-4">Data from CoinGecko • RSI (14)</p></footer>
       </div>
       {showLoginModal && <LoginModal onClose={() => setShowLoginModal(false)} onLogin={handleLogin} />}
     </div>
