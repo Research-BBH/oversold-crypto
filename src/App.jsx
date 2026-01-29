@@ -803,7 +803,7 @@ export default function App() {
                     <div className="col-span-3 flex items-center gap-3">
                       <span className="text-xs text-gray-600 w-5 text-right">{t.rank}</span>
                       <img 
-                        src={`https://s2.coinmarketcap.com/static/img/coins/64x64/${t.cmcId}.png`} 
+                        src={t.image} 
                         alt={t.symbol}
                         className="w-9 h-9 rounded-full shrink-0 bg-gray-800"
                         onError={(e) => { e.target.style.display = 'none'; e.target.nextSibling.style.display = 'flex'; }}
@@ -860,7 +860,7 @@ export default function App() {
 
             <div className="px-5 py-3 border-t border-white/10 bg-white/[0.02] flex flex-col sm:flex-row justify-between gap-2 text-xs text-gray-500">
               <span>{filtered.length} tokens • {stats.withRSI} with RSI data</span>
-              <span>Data: CoinMarketCap • Auto-refresh 3min</span>
+              <span>Data: CoinGecko • Real RSI (14) • Auto-refresh 3min</span>
             </div>
           </div>
         )}
@@ -941,7 +941,7 @@ export default function App() {
               )}
 
               <div className="flex gap-3">
-                <a href={`https://coinmarketcap.com/currencies/${sel.id}/`} target="_blank" rel="noreferrer" className="flex-1 py-3 bg-blue-500/20 hover:bg-blue-500/30 rounded-xl text-center text-blue-400 font-medium transition-colors">CoinMarketCap ↗</a>
+                <a href={`https://www.coingecko.com/en/coins/${sel.id}`} target="_blank" rel="noreferrer" className="flex-1 py-3 bg-blue-500/20 hover:bg-blue-500/30 rounded-xl text-center text-blue-400 font-medium transition-colors">CoinMarketCap ↗</a>
                 <a href={`https://www.tradingview.com/symbols/${sel.symbol}USD`} target="_blank" rel="noreferrer" className="flex-1 py-3 bg-emerald-500/20 hover:bg-emerald-500/30 rounded-xl text-center text-emerald-400 font-medium transition-colors">TradingView ↗</a>
               </div>
               <button 
@@ -966,3 +966,4 @@ export default function App() {
     </div>
   );
 }
+
