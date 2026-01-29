@@ -487,6 +487,7 @@ export default function App() {
   const [lastUpdate, setLastUpdate] = useState(null);
   const [apiStats, setApiStats] = useState(null);
   const [rsiFilter, setRsiFilter] = useState(null);
+  const [rsiSortDir, setRsiSortDir] = useState('desc'); // 'desc' = highest first, 'asc' = lowest first
   
   // Hash routing for full page token view
   const [pageTokenId, setPageTokenId] = useState(null);
@@ -549,6 +550,7 @@ export default function App() {
     setPreset(null);
     setShowWL(false);
     setRsiFilter(null);
+    setRsiSortDir('desc');
     setSortBy('rsi_asc');
   };
 
@@ -570,10 +572,11 @@ export default function App() {
     else if (rsiFilter === 'neutral') r = r.filter(t => t.rsi !== null && t.rsi >= 30 && t.rsi < 70);
     else if (rsiFilter === 'overbought') r = r.filter(t => t.rsi !== null && t.rsi >= 70);
 
-    // Determine sort - RSI filters override sort direction for intuitive results
+    // Determine sort - RSI filters override sort direction based on user preference
     let activeSort = preset ? PRESETS.find(x => x.id === preset)?.sort || sortBy : sortBy;
-    if (rsiFilter === 'overbought') activeSort = 'rsi_desc'; // Most overbought first
-    else if (rsiFilter === 'extreme' || rsiFilter === 'oversold') activeSort = 'rsi_asc'; // Most oversold first
+    if (rsiFilter === 'overbought' || rsiFilter === 'neutral' || rsiFilter === 'oversold' || rsiFilter === 'extreme') {
+      activeSort = `rsi_${rsiSortDir}`; // Use user's preferred direction for RSI categories
+    }
     
     const [field, dir] = activeSort.split('_');
     r.sort((a, b) => {
@@ -583,7 +586,7 @@ export default function App() {
       return dir === 'asc' ? va - vb : vb - va;
     });
     return r;
-  }, [tokens, search, cat, sortBy, showWL, watchlist, preset, rsiFilter]);
+  }, [tokens, search, cat, sortBy, showWL, watchlist, preset, rsiFilter, rsiSortDir]);
 
   const stats = useMemo(() => {
     const withRSI = tokens.filter(t => t.rsi !== null);
@@ -704,13 +707,27 @@ export default function App() {
 
         {/* Active filter indicator */}
         {rsiFilter && (
-          <div className="flex items-center gap-2 mb-4 px-4 py-2 bg-white/5 rounded-xl w-fit">
+          <div className="flex items-center gap-3 mb-4 px-4 py-2 bg-white/5 rounded-xl w-fit">
             <span className="text-sm text-gray-400">
               Showing: <span className="text-white font-medium capitalize">{rsiFilter}</span> tokens
             </span>
+            <div className="flex items-center gap-1 border-l border-white/10 pl-3">
+              <span className="text-xs text-gray-500">Sort:</span>
+              <button
+                onClick={() => setRsiSortDir(d => d === 'desc' ? 'asc' : 'desc')}
+                className={`px-2 py-1 rounded-lg text-xs font-medium transition-all ${
+                  rsiSortDir === 'desc' 
+                    ? 'bg-orange-500/20 text-orange-400 border border-orange-500/30' 
+                    : 'bg-blue-500/20 text-blue-400 border border-blue-500/30'
+                }`}
+                title={rsiSortDir === 'desc' ? 'Highest RSI first' : 'Lowest RSI first'}
+              >
+                {rsiSortDir === 'desc' ? '↓ High→Low' : '↑ Low→High'}
+              </button>
+            </div>
             <button 
               onClick={() => setRsiFilter(null)}
-              className="text-gray-400 hover:text-white ml-2 text-lg"
+              className="text-gray-400 hover:text-white ml-1 text-lg"
               title="Clear filter"
             >
               ✕
