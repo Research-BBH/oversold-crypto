@@ -72,29 +72,38 @@ export default async function handler(req) {
   try {
     // CoinGecko Pro API endpoint with sparkline data
     // sparkline=true gives us 7 days of hourly price data (168 data points)
-    const cgRes = await fetch(
-      'https://pro-api.coingecko.com/api/v3/coins/markets?' + new URLSearchParams({
-        vs_currency: 'usd',
-        order: 'market_cap_desc',
-        per_page: '150',
-        page: '1',
-        sparkline: 'true',
-        price_change_percentage: '1h,24h,7d,30d',
-      }),
-      {
-        headers: {
-          'x-cg-pro-api-key': CG_API_KEY,
-          'Accept': 'application/json',
-        },
-      }
-    );
+    // Fetch 1000 coins (4 pages of 250)
+    const pages = [1, 2, 3, 4];
+    const allData = [];
     
-    if (!cgRes.ok) {
-      const errorText = await cgRes.text();
-      throw new Error(`CoinGecko API error: ${cgRes.status} - ${errorText}`);
+    for (const page of pages) {
+      const cgRes = await fetch(
+        'https://pro-api.coingecko.com/api/v3/coins/markets?' + new URLSearchParams({
+          vs_currency: 'usd',
+          order: 'market_cap_desc',
+          per_page: '250',
+          page: String(page),
+          sparkline: 'true',
+          price_change_percentage: '1h,24h,7d,30d',
+        }),
+        {
+          headers: {
+            'x-cg-pro-api-key': CG_API_KEY,
+            'Accept': 'application/json',
+          },
+        }
+      );
+      
+      if (!cgRes.ok) {
+        const errorText = await cgRes.text();
+        throw new Error(`CoinGecko API error (page ${page}): ${cgRes.status} - ${errorText}`);
+      }
+      
+      const pageData = await cgRes.json();
+      allData.push(...pageData);
     }
     
-    const cgData = await cgRes.json();
+    const cgData = allData;
     
     // Calculate total market cap for dominance
     const totalMcap = cgData.reduce((sum, c) => sum + (c.market_cap || 0), 0);
