@@ -366,7 +366,7 @@ const TokenDetailPage = ({ token, onBack }) => {
             </svg>
           </button>
           <img 
-            src={`https://s2.coinmarketcap.com/static/img/coins/64x64/${token.cmcId}.png`}
+            src={`${token.image}`}
             alt={token.symbol}
             className="w-16 h-16 rounded-2xl bg-gray-800"
             onError={(e) => { e.target.style.display = 'none'; }}
@@ -397,7 +397,7 @@ const TokenDetailPage = ({ token, onBack }) => {
               </span>
             </div>
             <FullPageChart data={token.sparkline} basePrice={token.price} symbol={token.symbol} change7d={token.change7d}/>
-            <p className="text-xs text-gray-500 mt-4 text-center">* Chart shows estimated trend based on % changes. For accurate data, visit CoinMarketCap or TradingView.</p>
+            <p className="text-xs text-gray-500 mt-4 text-center">* Chart shows estimated trend based on % changes. For accurate data, visit CoinGecko or TradingView.</p>
           </div>
 
           {/* RSI & Stats - 1 col */}
@@ -461,9 +461,9 @@ const TokenDetailPage = ({ token, onBack }) => {
 
         {/* External Links */}
         <div className="mt-6 flex gap-4">
-          <a href={`https://coinmarketcap.com/currencies/${token.id}/`} target="_blank" rel="noreferrer" 
+          <a href={`https://coingecko.com/en/coins/${token.id}`} target="_blank" rel="noreferrer" 
             className="flex-1 py-4 bg-blue-500/20 hover:bg-blue-500/30 rounded-xl text-center text-blue-400 font-medium transition-colors text-lg">
-            View on CoinMarketCap ↗
+            View on CoinGecko ↗
           </a>
           <a href={`https://www.tradingview.com/symbols/${token.symbol}USD`} target="_blank" rel="noreferrer" 
             className="flex-1 py-4 bg-emerald-500/20 hover:bg-emerald-500/30 rounded-xl text-center text-emerald-400 font-medium transition-colors text-lg">
@@ -545,7 +545,7 @@ export default function App() {
     }
   }, []);
 
-  useEffect(() => { fetchData(); const i = setInterval(fetchData, 180000); return () => clearInterval(i); }, [fetchData]);
+  useEffect(() => { fetchData(); const i = setInterval(fetchData, 60000); return () => clearInterval(i); }, [fetchData]);
 
   const resetFilters = () => {
     setSearch('');
@@ -625,7 +625,7 @@ export default function App() {
           <div className="text-center">
             <p className="text-4xl mb-4">😕</p>
             <p className="text-xl mb-2">Token not found</p>
-            <p className="text-gray-400 mb-4">"{pageTokenId}" is not in the top 150 tokens</p>
+            <p className="text-gray-400 mb-4">"{pageTokenId}" is not in the top 1000 tokens</p>
             <button onClick={goBack} className="px-6 py-2 bg-orange-500 rounded-lg hover:bg-orange-600 transition-colors">
               Back to list
             </button>
@@ -770,7 +770,7 @@ export default function App() {
           <div className="text-center py-24">
             <div className="w-14 h-14 border-4 border-orange-500/30 border-t-orange-500 rounded-full animate-spin mx-auto"/>
             <p className="text-gray-400 mt-5">Loading market data...</p>
-            <p className="text-gray-600 text-sm mt-1">Fetching from CoinMarketCap...</p>
+            <p className="text-gray-600 text-sm mt-1">Fetching from CoinGecko...</p>
           </div>
         ) : error ? (
           <div className="text-center py-20 bg-red-500/10 border border-red-500/20 rounded-2xl">
@@ -860,7 +860,7 @@ export default function App() {
 
             <div className="px-5 py-3 border-t border-white/10 bg-white/[0.02] flex flex-col sm:flex-row justify-between gap-2 text-xs text-gray-500">
               <span>{filtered.length} tokens • {stats.withRSI} with RSI data</span>
-              <span>Data: CoinGecko • Real RSI (14) • Auto-refresh 3min</span>
+              <span>Data: CoinGecko • Real RSI (14) • Auto-refresh 1min</span>
             </div>
           </div>
         )}
@@ -870,7 +870,7 @@ export default function App() {
             <div className="bg-[#12121a] border border-white/10 rounded-2xl p-6 max-w-lg w-full max-h-[90vh] overflow-y-auto shadow-2xl" onClick={e => e.stopPropagation()}>
               <div className="flex items-center gap-4 mb-5">
                 <img 
-                  src={`https://s2.coinmarketcap.com/static/img/coins/64x64/${sel.cmcId}.png`}
+                  src={`${sel.image}`}
                   alt={sel.symbol}
                   className="w-16 h-16 rounded-2xl bg-gray-800"
                   onError={(e) => { e.target.style.display = 'none'; e.target.nextSibling.style.display = 'flex'; }}
@@ -941,7 +941,7 @@ export default function App() {
               )}
 
               <div className="flex gap-3">
-                <a href={`https://www.coingecko.com/en/coins/${sel.id}`} target="_blank" rel="noreferrer" className="flex-1 py-3 bg-blue-500/20 hover:bg-blue-500/30 rounded-xl text-center text-blue-400 font-medium transition-colors">CoinMarketCap ↗</a>
+                <a href={`https://www.coingecko.com/en/coins/${sel.id}`} target="_blank" rel="noreferrer" className="flex-1 py-3 bg-blue-500/20 hover:bg-blue-500/30 rounded-xl text-center text-blue-400 font-medium transition-colors">CoinGecko ↗</a>
                 <a href={`https://www.tradingview.com/symbols/${sel.symbol}USD`} target="_blank" rel="noreferrer" className="flex-1 py-3 bg-emerald-500/20 hover:bg-emerald-500/30 rounded-xl text-center text-emerald-400 font-medium transition-colors">TradingView ↗</a>
               </div>
               <button 
@@ -959,11 +959,10 @@ export default function App() {
         )}
 
         <footer className="text-center text-gray-600 text-xs mt-8 pb-4">
-          <p>Data from CoinMarketCap • Momentum score based on price changes</p>
+          <p>Data from CoinGecko • Momentum score based on price changes</p>
           <p className="mt-1">Momentum score calculated from 1h/24h/7d/30d price changes • Not financial advice</p>
         </footer>
       </div>
     </div>
   );
 }
-
