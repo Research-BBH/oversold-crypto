@@ -762,9 +762,13 @@ export default function App() {
             ))}
           </div>
           <div className="flex gap-2">
-            <select value={sortBy} onChange={e => { setSortBy(e.target.value); setPreset(null); }}
+            <select value={sortBy} onChange={e => { setSortBy(e.target.value); setPreset(null); setRsiFilter(null); }}
               className="bg-gray-900 border border-white/10 rounded-xl px-4 py-2.5 text-sm focus:outline-none cursor-pointer text-white appearance-none min-w-[180px]"
               style={{ backgroundImage: `url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 24 24' stroke='%239ca3af'%3E%3Cpath stroke-linecap='round' stroke-linejoin='round' stroke-width='2' d='M19 9l-7 7-7-7'%3E%3C/path%3E%3C/svg%3E")`, backgroundRepeat: 'no-repeat', backgroundPosition: 'right 12px center', backgroundSize: '16px', paddingRight: '40px' }}>
+              <option value="rank_asc" className="bg-gray-900 py-2">Rank ↑ (Top first)</option>
+              <option value="rank_desc" className="bg-gray-900 py-2">Rank ↓ (Bottom first)</option>
+              <option value="price_desc" className="bg-gray-900 py-2">Price ↓ (Highest)</option>
+              <option value="price_asc" className="bg-gray-900 py-2">Price ↑ (Lowest)</option>
               <option value="rsi_asc" className="bg-gray-900 py-2">RSI ↑ (Oversold first)</option>
               <option value="rsi_desc" className="bg-gray-900 py-2">RSI ↓ (Overbought first)</option>
               <option value="change24h_asc" className="bg-gray-900 py-2">24h % ↑ (Losers)</option>
@@ -773,7 +777,6 @@ export default function App() {
               <option value="change7d_desc" className="bg-gray-900 py-2">7d % ↓ (Gainers)</option>
               <option value="mcap_desc" className="bg-gray-900 py-2">Market Cap ↓</option>
               <option value="volume_desc" className="bg-gray-900 py-2">Volume ↓</option>
-              <option value="rank_asc" className="bg-gray-900 py-2">Rank ↑</option>
             </select>
             <button onClick={() => setShowWL(w => !w)} className={`px-4 py-2.5 rounded-xl text-sm font-medium transition-all ${showWL ? 'bg-yellow-500 text-black' : 'bg-white/5 text-gray-400 hover:bg-white/10 border border-white/5'}`}>
               ⭐ {watchlist.size}
@@ -798,11 +801,51 @@ export default function App() {
         ) : (
           <div className="bg-white/[0.03] backdrop-blur-sm rounded-2xl border border-white/10 overflow-hidden">
             <div className="hidden lg:grid grid-cols-12 gap-3 px-5 py-3 border-b border-white/10 text-xs text-gray-500 font-semibold uppercase tracking-wider">
-              <div className="col-span-3">Token</div>
-              <div className="col-span-2 text-right">Price</div>
-              <div className="col-span-1 text-right">24H</div>
-              <div className="col-span-1 text-right">7D</div>
-              <div className="col-span-2 text-center">RSI (14)</div>
+              <div 
+                className="col-span-3 flex items-center gap-1 cursor-pointer hover:text-white transition-colors group"
+                onClick={() => { setSortBy(sortBy === 'rank_asc' ? 'rank_desc' : 'rank_asc'); setPreset(null); setRsiFilter(null); }}
+              >
+                <span>Token</span>
+                <span className={`transition-opacity ${sortBy.startsWith('rank') ? 'opacity-100 text-orange-400' : 'opacity-0 group-hover:opacity-50'}`}>
+                  {sortBy === 'rank_asc' ? '↑' : '↓'}
+                </span>
+              </div>
+              <div 
+                className="col-span-2 text-right flex items-center justify-end gap-1 cursor-pointer hover:text-white transition-colors group"
+                onClick={() => { setSortBy(sortBy === 'price_desc' ? 'price_asc' : 'price_desc'); setPreset(null); setRsiFilter(null); }}
+              >
+                <span>Price</span>
+                <span className={`transition-opacity ${sortBy.startsWith('price') ? 'opacity-100 text-orange-400' : 'opacity-0 group-hover:opacity-50'}`}>
+                  {sortBy === 'price_asc' ? '↑' : '↓'}
+                </span>
+              </div>
+              <div 
+                className="col-span-1 text-right flex items-center justify-end gap-1 cursor-pointer hover:text-white transition-colors group"
+                onClick={() => { setSortBy(sortBy === 'change24h_desc' ? 'change24h_asc' : 'change24h_desc'); setPreset(null); setRsiFilter(null); }}
+              >
+                <span>24H</span>
+                <span className={`transition-opacity ${sortBy.startsWith('change24h') ? 'opacity-100 text-orange-400' : 'opacity-0 group-hover:opacity-50'}`}>
+                  {sortBy === 'change24h_asc' ? '↑' : '↓'}
+                </span>
+              </div>
+              <div 
+                className="col-span-1 text-right flex items-center justify-end gap-1 cursor-pointer hover:text-white transition-colors group"
+                onClick={() => { setSortBy(sortBy === 'change7d_desc' ? 'change7d_asc' : 'change7d_desc'); setPreset(null); setRsiFilter(null); }}
+              >
+                <span>7D</span>
+                <span className={`transition-opacity ${sortBy.startsWith('change7d') ? 'opacity-100 text-orange-400' : 'opacity-0 group-hover:opacity-50'}`}>
+                  {sortBy === 'change7d_asc' ? '↑' : '↓'}
+                </span>
+              </div>
+              <div 
+                className="col-span-2 text-center flex items-center justify-center gap-1 cursor-pointer hover:text-white transition-colors group"
+                onClick={() => { setSortBy(sortBy === 'rsi_desc' ? 'rsi_asc' : 'rsi_desc'); setPreset(null); setRsiFilter(null); }}
+              >
+                <span>RSI (14)</span>
+                <span className={`transition-opacity ${sortBy.startsWith('rsi') ? 'opacity-100 text-orange-400' : 'opacity-0 group-hover:opacity-50'}`}>
+                  {sortBy === 'rsi_asc' ? '↑' : '↓'}
+                </span>
+              </div>
               <div className="col-span-2 text-right">Chart</div>
               <div className="col-span-1 text-center">Actions</div>
             </div>
