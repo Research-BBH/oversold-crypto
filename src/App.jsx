@@ -46,7 +46,7 @@ const PRESETS = [
 
 // ⚠️ REPLACE THIS WITH YOUR GOOGLE CLIENT ID FROM GOOGLE CLOUD CONSOLE
 // Instructions: https://developers.google.com/identity/gsi/web/guides/get-google-api-clientid
-const GOOGLE_CLIENT_ID = 'YOUR_GOOGLE_CLIENT_ID.apps.googleusercontent.com';
+const GOOGLE_CLIENT_ID = '889475479271-64c68ua41no083lq5g82v8pp2cvf9r9k.apps.googleusercontent.com';
 
 // Login Modal Component with Google OAuth
 const LoginModal = ({ onClose, onLogin }) => {
@@ -1500,3 +1500,4 @@ export default function App() {
     </div>
   );
 }
+
