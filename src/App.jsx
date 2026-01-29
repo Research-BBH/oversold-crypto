@@ -570,7 +570,11 @@ export default function App() {
     else if (rsiFilter === 'neutral') r = r.filter(t => t.rsi !== null && t.rsi >= 30 && t.rsi < 70);
     else if (rsiFilter === 'overbought') r = r.filter(t => t.rsi !== null && t.rsi >= 70);
 
-    const activeSort = preset ? PRESETS.find(x => x.id === preset)?.sort || sortBy : sortBy;
+    // Determine sort - RSI filters override sort direction for intuitive results
+    let activeSort = preset ? PRESETS.find(x => x.id === preset)?.sort || sortBy : sortBy;
+    if (rsiFilter === 'overbought') activeSort = 'rsi_desc'; // Most overbought first
+    else if (rsiFilter === 'extreme' || rsiFilter === 'oversold') activeSort = 'rsi_asc'; // Most oversold first
+    
     const [field, dir] = activeSort.split('_');
     r.sort((a, b) => {
       let va = a[field], vb = b[field];
