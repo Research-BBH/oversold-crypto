@@ -43,13 +43,82 @@ const PRESETS = [
   {id:'volume',name:'🔥 High Volume',filter:()=>true,sort:'volMcap_desc'},
 ];
 
-// Login Modal Component
-const LoginModal = ({ onClose }) => {
-  const handleGoogleLogin = () => {
-    // TODO: Implement actual Google OAuth
-    // For now, show alert that this feature requires backend setup
-    alert('Google Sign-In requires backend OAuth configuration. This is a UI preview.');
+
+// ⚠️ REPLACE THIS WITH YOUR GOOGLE CLIENT ID FROM GOOGLE CLOUD CONSOLE
+// Instructions: https://developers.google.com/identity/gsi/web/guides/get-google-api-clientid
+const GOOGLE_CLIENT_ID = '889475479271-64c68ua41no083lq5g82v8pp2cvf9r9k.apps.googleusercontent.com';
+
+// Login Modal Component with Google OAuth
+const LoginModal = ({ onClose, onLogin }) => {
+  const [isLoading, setIsLoading] = useState(false);
+  const [error, setError] = useState(null);
+  const googleButtonRef = useCallback(node => {
+    if (node && window.google?.accounts?.id) {
+      window.google.accounts.id.renderButton(node, {
+        theme: 'filled_black',
+        size: 'large',
+        width: 320,
+        text: 'continue_with',
+        shape: 'rectangular',
+      });
+    }
+  }, []);
+
+  useEffect(() => {
+    // Load Google Identity Services script
+    const script = document.createElement('script');
+    script.src = 'https://accounts.google.com/gsi/client';
+    script.async = true;
+    script.defer = true;
+    script.onload = () => {
+      if (window.google?.accounts?.id) {
+        window.google.accounts.id.initialize({
+          client_id: GOOGLE_CLIENT_ID,
+          callback: handleCredentialResponse,
+          auto_select: false,
+        });
+        // Re-render button after initialization
+        const btnContainer = document.getElementById('google-signin-btn');
+        if (btnContainer) {
+          window.google.accounts.id.renderButton(btnContainer, {
+            theme: 'filled_black',
+            size: 'large',
+            width: 320,
+            text: 'continue_with',
+            shape: 'rectangular',
+          });
+        }
+      }
+    };
+    document.body.appendChild(script);
+    return () => {
+      document.body.removeChild(script);
+    };
+  }, []);
+
+  const handleCredentialResponse = (response) => {
+    setIsLoading(true);
+    setError(null);
+    try {
+      // Decode JWT token to get user info
+      const payload = JSON.parse(atob(response.credential.split('.')[1]));
+      const user = {
+        id: payload.sub,
+        name: payload.name,
+        email: payload.email,
+        picture: payload.picture,
+      };
+      // Save user to localStorage
+      localStorage.setItem('oversold_user', JSON.stringify(user));
+      onLogin(user);
+      onClose();
+    } catch (err) {
+      setError('Failed to sign in. Please try again.');
+      setIsLoading(false);
+    }
   };
+
+  const isConfigured = GOOGLE_CLIENT_ID !== 'YOUR_GOOGLE_CLIENT_ID.apps.googleusercontent.com';
 
   return (
     <div className="fixed inset-0 bg-black/90 backdrop-blur-sm z-50 flex items-center justify-center p-4" onClick={onClose}>
@@ -59,18 +128,34 @@ const LoginModal = ({ onClose }) => {
           <p className="text-gray-400">Create a watchlist to track your favorite assets</p>
         </div>
         
-        <button 
-          onClick={handleGoogleLogin}
-          className="w-full flex items-center justify-center gap-3 bg-white/10 hover:bg-white/15 border border-white/20 rounded-xl py-3.5 px-4 font-medium transition-all hover:scale-[1.02]"
-        >
-          <svg className="w-5 h-5" viewBox="0 0 24 24">
-            <path fill="#4285F4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"/>
-            <path fill="#34A853" d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z"/>
-            <path fill="#FBBC05" d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z"/>
-            <path fill="#EA4335" d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z"/>
-          </svg>
-          Continue with Google
-        </button>
+        {!isConfigured ? (
+          <div className="bg-yellow-500/10 border border-yellow-500/30 rounded-xl p-4 mb-4">
+            <p className="text-yellow-400 text-sm font-medium mb-2">⚠️ Setup Required</p>
+            <p className="text-gray-400 text-xs">
+              To enable Google Sign-In, you need to:
+            </p>
+            <ol className="text-gray-400 text-xs mt-2 list-decimal list-inside space-y-1">
+              <li>Go to <a href="https://console.cloud.google.com/apis/credentials" target="_blank" rel="noreferrer" className="text-orange-400 hover:underline">Google Cloud Console</a></li>
+              <li>Create a new project or select existing</li>
+              <li>Create OAuth 2.0 Client ID (Web application)</li>
+              <li>Add your domain to Authorized JavaScript origins</li>
+              <li>Copy the Client ID and replace GOOGLE_CLIENT_ID in App.jsx</li>
+            </ol>
+          </div>
+        ) : (
+          <>
+            {isLoading ? (
+              <div className="flex justify-center py-4">
+                <div className="w-8 h-8 border-2 border-orange-500 border-t-transparent rounded-full animate-spin"/>
+              </div>
+            ) : (
+              <div id="google-signin-btn" ref={googleButtonRef} className="flex justify-center"/>
+            )}
+            {error && (
+              <p className="text-red-400 text-sm text-center mt-4">{error}</p>
+            )}
+          </>
+        )}
         
         <p className="text-center text-gray-500 text-sm mt-6">
           By signing in, you agree to our <a href="#/terms" className="text-orange-400 hover:underline">Terms of Service</a>
@@ -83,6 +168,52 @@ const LoginModal = ({ onClose }) => {
           Cancel
         </button>
       </div>
+    </div>
+  );
+};
+
+// User Menu Component (shown when logged in)
+const UserMenu = ({ user, onLogout }) => {
+  const [isOpen, setIsOpen] = useState(false);
+  
+  return (
+    <div className="relative">
+      <button 
+        onClick={() => setIsOpen(!isOpen)}
+        className="flex items-center gap-2 bg-white/5 hover:bg-white/10 border border-white/10 px-3 py-2 rounded-xl transition-all"
+      >
+        <img src={user.picture} alt={user.name} className="w-6 h-6 rounded-full"/>
+        <span className="text-sm font-medium max-w-[100px] truncate hidden sm:inline">{user.name?.split(' ')[0]}</span>
+        <svg className={`w-4 h-4 text-gray-400 transition-transform ${isOpen ? 'rotate-180' : ''}`} fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+        </svg>
+      </button>
+      
+      {isOpen && (
+        <>
+          <div className="fixed inset-0 z-40" onClick={() => setIsOpen(false)}/>
+          <div className="absolute right-0 top-full mt-2 w-64 bg-[#1a1a24] border border-white/10 rounded-xl shadow-xl z-50 overflow-hidden">
+            <div className="p-4 border-b border-white/10">
+              <div className="flex items-center gap-3">
+                <img src={user.picture} alt={user.name} className="w-10 h-10 rounded-full"/>
+                <div className="min-w-0">
+                  <p className="font-medium truncate">{user.name}</p>
+                  <p className="text-xs text-gray-400 truncate">{user.email}</p>
+                </div>
+              </div>
+            </div>
+            <button 
+              onClick={() => { onLogout(); setIsOpen(false); }}
+              className="w-full px-4 py-3 text-left text-sm text-gray-400 hover:text-white hover:bg-white/5 transition-colors flex items-center gap-2"
+            >
+              <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1" />
+              </svg>
+              Sign out
+            </button>
+          </div>
+        </>
+      )}
     </div>
   );
 };
@@ -734,6 +865,64 @@ export default function App() {
   const [rsiFilter, setRsiFilter] = useState(null);
   const [rsiSortDir, setRsiSortDir] = useState('desc'); // 'desc' = highest first, 'asc' = lowest first
   const [showLoginModal, setShowLoginModal] = useState(false);
+  const [user, setUser] = useState(null);
+  
+  // Load user from localStorage on mount
+  useEffect(() => {
+    const savedUser = localStorage.getItem('oversold_user');
+    if (savedUser) {
+      try {
+        const parsedUser = JSON.parse(savedUser);
+        setUser(parsedUser);
+        // Load user's watchlist
+        const savedWatchlist = localStorage.getItem(`oversold_watchlist_${parsedUser.id}`);
+        if (savedWatchlist) {
+          setWatchlist(new Set(JSON.parse(savedWatchlist)));
+        }
+      } catch (e) {
+        console.error('Failed to load user:', e);
+      }
+    } else {
+      // Load anonymous watchlist
+      const savedWatchlist = localStorage.getItem('oversold_watchlist_anonymous');
+      if (savedWatchlist) {
+        setWatchlist(new Set(JSON.parse(savedWatchlist)));
+      }
+    }
+  }, []);
+
+  // Save watchlist to localStorage whenever it changes
+  useEffect(() => {
+    const key = user ? `oversold_watchlist_${user.id}` : 'oversold_watchlist_anonymous';
+    localStorage.setItem(key, JSON.stringify([...watchlist]));
+  }, [watchlist, user]);
+
+  // Handle login
+  const handleLogin = (loggedInUser) => {
+    setUser(loggedInUser);
+    // Load the user's watchlist (might merge with anonymous)
+    const savedWatchlist = localStorage.getItem(`oversold_watchlist_${loggedInUser.id}`);
+    if (savedWatchlist) {
+      setWatchlist(new Set(JSON.parse(savedWatchlist)));
+    }
+  };
+
+  // Handle logout
+  const handleLogout = () => {
+    localStorage.removeItem('oversold_user');
+    setUser(null);
+    // Optionally clear watchlist on logout or keep anonymous one
+    const anonWatchlist = localStorage.getItem('oversold_watchlist_anonymous');
+    if (anonWatchlist) {
+      setWatchlist(new Set(JSON.parse(anonWatchlist)));
+    } else {
+      setWatchlist(new Set());
+    }
+    // Revoke Google token if available
+    if (window.google?.accounts?.id) {
+      window.google.accounts.id.disableAutoSelect();
+    }
+  };
   
   // Hash routing for pages
   const [pageTokenId, setPageTokenId] = useState(null);
@@ -942,15 +1131,19 @@ export default function App() {
                 </span>
               </div>
             </div>
-            <button 
-              onClick={() => setShowLoginModal(true)}
-              className="bg-white/5 hover:bg-white/10 border border-white/10 px-4 py-2.5 rounded-xl text-sm font-medium transition-all flex items-center gap-2"
-            >
-              <svg className="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
-              </svg>
-              Sign In
-            </button>
+            {user ? (
+              <UserMenu user={user} onLogout={handleLogout} />
+            ) : (
+              <button 
+                onClick={() => setShowLoginModal(true)}
+                className="bg-white/5 hover:bg-white/10 border border-white/10 px-4 py-2.5 rounded-xl text-sm font-medium transition-all flex items-center gap-2"
+              >
+                <svg className="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
+                </svg>
+                Sign In
+              </button>
+            )}
           </div>
         </header>
 
@@ -1303,7 +1496,7 @@ export default function App() {
       </div>
 
       {/* Login Modal */}
-      {showLoginModal && <LoginModal onClose={() => setShowLoginModal(false)} />}
+      {showLoginModal && <LoginModal onClose={() => setShowLoginModal(false)} onLogin={handleLogin} />}
     </div>
   );
 }
