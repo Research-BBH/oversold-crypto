@@ -42,22 +42,14 @@ const PRESETS = [
   {id:'volume',name:'🔥 High Volume',filter:()=>true,sort:'volMcap_desc'},
 ];
 
-// ⚠️ REPLACE THIS WITH YOUR GOOGLE CLIENT ID FROM GOOGLE CLOUD CONSOLE
 const GOOGLE_CLIENT_ID = '889475479271-64c68ua41no083lq5g82v8pp2cvf9r9k.apps.googleusercontent.com';
 
-// Login Modal Component with Google OAuth
 const LoginModal = ({ onClose, onLogin }) => {
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState(null);
   const googleButtonRef = useCallback(node => {
     if (node && window.google?.accounts?.id) {
-      window.google.accounts.id.renderButton(node, {
-        theme: 'filled_black',
-        size: 'large',
-        width: 320,
-        text: 'continue_with',
-        shape: 'rectangular',
-      });
+      window.google.accounts.id.renderButton(node, { theme: 'filled_black', size: 'large', width: 320, text: 'continue_with', shape: 'rectangular' });
     }
   }, []);
 
@@ -68,20 +60,10 @@ const LoginModal = ({ onClose, onLogin }) => {
     script.defer = true;
     script.onload = () => {
       if (window.google?.accounts?.id) {
-        window.google.accounts.id.initialize({
-          client_id: GOOGLE_CLIENT_ID,
-          callback: handleCredentialResponse,
-          auto_select: false,
-        });
+        window.google.accounts.id.initialize({ client_id: GOOGLE_CLIENT_ID, callback: handleCredentialResponse, auto_select: false });
         const btnContainer = document.getElementById('google-signin-btn');
         if (btnContainer) {
-          window.google.accounts.id.renderButton(btnContainer, {
-            theme: 'filled_black',
-            size: 'large',
-            width: 320,
-            text: 'continue_with',
-            shape: 'rectangular',
-          });
+          window.google.accounts.id.renderButton(btnContainer, { theme: 'filled_black', size: 'large', width: 320, text: 'continue_with', shape: 'rectangular' });
         }
       }
     };
@@ -94,12 +76,7 @@ const LoginModal = ({ onClose, onLogin }) => {
     setError(null);
     try {
       const payload = JSON.parse(atob(response.credential.split('.')[1]));
-      const user = {
-        id: payload.sub,
-        name: payload.name,
-        email: payload.email,
-        picture: payload.picture,
-      };
+      const user = { id: payload.sub, name: payload.name, email: payload.email, picture: payload.picture };
       localStorage.setItem('oversold_user', JSON.stringify(user));
       onLogin(user);
       onClose();
@@ -118,58 +95,39 @@ const LoginModal = ({ onClose, onLogin }) => {
           <h2 className="text-2xl font-bold mb-2">Sign in to Oversold</h2>
           <p className="text-gray-400">Create a watchlist to track your favorite assets</p>
         </div>
-        
         {!isConfigured ? (
           <div className="bg-yellow-500/10 border border-yellow-500/30 rounded-xl p-4 mb-4">
             <p className="text-yellow-400 text-sm font-medium mb-2">⚠️ Setup Required</p>
-            <p className="text-gray-400 text-xs">To enable Google Sign-In, you need to:</p>
-            <ol className="text-gray-400 text-xs mt-2 list-decimal list-inside space-y-1">
-              <li>Go to <a href="https://console.cloud.google.com/apis/credentials" target="_blank" rel="noreferrer" className="text-orange-400 hover:underline">Google Cloud Console</a></li>
-              <li>Create a new project or select existing</li>
-              <li>Create OAuth 2.0 Client ID (Web application)</li>
-              <li>Add your domain to Authorized JavaScript origins</li>
-              <li>Copy the Client ID and replace GOOGLE_CLIENT_ID in App.jsx</li>
-            </ol>
+            <p className="text-gray-400 text-xs">To enable Google Sign-In, configure your GOOGLE_CLIENT_ID.</p>
           </div>
         ) : (
           <>
             {isLoading ? (
-              <div className="flex justify-center py-4">
-                <div className="w-8 h-8 border-2 border-orange-500 border-t-transparent rounded-full animate-spin"/>
-              </div>
+              <div className="flex justify-center py-4"><div className="w-8 h-8 border-2 border-orange-500 border-t-transparent rounded-full animate-spin"/></div>
             ) : (
               <div id="google-signin-btn" ref={googleButtonRef} className="flex justify-center"/>
             )}
             {error && <p className="text-red-400 text-sm text-center mt-4">{error}</p>}
           </>
         )}
-        
-        <p className="text-center text-gray-500 text-sm mt-6">
-          By signing in, you agree to our <a href="#/terms" className="text-orange-400 hover:underline">Terms of Service</a>
-        </p>
+        <p className="text-center text-gray-500 text-sm mt-6">By signing in, you agree to our <a href="#/terms" className="text-orange-400 hover:underline">Terms of Service</a></p>
         <button onClick={onClose} className="w-full mt-4 py-2 text-gray-400 hover:text-white transition-colors text-sm">Cancel</button>
       </div>
     </div>
   );
 };
 
-// User Menu Component
 const UserMenu = ({ user, onLogout, watchlistCount }) => {
   const [isOpen, setIsOpen] = useState(false);
-  
   return (
     <div className="relative">
-      <button 
-        onClick={() => setIsOpen(!isOpen)}
-        className="flex items-center gap-2 bg-white/5 hover:bg-white/10 border border-white/10 px-3 py-2 rounded-xl transition-all"
-      >
+      <button onClick={() => setIsOpen(!isOpen)} className="flex items-center gap-2 bg-white/5 hover:bg-white/10 border border-white/10 px-3 py-2 rounded-xl transition-all">
         <img src={user.picture} alt={user.name} className="w-6 h-6 rounded-full"/>
         <span className="text-sm font-medium max-w-[100px] truncate hidden sm:inline">{user.name?.split(' ')[0]}</span>
         <svg className={`w-4 h-4 text-gray-400 transition-transform ${isOpen ? 'rotate-180' : ''}`} fill="none" stroke="currentColor" viewBox="0 0 24 24">
           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
         </svg>
       </button>
-      
       {isOpen && (
         <>
           <div className="fixed inset-0 z-40" onClick={() => setIsOpen(false)}/>
@@ -177,27 +135,15 @@ const UserMenu = ({ user, onLogout, watchlistCount }) => {
             <div className="p-4 border-b border-white/10">
               <div className="flex items-center gap-3">
                 <img src={user.picture} alt={user.name} className="w-10 h-10 rounded-full"/>
-                <div className="min-w-0">
-                  <p className="font-medium truncate">{user.name}</p>
-                  <p className="text-xs text-gray-400 truncate">{user.email}</p>
-                </div>
+                <div className="min-w-0"><p className="font-medium truncate">{user.name}</p><p className="text-xs text-gray-400 truncate">{user.email}</p></div>
               </div>
             </div>
-            <a href="#/watchlist" onClick={() => setIsOpen(false)}
-              className="w-full px-4 py-3 text-left text-sm text-gray-400 hover:text-white hover:bg-white/5 transition-colors flex items-center gap-2">
-              <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11.049 2.927c.3-.921 1.603-.921 1.902 0l1.519 4.674a1 1 0 00.95.69h4.915c.969 0 1.371 1.24.588 1.81l-3.976 2.888a1 1 0 00-.363 1.118l1.518 4.674c.3.922-.755 1.688-1.538 1.118l-3.976-2.888a1 1 0 00-1.176 0l-3.976 2.888c-.783.57-1.838-.197-1.538-1.118l1.518-4.674a1 1 0 00-.363-1.118l-3.976-2.888c-.784-.57-.38-1.81.588-1.81h4.914a1 1 0 00.951-.69l1.519-4.674z" />
-              </svg>
-              My Watchlist
-              {watchlistCount > 0 && (
-                <span className="ml-auto bg-yellow-500/20 text-yellow-400 text-xs px-2 py-0.5 rounded-full">{watchlistCount}</span>
-              )}
+            <a href="#/watchlist" onClick={() => setIsOpen(false)} className="w-full px-4 py-3 text-left text-sm text-gray-400 hover:text-white hover:bg-white/5 transition-colors flex items-center gap-2">
+              <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11.049 2.927c.3-.921 1.603-.921 1.902 0l1.519 4.674a1 1 0 00.95.69h4.915c.969 0 1.371 1.24.588 1.81l-3.976 2.888a1 1 0 00-.363 1.118l1.518 4.674c.3.922-.755 1.688-1.538 1.118l-3.976-2.888a1 1 0 00-1.176 0l-3.976 2.888c-.783.57-1.838-.197-1.538-1.118l1.518-4.674a1 1 0 00-.363-1.118l-3.976-2.888c-.784-.57-.38-1.81.588-1.81h4.914a1 1 0 00.951-.69l1.519-4.674z" /></svg>
+              My Watchlist {watchlistCount > 0 && <span className="ml-auto bg-yellow-500/20 text-yellow-400 text-xs px-2 py-0.5 rounded-full">{watchlistCount}</span>}
             </a>
-            <button onClick={() => { onLogout(); setIsOpen(false); }}
-              className="w-full px-4 py-3 text-left text-sm text-gray-400 hover:text-white hover:bg-white/5 transition-colors flex items-center gap-2">
-              <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1" />
-              </svg>
+            <button onClick={() => { onLogout(); setIsOpen(false); }} className="w-full px-4 py-3 text-left text-sm text-gray-400 hover:text-white hover:bg-white/5 transition-colors flex items-center gap-2">
+              <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1" /></svg>
               Sign out
             </button>
           </div>
@@ -207,128 +153,50 @@ const UserMenu = ({ user, onLogout, watchlistCount }) => {
   );
 };
 
-// Methodology Page Component
-const MethodologyPage = ({ onBack }) => {
-  return (
-    <div className="min-h-screen bg-[#0a0a0f] text-white">
-      <div className="fixed inset-0 pointer-events-none">
-        <div className="absolute top-0 left-1/3 w-[800px] h-[800px] bg-red-600/5 rounded-full blur-[120px]"/>
-        <div className="absolute bottom-0 right-1/3 w-[800px] h-[800px] bg-orange-500/5 rounded-full blur-[120px]"/>
-      </div>
-      
-      <div className="relative z-10 max-w-4xl mx-auto px-4 py-8">
-        <button onClick={onBack} className="flex items-center gap-2 text-gray-400 hover:text-white mb-8 transition-colors">
-          <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
-          </svg>
-          Back to Dashboard
-        </button>
-
-        <h1 className="text-4xl font-black mb-2">
-          <span className="bg-gradient-to-r from-red-500 via-orange-500 to-yellow-500 bg-clip-text text-transparent">Methodology</span>
-        </h1>
-        <p className="text-gray-400 text-lg mb-12">How we calculate RSI and analyze cryptocurrency markets</p>
-
-        <div className="grid md:grid-cols-3 gap-6 mb-12">
-          <div className="bg-white/5 border border-white/10 rounded-2xl p-6">
-            <div className="w-12 h-12 bg-orange-500/20 rounded-xl flex items-center justify-center mb-4">
-              <svg className="w-6 h-6 text-orange-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />
-              </svg>
-            </div>
-            <h3 className="text-xl font-bold mb-2">RSI Analysis</h3>
-            <p className="text-gray-400 text-sm">We calculate the 14-day Relative Strength Index (RSI) for the top 1000 cryptocurrencies daily.</p>
-          </div>
-          
-          <div className="bg-white/5 border border-white/10 rounded-2xl p-6">
-            <div className="w-12 h-12 bg-green-500/20 rounded-xl flex items-center justify-center mb-4">
-              <svg className="w-6 h-6 text-green-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
-              </svg>
-            </div>
-            <h3 className="text-xl font-bold mb-2">Real-Time Data</h3>
-            <p className="text-gray-400 text-sm">Data is refreshed every minute from CoinGecko's API for accurate analysis.</p>
-          </div>
-          
-          <div className="bg-white/5 border border-white/10 rounded-2xl p-6">
-            <div className="w-12 h-12 bg-blue-500/20 rounded-xl flex items-center justify-center mb-4">
-              <svg className="w-6 h-6 text-blue-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 5a2 2 0 012-2h10a2 2 0 012 2v16l-7-3.5L5 21V5z" />
-              </svg>
-            </div>
-            <h3 className="text-xl font-bold mb-2">Personal Watchlist</h3>
-            <p className="text-gray-400 text-sm">Sign in with Google to save tickers to your personal watchlist.</p>
-          </div>
-        </div>
-
-        <div className="bg-white/5 border border-white/10 rounded-2xl p-8 mb-8">
-          <h2 className="text-2xl font-bold mb-6">Understanding RSI Calculation</h2>
-          <div className="space-y-6">
-            <div>
-              <h3 className="text-lg font-semibold text-orange-400 mb-3">What is RSI?</h3>
-              <p className="text-gray-300 leading-relaxed">The Relative Strength Index (RSI) is a momentum oscillator developed by J. Welles Wilder in 1978. It measures the speed and magnitude of price movements on a scale from 0 to 100.</p>
-            </div>
-            <div>
-              <h3 className="text-lg font-semibold text-orange-400 mb-3">The Formula</h3>
-              <div className="bg-black/30 rounded-xl p-4 font-mono text-sm mb-4">
-                <p className="text-gray-300 mb-2">RSI = 100 - (100 / (1 + RS))</p>
-                <p className="text-gray-500">Where RS = Average Gain / Average Loss over 14 periods</p>
-              </div>
-            </div>
-          </div>
-        </div>
-
-        <div className="bg-white/5 border border-white/10 rounded-2xl p-8 mb-8">
-          <h2 className="text-2xl font-bold mb-6">Interpreting RSI Values</h2>
-          <div className="grid md:grid-cols-2 gap-6">
-            <div className="bg-red-500/10 border border-red-500/20 rounded-xl p-5">
-              <div className="flex items-center gap-3 mb-3">
-                <span className="w-3 h-3 rounded-full bg-red-500"/>
-                <h3 className="font-bold text-red-400">Oversold (RSI &lt; 30)</h3>
-              </div>
-              <p className="text-gray-300 text-sm">Indicates the asset may be undervalued. Consider researching for potential entry points.</p>
-            </div>
-            <div className="bg-orange-500/10 border border-orange-500/20 rounded-xl p-5">
-              <div className="flex items-center gap-3 mb-3">
-                <span className="w-3 h-3 rounded-full bg-orange-500"/>
-                <h3 className="font-bold text-orange-400">Extreme (RSI &lt; 20)</h3>
-              </div>
-              <p className="text-gray-300 text-sm">Extremely oversold conditions. Often precedes sharp rebounds.</p>
-            </div>
-            <div className="bg-gray-500/10 border border-gray-500/20 rounded-xl p-5">
-              <div className="flex items-center gap-3 mb-3">
-                <span className="w-3 h-3 rounded-full bg-gray-500"/>
-                <h3 className="font-bold text-gray-400">Neutral (RSI 30-70)</h3>
-              </div>
-              <p className="text-gray-300 text-sm">The asset is in neutral territory with balanced buying and selling pressure.</p>
-            </div>
-            <div className="bg-green-500/10 border border-green-500/20 rounded-xl p-5">
-              <div className="flex items-center gap-3 mb-3">
-                <span className="w-3 h-3 rounded-full bg-green-500"/>
-                <h3 className="font-bold text-green-400">Overbought (RSI &gt; 70)</h3>
-              </div>
-              <p className="text-gray-300 text-sm">Indicates the asset may be overvalued. Consider taking profits.</p>
-            </div>
-          </div>
-        </div>
-
-        <footer className="text-center py-8 border-t border-white/10">
-          <p className="text-gray-500 text-sm mb-4">Nothing on this site is financial advice. For educational purposes only.</p>
-          <div className="flex items-center justify-center gap-6 text-sm">
-            <a href="#/terms" className="text-gray-400 hover:text-white transition-colors">Terms</a>
-            <span className="text-gray-700">|</span>
-            <a href="#/privacy" className="text-gray-400 hover:text-white transition-colors">Privacy</a>
-            <span className="text-gray-700">|</span>
-            <span className="text-orange-400">Methodology</span>
-          </div>
-        </footer>
-      </div>
+const MethodologyPage = ({ onBack }) => (
+  <div className="min-h-screen bg-[#0a0a0f] text-white">
+    <div className="fixed inset-0 pointer-events-none">
+      <div className="absolute top-0 left-1/3 w-[800px] h-[800px] bg-red-600/5 rounded-full blur-[120px]"/>
+      <div className="absolute bottom-0 right-1/3 w-[800px] h-[800px] bg-orange-500/5 rounded-full blur-[120px]"/>
     </div>
-  );
-};
-
-// Watchlist Page Component with Sorting
-// Find the WatchlistPage component in your App.jsx and replace it entirely with this:
+    <div className="relative z-10 max-w-4xl mx-auto px-4 py-8">
+      <button onClick={onBack} className="flex items-center gap-2 text-gray-400 hover:text-white mb-8 transition-colors">
+        <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" /></svg>
+        Back to Dashboard
+      </button>
+      <h1 className="text-4xl font-black mb-2"><span className="bg-gradient-to-r from-red-500 via-orange-500 to-yellow-500 bg-clip-text text-transparent">Methodology</span></h1>
+      <p className="text-gray-400 text-lg mb-12">How we calculate RSI and analyze cryptocurrency markets</p>
+      <div className="grid md:grid-cols-3 gap-6 mb-12">
+        <div className="bg-white/5 border border-white/10 rounded-2xl p-6">
+          <div className="w-12 h-12 bg-orange-500/20 rounded-xl flex items-center justify-center mb-4"><svg className="w-6 h-6 text-orange-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" /></svg></div>
+          <h3 className="text-xl font-bold mb-2">RSI Analysis</h3>
+          <p className="text-gray-400 text-sm">We calculate the 14-period RSI for the top 1000 cryptocurrencies to identify oversold and overbought conditions.</p>
+        </div>
+        <div className="bg-white/5 border border-white/10 rounded-2xl p-6">
+          <div className="w-12 h-12 bg-green-500/20 rounded-xl flex items-center justify-center mb-4"><svg className="w-6 h-6 text-green-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" /></svg></div>
+          <h3 className="text-xl font-bold mb-2">Real-Time Data</h3>
+          <p className="text-gray-400 text-sm">Data is refreshed every minute from CoinGecko's API for accurate analysis.</p>
+        </div>
+        <div className="bg-white/5 border border-white/10 rounded-2xl p-6">
+          <div className="w-12 h-12 bg-blue-500/20 rounded-xl flex items-center justify-center mb-4"><svg className="w-6 h-6 text-blue-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 5a2 2 0 012-2h10a2 2 0 012 2v16l-7-3.5L5 21V5z" /></svg></div>
+          <h3 className="text-xl font-bold mb-2">Personal Watchlist</h3>
+          <p className="text-gray-400 text-sm">Sign in with Google to save tickers to your personal watchlist.</p>
+        </div>
+      </div>
+      <div className="bg-white/5 border border-white/10 rounded-2xl p-8 mb-8">
+        <h2 className="text-2xl font-bold mb-6">Understanding RSI</h2>
+        <p className="text-gray-300 mb-4">RSI = 100 - (100 / (1 + RS)), where RS = Average Gain / Average Loss over 14 periods.</p>
+        <div className="grid md:grid-cols-2 gap-4">
+          <div className="bg-red-500/10 border border-red-500/20 rounded-xl p-4"><h3 className="font-bold text-red-400 mb-2">Oversold (RSI &lt; 30)</h3><p className="text-gray-300 text-sm">May indicate undervaluation and buying opportunities.</p></div>
+          <div className="bg-green-500/10 border border-green-500/20 rounded-xl p-4"><h3 className="font-bold text-green-400 mb-2">Overbought (RSI &gt; 70)</h3><p className="text-gray-300 text-sm">May indicate overvaluation. Consider taking profits.</p></div>
+        </div>
+      </div>
+      <footer className="text-center py-8 border-t border-white/10">
+        <p className="text-gray-500 text-sm">Nothing on this site is financial advice. For educational purposes only.</p>
+      </footer>
+    </div>
+  </div>
+);
 
 const WatchlistPage = ({ tokens, watchlist, onRemove, onBack, user }) => {
   const [sortBy, setSortBy] = useState('rank_asc');
@@ -348,30 +216,18 @@ const WatchlistPage = ({ tokens, watchlist, onRemove, onBack, user }) => {
   const toggleSort = (field) => {
     setSortBy(prev => {
       const [currentField, currentDir] = prev.split('_');
-      if (currentField === field) {
-        return `${field}_${currentDir === 'asc' ? 'desc' : 'asc'}`;
-      }
+      if (currentField === field) return `${field}_${currentDir === 'asc' ? 'desc' : 'asc'}`;
       const defaults = { rank: 'asc', price: 'desc', change24h: 'desc', rsi: 'asc' };
       return `${field}_${defaults[field] || 'asc'}`;
     });
   };
 
-  const SortIndicator = ({ field }) => {
-    const [currentField, currentDir] = sortBy.split('_');
-    const isActive = currentField === field;
-    return (
-      <span className={`ml-1 transition-all ${isActive ? 'text-orange-400' : 'text-gray-600 group-hover:text-gray-400'}`}>
-        {isActive ? (currentDir === 'asc' ? '↑' : '↓') : '↕'}
-      </span>
-    );
-  };
-
   const rsiStyle = (rsi) => {
-    if (rsi === null) return { bg: 'bg-gray-500/10', text: 'text-gray-400', dot: 'bg-gray-500', label: 'N/A' };
-    if (rsi < 20) return { bg: 'bg-red-500/20 border-red-500/30', text: 'text-red-400', dot: 'bg-red-500', label: 'EXTREME' };
-    if (rsi < 30) return { bg: 'bg-orange-500/20 border-orange-500/30', text: 'text-orange-400', dot: 'bg-orange-500', label: 'OVERSOLD' };
-    if (rsi > 70) return { bg: 'bg-green-500/20 border-green-500/30', text: 'text-green-400', dot: 'bg-green-500', label: 'OVERBOUGHT' };
-    return { bg: 'bg-gray-500/10 border-gray-500/20', text: 'text-gray-300', dot: 'bg-gray-400', label: 'NEUTRAL' };
+    if (rsi === null) return { bg: 'bg-gray-500/10', text: 'text-gray-400', dot: 'bg-gray-500' };
+    if (rsi < 20) return { bg: 'bg-red-500/20 border-red-500/30', text: 'text-red-400', dot: 'bg-red-500' };
+    if (rsi < 30) return { bg: 'bg-orange-500/20 border-orange-500/30', text: 'text-orange-400', dot: 'bg-orange-500' };
+    if (rsi > 70) return { bg: 'bg-green-500/20 border-green-500/30', text: 'text-green-400', dot: 'bg-green-500' };
+    return { bg: 'bg-gray-500/10 border-gray-500/20', text: 'text-gray-300', dot: 'bg-gray-400' };
   };
 
   const fmtP = (p) => {
@@ -388,27 +244,18 @@ const WatchlistPage = ({ tokens, watchlist, onRemove, onBack, user }) => {
         <div className="absolute top-0 left-1/3 w-[800px] h-[800px] bg-yellow-600/5 rounded-full blur-[120px]"/>
         <div className="absolute bottom-0 right-1/3 w-[800px] h-[800px] bg-orange-500/5 rounded-full blur-[120px]"/>
       </div>
-      
       <div className="relative z-10 max-w-6xl mx-auto px-4 py-8">
         <button onClick={onBack} className="flex items-center gap-2 text-gray-400 hover:text-white mb-8 transition-colors">
-          <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
-          </svg>
+          <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" /></svg>
           Back to Dashboard
         </button>
-
         <div className="flex items-center gap-4 mb-8">
           <div className="w-14 h-14 bg-yellow-500/20 rounded-2xl flex items-center justify-center">
-            <svg className="w-7 h-7 text-yellow-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11.049 2.927c.3-.921 1.603-.921 1.902 0l1.519 4.674a1 1 0 00.95.69h4.915c.969 0 1.371 1.24.588 1.81l-3.976 2.888a1 1 0 00-.363 1.118l1.518 4.674c.3.922-.755 1.688-1.538 1.118l-3.976-2.888a1 1 0 00-1.176 0l-3.976 2.888c-.783.57-1.838-.197-1.538-1.118l1.518-4.674a1 1 0 00-.363-1.118l-3.976-2.888c-.784-.57-.38-1.81.588-1.81h4.914a1 1 0 00.951-.69l1.519-4.674z" />
-            </svg>
+            <svg className="w-7 h-7 text-yellow-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11.049 2.927c.3-.921 1.603-.921 1.902 0l1.519 4.674a1 1 0 00.95.69h4.915c.969 0 1.371 1.24.588 1.81l-3.976 2.888a1 1 0 00-.363 1.118l1.518 4.674c.3.922-.755 1.688-1.538 1.118l-3.976-2.888a1 1 0 00-1.176 0l-3.976 2.888c-.783.57-1.838-.197-1.538-1.118l1.518-4.674a1 1 0 00-.363-1.118l-3.976-2.888c-.784-.57-.38-1.81.588-1.81h4.914a1 1 0 00.951-.69l1.519-4.674z" /></svg>
           </div>
           <div>
             <h1 className="text-3xl font-black">My Watchlist</h1>
-            <p className="text-gray-400">
-              {user?.name && <span>Welcome, {user.name.split(' ')[0]}! </span>}
-              {watchedTokens.length} {watchedTokens.length === 1 ? 'token' : 'tokens'} saved
-            </p>
+            <p className="text-gray-400">{user?.name && <span>Welcome, {user.name.split(' ')[0]}! </span>}{watchedTokens.length} {watchedTokens.length === 1 ? 'token' : 'tokens'} saved</p>
           </div>
         </div>
 
@@ -421,203 +268,25 @@ const WatchlistPage = ({ tokens, watchlist, onRemove, onBack, user }) => {
           </div>
         ) : (
           <div className="bg-white/5 border border-white/10 rounded-2xl overflow-hidden">
-            {/* Sortable Table Header */}
             <div className="hidden md:grid grid-cols-12 gap-4 px-6 py-4 border-b border-white/10 text-xs text-gray-500 font-semibold uppercase tracking-wider">
-              <div 
-                className="col-span-4 flex items-center cursor-pointer hover:text-white transition-colors group"
-                onClick={() => toggleSort('rank')}
-              >
+              <div className="col-span-4 flex items-center gap-1 cursor-pointer hover:text-white transition-colors group" onClick={() => toggleSort('rank')}>
                 <span>Token</span>
-                <SortIndicator field="rank" />
+                <span className={`transition-opacity ${sortBy.startsWith('rank') ? 'opacity-100 text-orange-400' : 'opacity-0 group-hover:opacity-50'}`}>{sortBy === 'rank_asc' ? '↑' : '↓'}</span>
               </div>
-              <div 
-                className="col-span-2 flex items-center justify-end cursor-pointer hover:text-white transition-colors group"
-                onClick={() => toggleSort('price')}
-              >
+              <div className="col-span-2 text-right flex items-center justify-end gap-1 cursor-pointer hover:text-white transition-colors group" onClick={() => toggleSort('price')}>
                 <span>Price</span>
-                <SortIndicator field="price" />
+                <span className={`transition-opacity ${sortBy.startsWith('price') ? 'opacity-100 text-orange-400' : 'opacity-0 group-hover:opacity-50'}`}>{sortBy === 'price_asc' ? '↑' : '↓'}</span>
               </div>
-              <div 
-                className="col-span-2 flex items-center justify-end cursor-pointer hover:text-white transition-colors group"
-                onClick={() => toggleSort('change24h')}
-              >
+              <div className="col-span-2 text-right flex items-center justify-end gap-1 cursor-pointer hover:text-white transition-colors group" onClick={() => toggleSort('change24h')}>
                 <span>24H / 7D</span>
-                <SortIndicator field="change24h" />
+                <span className={`transition-opacity ${sortBy.startsWith('change24h') ? 'opacity-100 text-orange-400' : 'opacity-0 group-hover:opacity-50'}`}>{sortBy === 'change24h_asc' ? '↑' : '↓'}</span>
               </div>
-              <div 
-                className="col-span-2 flex items-center justify-center cursor-pointer hover:text-white transition-colors group"
-                onClick={() => toggleSort('rsi')}
-              >
+              <div className="col-span-2 text-center flex items-center justify-center gap-1 cursor-pointer hover:text-white transition-colors group" onClick={() => toggleSort('rsi')}>
                 <span>RSI</span>
-                <SortIndicator field="rsi" />
+                <span className={`transition-opacity ${sortBy.startsWith('rsi') ? 'opacity-100 text-orange-400' : 'opacity-0 group-hover:opacity-50'}`}>{sortBy === 'rsi_asc' ? '↑' : '↓'}</span>
               </div>
               <div className="col-span-2 text-center">Actions</div>
             </div>
-
-            {/* Token Rows */}
-            <div className="divide-y divide-white/5">
-              {watchedTokens.map(t => {
-                const rs = rsiStyle(t.rsi);
-                return (
-                  <div key={t.id} className="grid grid-cols-12 gap-4 px-6 py-4 hover:bg-white/[0.03] transition-colors items-center">
-                    <div className="col-span-12 md:col-span-4 flex items-center gap-3">
-                      <span className="text-xs text-gray-600 w-6 text-right">#{t.rank}</span>
-                      <img src={t.image} alt={t.symbol} className="w-10 h-10 rounded-full bg-gray-800"/>
-                      <div>
-                        <div className="flex items-center gap-2">
-                          <span className="font-semibold">{t.symbol}</span>
-                          {t.rsi !== null && t.rsi < 25 && <span className="text-xs">🔴</span>}
-                          {t.rsi !== null && t.rsi > 75 && <span className="text-xs">🟢</span>}
-                        </div>
-                        <p className="text-sm text-gray-500">{t.name}</p>
-                      </div>
-                    </div>
-                    <div className="col-span-4 md:col-span-2 text-right font-mono">{fmtP(t.price)}</div>
-                    <div className="col-span-4 md:col-span-2 text-right text-sm">
-                      <span className={t.change24h >= 0 ? 'text-green-400' : 'text-red-400'}>
-                        {t.change24h >= 0 ? '+' : ''}{t.change24h?.toFixed(1)}%
-                      </span>
-                      <span className="text-gray-600 mx-1">/</span>
-                      <span className={t.change7d >= 0 ? 'text-green-400' : 'text-red-400'}>
-                        {t.change7d >= 0 ? '+' : ''}{t.change7d?.toFixed(1)}%
-                      </span>
-                    </div>
-                    <div className="col-span-2 md:col-span-2 flex justify-center">
-                      <div className={`inline-flex items-center gap-2 px-3 py-1.5 rounded-lg border ${rs.bg} ${rs.text}`}>
-                        <span className={`w-1.5 h-1.5 rounded-full ${rs.dot}`}/>
-                        <span className="font-bold text-sm">{t.rsi !== null ? t.rsi.toFixed(0) : '--'}</span>
-                      </div>
-                    </div>
-                    <div className="col-span-2 md:col-span-2 flex justify-center gap-2">
-                      <a href={`#/token/${t.id}`} className="p-2 rounded-lg hover:bg-white/10 text-gray-400 hover:text-white transition-colors" title="View details">
-                        <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
-                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
-                        </svg>
-                      </a>
-                      <button onClick={(e) => onRemove(t.id, e)} className="p-2 rounded-lg hover:bg-red-500/20 text-gray-400 hover:text-red-400 transition-colors" title="Remove from watchlist">
-                        <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
-                        </svg>
-                      </button>
-                    </div>
-                  </div>
-                );
-              })}
-            </div>
-          </div>
-        )}
-
-        {/* Summary Stats */}
-        {watchedTokens.length > 0 && (
-          <div className="mt-6 grid grid-cols-2 md:grid-cols-4 gap-4">
-            <div className="bg-white/5 border border-white/10 rounded-xl p-4">
-              <p className="text-xs text-gray-500 mb-1">Avg RSI</p>
-              <p className="text-xl font-bold">
-                {(watchedTokens.filter(t => t.rsi !== null).reduce((sum, t) => sum + t.rsi, 0) / watchedTokens.filter(t => t.rsi !== null).length || 0).toFixed(1)}
-              </p>
-            </div>
-            <div className="bg-white/5 border border-white/10 rounded-xl p-4">
-              <p className="text-xs text-gray-500 mb-1">Oversold</p>
-              <p className="text-xl font-bold text-orange-400">{watchedTokens.filter(t => t.rsi !== null && t.rsi < 30).length}</p>
-            </div>
-            <div className="bg-white/5 border border-white/10 rounded-xl p-4">
-              <p className="text-xs text-gray-500 mb-1">Overbought</p>
-              <p className="text-xl font-bold text-green-400">{watchedTokens.filter(t => t.rsi !== null && t.rsi > 70).length}</p>
-            </div>
-            <div className="bg-white/5 border border-white/10 rounded-xl p-4">
-              <p className="text-xs text-gray-500 mb-1">Avg 24h Change</p>
-              <p className={`text-xl font-bold ${(watchedTokens.reduce((sum, t) => sum + (t.change24h || 0), 0) / watchedTokens.length) >= 0 ? 'text-green-400' : 'text-red-400'}`}>
-                {((watchedTokens.reduce((sum, t) => sum + (t.change24h || 0), 0) / watchedTokens.length) || 0).toFixed(2)}%
-              </p>
-            </div>
-          </div>
-        )}
-
-        <footer className="text-center py-8 mt-8 border-t border-white/10">
-          <p className="text-gray-600 text-xs">Your watchlist is saved to your account and syncs across devices</p>
-        </footer>
-      </div>
-    </div>
-  );
-};
-
-  const SortHeader = ({ field, label, className = '' }) => {
-    const [currentField, currentDir] = sortBy.split('_');
-    const isActive = currentField === field;
-    return (
-      <div className={`flex items-center gap-1 cursor-pointer hover:text-white transition-colors group ${className}`} onClick={() => toggleSort(field)}>
-        <span>{label}</span>
-        <span className={`transition-opacity ${isActive ? 'opacity-100 text-orange-400' : 'opacity-0 group-hover:opacity-50'}`}>
-          {isActive ? (currentDir === 'asc' ? '↑' : '↓') : '↕'}
-        </span>
-      </div>
-    );
-  };
-  
-  const rsiStyle = (rsi) => {
-    if (rsi === null) return { bg: 'bg-gray-500/10', text: 'text-gray-400', dot: 'bg-gray-500', label: 'N/A' };
-    if (rsi < 20) return { bg: 'bg-red-500/20 border-red-500/30', text: 'text-red-400', dot: 'bg-red-500', label: 'EXTREME' };
-    if (rsi < 30) return { bg: 'bg-orange-500/20 border-orange-500/30', text: 'text-orange-400', dot: 'bg-orange-500', label: 'OVERSOLD' };
-    if (rsi > 70) return { bg: 'bg-green-500/20 border-green-500/30', text: 'text-green-400', dot: 'bg-green-500', label: 'OVERBOUGHT' };
-    return { bg: 'bg-gray-500/10 border-gray-500/20', text: 'text-gray-300', dot: 'bg-gray-400', label: 'NEUTRAL' };
-  };
-
-  const fmtP = (p) => {
-    if (p == null) return '--';
-    if (p >= 1000) return '$' + p.toLocaleString(undefined, { maximumFractionDigits: 0 });
-    if (p >= 1) return '$' + p.toFixed(2);
-    if (p >= 0.01) return '$' + p.toFixed(4);
-    return '$' + p.toFixed(6);
-  };
-
-  return (
-    <div className="min-h-screen bg-[#0a0a0f] text-white">
-      <div className="fixed inset-0 pointer-events-none">
-        <div className="absolute top-0 left-1/3 w-[800px] h-[800px] bg-yellow-600/5 rounded-full blur-[120px]"/>
-        <div className="absolute bottom-0 right-1/3 w-[800px] h-[800px] bg-orange-500/5 rounded-full blur-[120px]"/>
-      </div>
-      
-      <div className="relative z-10 max-w-6xl mx-auto px-4 py-8">
-        <button onClick={onBack} className="flex items-center gap-2 text-gray-400 hover:text-white mb-8 transition-colors">
-          <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
-          </svg>
-          Back to Dashboard
-        </button>
-
-        <div className="flex items-center gap-4 mb-8">
-          <div className="w-14 h-14 bg-yellow-500/20 rounded-2xl flex items-center justify-center">
-            <svg className="w-7 h-7 text-yellow-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11.049 2.927c.3-.921 1.603-.921 1.902 0l1.519 4.674a1 1 0 00.95.69h4.915c.969 0 1.371 1.24.588 1.81l-3.976 2.888a1 1 0 00-.363 1.118l1.518 4.674c.3.922-.755 1.688-1.538 1.118l-3.976-2.888a1 1 0 00-1.176 0l-3.976 2.888c-.783.57-1.838-.197-1.538-1.118l1.518-4.674a1 1 0 00-.363-1.118l-3.976-2.888c-.784-.57-.38-1.81.588-1.81h4.914a1 1 0 00.951-.69l1.519-4.674z" />
-            </svg>
-          </div>
-          <div>
-            <h1 className="text-3xl font-black">My Watchlist</h1>
-            <p className="text-gray-400">
-              {user?.name && <span>Welcome, {user.name.split(' ')[0]}! </span>}
-              {watchedTokens.length} {watchedTokens.length === 1 ? 'token' : 'tokens'} saved
-            </p>
-          </div>
-        </div>
-
-        {watchedTokens.length === 0 ? (
-          <div className="bg-white/5 border border-white/10 rounded-2xl p-12 text-center">
-            <div className="text-6xl mb-4">⭐</div>
-            <h2 className="text-xl font-bold mb-2">Your watchlist is empty</h2>
-            <p className="text-gray-400 mb-6">Start adding tokens to track your favorite cryptocurrencies</p>
-            <button onClick={onBack} className="px-6 py-3 bg-gradient-to-r from-orange-500 to-red-500 rounded-xl font-medium hover:opacity-90 transition-opacity">Browse Tokens</button>
-          </div>
-        ) : (
-          <div className="bg-white/5 border border-white/10 rounded-2xl overflow-hidden">
-            <div className="hidden md:grid grid-cols-12 gap-4 px-6 py-4 border-b border-white/10 text-xs text-gray-500 font-semibold uppercase tracking-wider">
-              <div className="col-span-4"><SortHeader field="rank" label="Token" /></div>
-              <div className="col-span-2 text-right"><SortHeader field="price" label="Price" className="justify-end" /></div>
-              <div className="col-span-2 text-right"><SortHeader field="change24h" label="24H / 7D" className="justify-end" /></div>
-              <div className="col-span-2 text-center"><SortHeader field="rsi" label="RSI" className="justify-center" /></div>
-              <div className="col-span-2 text-center">Actions</div>
-            </div>
-
             <div className="divide-y divide-white/5">
               {watchedTokens.map(t => {
                 const rs = rsiStyle(t.rsi);
@@ -649,15 +318,10 @@ const WatchlistPage = ({ tokens, watchlist, onRemove, onBack, user }) => {
                     </div>
                     <div className="col-span-2 md:col-span-2 flex justify-center gap-2">
                       <a href={`#/token/${t.id}`} className="p-2 rounded-lg hover:bg-white/10 text-gray-400 hover:text-white transition-colors" title="View details">
-                        <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
-                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
-                        </svg>
+                        <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" /><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" /></svg>
                       </a>
-                      <button onClick={(e) => onRemove(t.id, e)} className="p-2 rounded-lg hover:bg-red-500/20 text-gray-400 hover:text-red-400 transition-colors" title="Remove from watchlist">
-                        <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
-                        </svg>
+                      <button onClick={(e) => onRemove(t.id, e)} className="p-2 rounded-lg hover:bg-red-500/20 text-gray-400 hover:text-red-400 transition-colors" title="Remove">
+                        <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" /></svg>
                       </button>
                     </div>
                   </div>
@@ -671,9 +335,7 @@ const WatchlistPage = ({ tokens, watchlist, onRemove, onBack, user }) => {
           <div className="mt-6 grid grid-cols-2 md:grid-cols-4 gap-4">
             <div className="bg-white/5 border border-white/10 rounded-xl p-4">
               <p className="text-xs text-gray-500 mb-1">Avg RSI</p>
-              <p className="text-xl font-bold">
-                {(watchedTokens.filter(t => t.rsi !== null).reduce((sum, t) => sum + t.rsi, 0) / watchedTokens.filter(t => t.rsi !== null).length || 0).toFixed(1)}
-              </p>
+              <p className="text-xl font-bold">{(watchedTokens.filter(t => t.rsi !== null).reduce((sum, t) => sum + t.rsi, 0) / watchedTokens.filter(t => t.rsi !== null).length || 0).toFixed(1)}</p>
             </div>
             <div className="bg-white/5 border border-white/10 rounded-xl p-4">
               <p className="text-xs text-gray-500 mb-1">Oversold</p>
@@ -691,10 +353,7 @@ const WatchlistPage = ({ tokens, watchlist, onRemove, onBack, user }) => {
             </div>
           </div>
         )}
-
-        <footer className="text-center py-8 mt-8 border-t border-white/10">
-          <p className="text-gray-600 text-xs">Your watchlist is saved to your account and syncs across devices</p>
-        </footer>
+        <footer className="text-center py-8 mt-8 border-t border-white/10"><p className="text-gray-600 text-xs">Your watchlist is saved to your account and syncs across devices</p></footer>
       </div>
     </div>
   );
@@ -707,219 +366,82 @@ const Spark = ({ data, color, h = 24 }) => {
   return <svg width={80} height={h}><polyline fill="none" stroke={color} strokeWidth="1.5" points={pts}/></svg>;
 };
 
-const DetailChart = ({ data, basePrice, symbol, change7d }) => {
-  if (!data?.length || data.length < 2) {
-    return <div className="w-full h-48 bg-gray-800/30 rounded-xl animate-pulse flex items-center justify-center text-gray-500">No chart data</div>;
-  }
-  
-  const W = 360, H = 180;
-  const PAD = { top: 20, right: 58, bottom: 35, left: 10 };
-  const chartW = W - PAD.left - PAD.right;
-  const chartH = H - PAD.top - PAD.bottom;
-  
-  const endPrice = basePrice;
-  const startPrice = endPrice / (1 + (change7d || 0) / 100);
-  const min = Math.min(...data);
-  const max = Math.max(...data);
-  const priceMin = startPrice * (min / 100);
-  const priceMax = startPrice * (max / 100);
+const DetailChart = ({ data, basePrice, change7d }) => {
+  if (!data?.length || data.length < 2) return <div className="w-full h-48 bg-gray-800/30 rounded-xl animate-pulse flex items-center justify-center text-gray-500">No chart data</div>;
+  const W = 360, H = 180, PAD = { top: 20, right: 58, bottom: 35, left: 10 };
+  const chartW = W - PAD.left - PAD.right, chartH = H - PAD.top - PAD.bottom;
+  const endPrice = basePrice, startPrice = endPrice / (1 + (change7d || 0) / 100);
+  const min = Math.min(...data), max = Math.max(...data);
+  const priceMin = startPrice * (min / 100), priceMax = startPrice * (max / 100);
   const priceRange = priceMax - priceMin || priceMin * 0.01;
-  const paddedMin = priceMin - priceRange * 0.1;
-  const paddedMax = priceMax + priceRange * 0.1;
-  const paddedRange = paddedMax - paddedMin;
+  const paddedMin = priceMin - priceRange * 0.1, paddedMax = priceMax + priceRange * 0.1, paddedRange = paddedMax - paddedMin;
   const priceLevels = [0, 0.33, 0.66, 1].map(t => paddedMax - paddedRange * t);
   const timeLabels = ['7d ago', '5d', '3d', '1d', 'Now'];
-  
-  const pts = data.map((v, i) => {
-    const x = PAD.left + (i / (data.length - 1)) * chartW;
-    const actualPrice = startPrice * (v / 100);
-    const y = PAD.top + chartH - ((actualPrice - paddedMin) / paddedRange) * chartH;
-    return `${x},${y}`;
-  });
-  
-  const areaPath = `M${PAD.left},${PAD.top + chartH} ` + pts.map((p) => `L${p}`).join(' ') + ` L${PAD.left + chartW},${PAD.top + chartH} Z`;
-  const isUp = data[data.length - 1] >= data[0];
-  const color = isUp ? '#22c55e' : '#ef4444';
-  
-  const fmtAxis = (p) => {
-    if (p >= 1000) return '$' + (p/1000).toFixed(1) + 'k';
-    if (p >= 1) return '$' + p.toFixed(2);
-    if (p >= 0.01) return '$' + p.toFixed(4);
-    if (p >= 0.0001) return '$' + p.toFixed(6);
-    return '$' + p.toExponential(2);
-  };
-  
+  const pts = data.map((v, i) => { const x = PAD.left + (i / (data.length - 1)) * chartW; const actualPrice = startPrice * (v / 100); const y = PAD.top + chartH - ((actualPrice - paddedMin) / paddedRange) * chartH; return `${x},${y}`; });
+  const areaPath = `M${PAD.left},${PAD.top + chartH} ` + pts.map(p => `L${p}`).join(' ') + ` L${PAD.left + chartW},${PAD.top + chartH} Z`;
+  const isUp = data[data.length - 1] >= data[0], color = isUp ? '#22c55e' : '#ef4444';
+  const fmtAxis = (p) => { if (p >= 1000) return '$' + (p/1000).toFixed(1) + 'k'; if (p >= 1) return '$' + p.toFixed(2); if (p >= 0.01) return '$' + p.toFixed(4); return '$' + p.toFixed(6); };
   const currentY = PAD.top + chartH - ((endPrice - paddedMin) / paddedRange) * chartH;
-  
   return (
     <div className="w-full">
       <svg viewBox={`0 0 ${W} ${H}`} className="w-full h-auto" style={{ maxHeight: '200px' }}>
-        <defs>
-          <linearGradient id="chartGrad" x1="0" y1="0" x2="0" y2="1">
-            <stop offset="0%" stopColor={color} stopOpacity="0.25"/>
-            <stop offset="100%" stopColor={color} stopOpacity="0"/>
-          </linearGradient>
-        </defs>
-        {priceLevels.map((price, i) => {
-          const y = PAD.top + (i / 3) * chartH;
-          return (
-            <g key={i}>
-              <line x1={PAD.left} y1={y} x2={PAD.left + chartW} y2={y} stroke="rgba(255,255,255,0.07)" strokeDasharray="3,3"/>
-              <text x={W - 5} y={y + 3} textAnchor="end" fill="rgba(255,255,255,0.4)" fontSize="9">{fmtAxis(price)}</text>
-            </g>
-          );
-        })}
-        {timeLabels.map((label, i) => {
-          const x = PAD.left + (i / (timeLabels.length - 1)) * chartW;
-          return (
-            <g key={i}>
-              <line x1={x} y1={PAD.top} x2={x} y2={PAD.top + chartH} stroke="rgba(255,255,255,0.04)"/>
-              <text x={x} y={H - 10} textAnchor="middle" fill="rgba(255,255,255,0.4)" fontSize="9">{label}</text>
-            </g>
-          );
-        })}
-        <path d={areaPath} fill="url(#chartGrad)"/>
-        <polyline fill="none" stroke={color} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" points={pts.join(' ')}/>
+        <defs><linearGradient id="chartGrad" x1="0" y1="0" x2="0" y2="1"><stop offset="0%" stopColor={color} stopOpacity="0.25"/><stop offset="100%" stopColor={color} stopOpacity="0"/></linearGradient></defs>
+        {priceLevels.map((price, i) => { const y = PAD.top + (i / 3) * chartH; return (<g key={i}><line x1={PAD.left} y1={y} x2={PAD.left + chartW} y2={y} stroke="rgba(255,255,255,0.07)" strokeDasharray="3,3"/><text x={W - 5} y={y + 3} textAnchor="end" fill="rgba(255,255,255,0.4)" fontSize="9">{fmtAxis(price)}</text></g>); })}
+        {timeLabels.map((label, i) => { const x = PAD.left + (i / (timeLabels.length - 1)) * chartW; return (<g key={i}><line x1={x} y1={PAD.top} x2={x} y2={PAD.top + chartH} stroke="rgba(255,255,255,0.04)"/><text x={x} y={H - 10} textAnchor="middle" fill="rgba(255,255,255,0.4)" fontSize="9">{label}</text></g>); })}
+        <path d={areaPath} fill="url(#chartGrad)"/><polyline fill="none" stroke={color} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" points={pts.join(' ')}/>
         <line x1={PAD.left} y1={currentY} x2={PAD.left + chartW} y2={currentY} stroke={color} strokeWidth="1" strokeDasharray="4,2" opacity="0.5"/>
       </svg>
       <div className="flex justify-between items-center mt-3 px-1">
-        <div className="flex gap-4 text-xs">
-          <span className="text-gray-400"><span className="inline-block w-2 h-2 rounded-full bg-green-500 mr-1"></span>High: <span className="text-white font-medium">{fmtAxis(startPrice * (max / 100))}</span></span>
-          <span className="text-gray-400"><span className="inline-block w-2 h-2 rounded-full bg-red-500 mr-1"></span>Low: <span className="text-white font-medium">{fmtAxis(startPrice * (min / 100))}</span></span>
-        </div>
+        <div className="flex gap-4 text-xs"><span className="text-gray-400"><span className="inline-block w-2 h-2 rounded-full bg-green-500 mr-1"></span>High: <span className="text-white font-medium">{fmtAxis(startPrice * (max / 100))}</span></span><span className="text-gray-400"><span className="inline-block w-2 h-2 rounded-full bg-red-500 mr-1"></span>Low: <span className="text-white font-medium">{fmtAxis(startPrice * (min / 100))}</span></span></div>
         <span className="text-xs text-gray-400">Spread: <span className={`font-medium ${isUp ? 'text-green-400' : 'text-red-400'}`}>{((max - min) / min * 100).toFixed(1)}%</span></span>
       </div>
     </div>
   );
 };
 
-const fmt = n => {
-  if (n == null) return '--';
-  if (n >= 1e12) return (n/1e12).toFixed(2)+'T';
-  if (n >= 1e9) return (n/1e9).toFixed(2)+'B';
-  if (n >= 1e6) return (n/1e6).toFixed(2)+'M';
-  if (n >= 1e3) return (n/1e3).toFixed(1)+'K';
-  return Number(n).toFixed(2);
-};
-
-const fmtP = p => {
-  if (p == null) return '--';
-  if (p >= 1000) return '$'+Number(p).toLocaleString('en-US',{maximumFractionDigits:0});
-  if (p >= 1) return '$'+Number(p).toFixed(2);
-  if (p >= 0.0001) return '$'+Number(p).toFixed(6);
-  return '$'+Number(p).toFixed(10);
-};
-
-const rsiStyle = r => {
-  if (r === null) return {bg:'bg-gray-700/30 border-gray-600/30',text:'text-gray-500',label:'...',dot:'bg-gray-500'};
-  if (r < 20) return {bg:'bg-red-500/20 border-red-500/40',text:'text-red-400',label:'EXTREME',dot:'bg-red-500'};
-  if (r < 30) return {bg:'bg-orange-500/20 border-orange-500/40',text:'text-orange-400',label:'OVERSOLD',dot:'bg-orange-500'};
-  if (r < 40) return {bg:'bg-yellow-500/20 border-yellow-500/40',text:'text-yellow-400',label:'WEAK',dot:'bg-yellow-500'};
-  if (r < 60) return {bg:'bg-gray-500/20 border-gray-500/30',text:'text-gray-300',label:'NEUTRAL',dot:'bg-gray-400'};
-  if (r < 70) return {bg:'bg-emerald-500/20 border-emerald-500/40',text:'text-emerald-400',label:'STRONG',dot:'bg-emerald-500'};
-  return {bg:'bg-green-500/20 border-green-500/40',text:'text-green-400',label:'OVERBOUGHT',dot:'bg-green-500'};
-};
+const fmt = n => { if (n == null) return '--'; if (n >= 1e12) return (n/1e12).toFixed(2)+'T'; if (n >= 1e9) return (n/1e9).toFixed(2)+'B'; if (n >= 1e6) return (n/1e6).toFixed(2)+'M'; if (n >= 1e3) return (n/1e3).toFixed(1)+'K'; return Number(n).toFixed(2); };
+const fmtP = p => { if (p == null) return '--'; if (p >= 1000) return '$'+Number(p).toLocaleString('en-US',{maximumFractionDigits:0}); if (p >= 1) return '$'+Number(p).toFixed(2); if (p >= 0.0001) return '$'+Number(p).toFixed(6); return '$'+Number(p).toFixed(10); };
+const rsiStyle = r => { if (r === null) return {bg:'bg-gray-700/30 border-gray-600/30',text:'text-gray-500',label:'...',dot:'bg-gray-500'}; if (r < 20) return {bg:'bg-red-500/20 border-red-500/40',text:'text-red-400',label:'EXTREME',dot:'bg-red-500'}; if (r < 30) return {bg:'bg-orange-500/20 border-orange-500/40',text:'text-orange-400',label:'OVERSOLD',dot:'bg-orange-500'}; if (r < 40) return {bg:'bg-yellow-500/20 border-yellow-500/40',text:'text-yellow-400',label:'WEAK',dot:'bg-yellow-500'}; if (r < 60) return {bg:'bg-gray-500/20 border-gray-500/30',text:'text-gray-300',label:'NEUTRAL',dot:'bg-gray-400'}; if (r < 70) return {bg:'bg-emerald-500/20 border-emerald-500/40',text:'text-emerald-400',label:'STRONG',dot:'bg-emerald-500'}; return {bg:'bg-green-500/20 border-green-500/40',text:'text-green-400',label:'OVERBOUGHT',dot:'bg-green-500'}; };
 
 const RSIMeter = ({value}) => {
   if (value === null) return <div className="h-3 bg-gray-800 rounded-full"/>;
   return (
     <div className="w-full">
       <div className="h-3 bg-gray-800 rounded-full overflow-hidden relative">
-        <div className="absolute inset-0 flex">
-          <div className="w-[20%] bg-red-500/40"/><div className="w-[10%] bg-orange-500/40"/>
-          <div className="w-[30%] bg-gray-600/40"/><div className="w-[10%] bg-emerald-500/40"/>
-          <div className="w-[30%] bg-green-500/40"/>
-        </div>
+        <div className="absolute inset-0 flex"><div className="w-[20%] bg-red-500/40"/><div className="w-[10%] bg-orange-500/40"/><div className="w-[30%] bg-gray-600/40"/><div className="w-[10%] bg-emerald-500/40"/><div className="w-[30%] bg-green-500/40"/></div>
         <div className="absolute top-0 h-full w-1.5 bg-white rounded-full shadow-lg shadow-white/50 transition-all duration-500" style={{left:`calc(${Math.min(98,Math.max(1,value))}% - 3px)`}}/>
       </div>
-      <div className="flex justify-between text-[9px] mt-1 text-gray-600">
-        <span>0</span><span className="text-red-400/70">20</span><span className="text-orange-400/70">30</span>
-        <span>50</span><span className="text-emerald-400/70">70</span><span>100</span>
-      </div>
+      <div className="flex justify-between text-[9px] mt-1 text-gray-600"><span>0</span><span className="text-red-400/70">20</span><span className="text-orange-400/70">30</span><span>50</span><span className="text-emerald-400/70">70</span><span>100</span></div>
     </div>
   );
 };
 
-const FullPageChart = ({ data, basePrice, symbol, change7d }) => {
-  if (!data?.length || data.length < 2) {
-    return <div className="w-full h-80 bg-gray-800/30 rounded-xl animate-pulse flex items-center justify-center text-gray-500">No chart data</div>;
-  }
-  
-  const W = 800, H = 400;
-  const PAD = { top: 30, right: 80, bottom: 50, left: 20 };
-  const chartW = W - PAD.left - PAD.right;
-  const chartH = H - PAD.top - PAD.bottom;
-  
-  const endPrice = basePrice;
-  const startPrice = endPrice / (1 + (change7d || 0) / 100);
-  const min = Math.min(...data);
-  const max = Math.max(...data);
-  const priceMin = startPrice * (min / 100);
-  const priceMax = startPrice * (max / 100);
-  const priceRange = priceMax - priceMin || priceMin * 0.01;
-  const paddedMin = priceMin - priceRange * 0.1;
-  const paddedMax = priceMax + priceRange * 0.1;
-  const paddedRange = paddedMax - paddedMin;
+const FullPageChart = ({ data, basePrice, change7d }) => {
+  if (!data?.length || data.length < 2) return <div className="w-full h-80 bg-gray-800/30 rounded-xl animate-pulse flex items-center justify-center text-gray-500">No chart data</div>;
+  const W = 800, H = 400, PAD = { top: 30, right: 80, bottom: 50, left: 20 };
+  const chartW = W - PAD.left - PAD.right, chartH = H - PAD.top - PAD.bottom;
+  const endPrice = basePrice, startPrice = endPrice / (1 + (change7d || 0) / 100);
+  const min = Math.min(...data), max = Math.max(...data);
+  const priceMin = startPrice * (min / 100), priceMax = startPrice * (max / 100), priceRange = priceMax - priceMin || priceMin * 0.01;
+  const paddedMin = priceMin - priceRange * 0.1, paddedMax = priceMax + priceRange * 0.1, paddedRange = paddedMax - paddedMin;
   const priceLevels = [0, 0.2, 0.4, 0.6, 0.8, 1].map(t => paddedMax - paddedRange * t);
   const timeLabels = ['7d ago', '6d', '5d', '4d', '3d', '2d', '1d', 'Now'];
-  
-  const pts = data.map((v, i) => {
-    const x = PAD.left + (i / (data.length - 1)) * chartW;
-    const actualPrice = startPrice * (v / 100);
-    const y = PAD.top + chartH - ((actualPrice - paddedMin) / paddedRange) * chartH;
-    return `${x},${y}`;
-  });
-  
-  const areaPath = `M${PAD.left},${PAD.top + chartH} ` + pts.map((p) => `L${p}`).join(' ') + ` L${PAD.left + chartW},${PAD.top + chartH} Z`;
-  const isUp = data[data.length - 1] >= data[0];
-  const color = isUp ? '#22c55e' : '#ef4444';
-  
-  const fmtAxis = (p) => {
-    if (p >= 1000) return '$' + (p/1000).toFixed(1) + 'k';
-    if (p >= 1) return '$' + p.toFixed(2);
-    if (p >= 0.01) return '$' + p.toFixed(4);
-    if (p >= 0.0001) return '$' + p.toFixed(6);
-    return '$' + p.toExponential(2);
-  };
-  
+  const pts = data.map((v, i) => { const x = PAD.left + (i / (data.length - 1)) * chartW; const actualPrice = startPrice * (v / 100); const y = PAD.top + chartH - ((actualPrice - paddedMin) / paddedRange) * chartH; return `${x},${y}`; });
+  const areaPath = `M${PAD.left},${PAD.top + chartH} ` + pts.map(p => `L${p}`).join(' ') + ` L${PAD.left + chartW},${PAD.top + chartH} Z`;
+  const isUp = data[data.length - 1] >= data[0], color = isUp ? '#22c55e' : '#ef4444';
+  const fmtAxis = (p) => { if (p >= 1000) return '$' + (p/1000).toFixed(1) + 'k'; if (p >= 1) return '$' + p.toFixed(2); if (p >= 0.01) return '$' + p.toFixed(4); return '$' + p.toFixed(6); };
   const currentY = PAD.top + chartH - ((endPrice - paddedMin) / paddedRange) * chartH;
-  
   return (
     <div className="w-full">
       <svg viewBox={`0 0 ${W} ${H}`} className="w-full h-auto">
-        <defs>
-          <linearGradient id="fullChartGrad" x1="0" y1="0" x2="0" y2="1">
-            <stop offset="0%" stopColor={color} stopOpacity="0.3"/>
-            <stop offset="100%" stopColor={color} stopOpacity="0"/>
-          </linearGradient>
-        </defs>
-        {priceLevels.map((price, i) => {
-          const y = PAD.top + (i / 5) * chartH;
-          return (
-            <g key={i}>
-              <line x1={PAD.left} y1={y} x2={PAD.left + chartW} y2={y} stroke="rgba(255,255,255,0.08)" strokeDasharray="4,4"/>
-              <text x={W - 10} y={y + 4} textAnchor="end" fill="rgba(255,255,255,0.5)" fontSize="12">{fmtAxis(price)}</text>
-            </g>
-          );
-        })}
-        {timeLabels.map((label, i) => {
-          const x = PAD.left + (i / (timeLabels.length - 1)) * chartW;
-          return (
-            <g key={i}>
-              <line x1={x} y1={PAD.top} x2={x} y2={PAD.top + chartH} stroke="rgba(255,255,255,0.05)"/>
-              <text x={x} y={H - 15} textAnchor="middle" fill="rgba(255,255,255,0.5)" fontSize="12">{label}</text>
-            </g>
-          );
-        })}
-        <path d={areaPath} fill="url(#fullChartGrad)"/>
-        <polyline fill="none" stroke={color} strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" points={pts.join(' ')}/>
+        <defs><linearGradient id="fullChartGrad" x1="0" y1="0" x2="0" y2="1"><stop offset="0%" stopColor={color} stopOpacity="0.3"/><stop offset="100%" stopColor={color} stopOpacity="0"/></linearGradient></defs>
+        {priceLevels.map((price, i) => { const y = PAD.top + (i / 5) * chartH; return (<g key={i}><line x1={PAD.left} y1={y} x2={PAD.left + chartW} y2={y} stroke="rgba(255,255,255,0.08)" strokeDasharray="4,4"/><text x={W - 10} y={y + 4} textAnchor="end" fill="rgba(255,255,255,0.5)" fontSize="12">{fmtAxis(price)}</text></g>); })}
+        {timeLabels.map((label, i) => { const x = PAD.left + (i / (timeLabels.length - 1)) * chartW; return (<g key={i}><line x1={x} y1={PAD.top} x2={x} y2={PAD.top + chartH} stroke="rgba(255,255,255,0.05)"/><text x={x} y={H - 15} textAnchor="middle" fill="rgba(255,255,255,0.5)" fontSize="12">{label}</text></g>); })}
+        <path d={areaPath} fill="url(#fullChartGrad)"/><polyline fill="none" stroke={color} strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" points={pts.join(' ')}/>
         <line x1={PAD.left} y1={currentY} x2={PAD.left + chartW} y2={currentY} stroke={color} strokeWidth="1" strokeDasharray="6,3" opacity="0.6"/>
       </svg>
       <div className="flex justify-between items-center mt-4 px-2">
-        <div className="flex gap-6 text-sm">
-          <span className="text-gray-400"><span className="inline-block w-2.5 h-2.5 rounded-full bg-green-500 mr-2"></span>High: <span className="text-white font-semibold">{fmtAxis(startPrice * (max / 100))}</span></span>
-          <span className="text-gray-400"><span className="inline-block w-2.5 h-2.5 rounded-full bg-red-500 mr-2"></span>Low: <span className="text-white font-semibold">{fmtAxis(startPrice * (min / 100))}</span></span>
-        </div>
+        <div className="flex gap-6 text-sm"><span className="text-gray-400"><span className="inline-block w-2.5 h-2.5 rounded-full bg-green-500 mr-2"></span>High: <span className="text-white font-semibold">{fmtAxis(startPrice * (max / 100))}</span></span><span className="text-gray-400"><span className="inline-block w-2.5 h-2.5 rounded-full bg-red-500 mr-2"></span>Low: <span className="text-white font-semibold">{fmtAxis(startPrice * (min / 100))}</span></span></div>
         <span className="text-sm text-gray-400">Spread: <span className={`font-semibold ${isUp ? 'text-green-400' : 'text-red-400'}`}>{((max - min) / min * 100).toFixed(2)}%</span></span>
       </div>
     </div>
@@ -929,112 +451,53 @@ const FullPageChart = ({ data, basePrice, symbol, change7d }) => {
 const TokenDetailPage = ({ token, onBack }) => {
   if (!token) return null;
   const rs = rsiStyle(token.rsi);
-  
   return (
     <div className="min-h-screen bg-[#0a0a0f] text-white">
       <div className="max-w-6xl mx-auto px-6 py-8">
         <div className="flex items-center gap-4 mb-8">
-          <button onClick={onBack} className="p-2 rounded-lg bg-white/5 hover:bg-white/10 transition-colors">
-            <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 19l-7-7m0 0l7-7m-7 7h18" />
-            </svg>
-          </button>
-          <img src={`${token.image}`} alt={token.symbol} className="w-16 h-16 rounded-2xl bg-gray-800" onError={(e) => { e.target.style.display = 'none'; }}/>
+          <button onClick={onBack} className="p-2 rounded-lg bg-white/5 hover:bg-white/10 transition-colors"><svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 19l-7-7m0 0l7-7m-7 7h18" /></svg></button>
+          <img src={token.image} alt={token.symbol} className="w-16 h-16 rounded-2xl bg-gray-800"/>
           <div className="flex-1">
-            <div className="flex items-center gap-3">
-              <h1 className="text-3xl font-bold">{token.name}</h1>
-              <span className="text-xl text-gray-400">{token.symbol}</span>
-              <span className="px-2 py-1 rounded bg-white/10 text-sm text-gray-400">Rank #{token.rank}</span>
-            </div>
-            <div className="flex items-center gap-4 mt-2">
-              <span className="text-2xl font-bold">{fmtP(token.price)}</span>
-              <span className={`text-lg font-semibold ${token.change24h >= 0 ? 'text-green-400' : 'text-red-400'}`}>
-                {token.change24h >= 0 ? '+' : ''}{token.change24h?.toFixed(2)}% (24h)
-              </span>
-            </div>
+            <div className="flex items-center gap-3"><h1 className="text-3xl font-bold">{token.name}</h1><span className="text-xl text-gray-400">{token.symbol}</span><span className="px-2 py-1 rounded bg-white/10 text-sm text-gray-400">Rank #{token.rank}</span></div>
+            <div className="flex items-center gap-4 mt-2"><span className="text-2xl font-bold">{fmtP(token.price)}</span><span className={`text-lg font-semibold ${token.change24h >= 0 ? 'text-green-400' : 'text-red-400'}`}>{token.change24h >= 0 ? '+' : ''}{token.change24h?.toFixed(2)}% (24h)</span></div>
           </div>
         </div>
-
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
           <div className="lg:col-span-2 bg-white/5 rounded-2xl p-6 border border-white/10">
-            <div className="flex justify-between items-center mb-6">
-              <h2 className="text-xl font-semibold">7-Day Price Chart</h2>
-              <span className={`px-3 py-1 rounded-lg text-sm font-medium ${token.change7d >= 0 ? 'bg-green-500/20 text-green-400' : 'bg-red-500/20 text-red-400'}`}>
-                {token.change7d >= 0 ? '+' : ''}{token.change7d?.toFixed(2)}%
-              </span>
-            </div>
-            <FullPageChart data={token.sparkline} basePrice={token.price} symbol={token.symbol} change7d={token.change7d}/>
-            <p className="text-xs text-gray-500 mt-4 text-center">* Chart shows estimated trend based on % changes.</p>
+            <div className="flex justify-between items-center mb-6"><h2 className="text-xl font-semibold">7-Day Price Chart</h2><span className={`px-3 py-1 rounded-lg text-sm font-medium ${token.change7d >= 0 ? 'bg-green-500/20 text-green-400' : 'bg-red-500/20 text-red-400'}`}>{token.change7d >= 0 ? '+' : ''}{token.change7d?.toFixed(2)}%</span></div>
+            <FullPageChart data={token.sparkline} basePrice={token.price} change7d={token.change7d}/>
           </div>
-
           <div className="space-y-6">
             <div className="bg-white/5 rounded-2xl p-6 border border-white/10">
-              <div className="flex justify-between items-center mb-4">
-                <h2 className="text-lg font-semibold">Momentum Score (RSI)</h2>
-                <div className="flex items-center gap-2">
-                  <span className={`w-3 h-3 rounded-full ${rs.dot}`}/>
-                  <span className={`text-2xl font-bold ${rs.text}`}>{token.rsi !== null ? token.rsi.toFixed(1) : 'N/A'}</span>
-                </div>
-              </div>
+              <div className="flex justify-between items-center mb-4"><h2 className="text-lg font-semibold">RSI (14)</h2><div className="flex items-center gap-2"><span className={`w-3 h-3 rounded-full ${rs.dot}`}/><span className={`text-2xl font-bold ${rs.text}`}>{token.rsi !== null ? token.rsi.toFixed(1) : 'N/A'}</span></div></div>
               <RSIMeter value={token.rsi}/>
-              <div className={`mt-4 p-3 rounded-xl ${rs.bg} border ${rs.text}`}>
-                <span className="font-semibold">{rs.label}</span>
-                <p className="text-sm opacity-80 mt-1">
-                  {token.rsi < 30 ? 'This token may be oversold.' : token.rsi > 70 ? 'This token may be overbought.' : 'This token is in neutral territory.'}
-                </p>
-              </div>
+              <div className={`mt-4 p-3 rounded-xl ${rs.bg} border ${rs.text}`}><span className="font-semibold">{rs.label}</span><p className="text-sm opacity-80 mt-1">{token.rsi < 30 ? 'This token may be oversold.' : token.rsi > 70 ? 'This token may be overbought.' : 'Neutral territory.'}</p></div>
             </div>
-
             <div className="bg-white/5 rounded-2xl p-6 border border-white/10">
               <h2 className="text-lg font-semibold mb-4">Price Changes</h2>
               <div className="grid grid-cols-2 gap-3">
                 {[{l:'1 Hour', v:token.change1h},{l:'24 Hours', v:token.change24h},{l:'7 Days', v:token.change7d},{l:'30 Days', v:token.change30d}].map(x => (
-                  <div key={x.l} className="bg-white/5 rounded-xl p-4 text-center">
-                    <p className="text-xs text-gray-500 mb-1">{x.l}</p>
-                    <p className={`text-lg font-bold ${(x.v||0) >= 0 ? 'text-green-400' : 'text-red-400'}`}>
-                      {x.v != null ? `${x.v >= 0 ? '+' : ''}${x.v.toFixed(2)}%` : '--'}
-                    </p>
-                  </div>
+                  <div key={x.l} className="bg-white/5 rounded-xl p-4 text-center"><p className="text-xs text-gray-500 mb-1">{x.l}</p><p className={`text-lg font-bold ${(x.v||0) >= 0 ? 'text-green-400' : 'text-red-400'}`}>{x.v != null ? `${x.v >= 0 ? '+' : ''}${x.v.toFixed(2)}%` : '--'}</p></div>
                 ))}
               </div>
             </div>
           </div>
         </div>
-
         <div className="mt-6 bg-white/5 rounded-2xl p-6 border border-white/10">
           <h2 className="text-lg font-semibold mb-4">Market Data</h2>
           <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-4">
-            {[
-              {icon:'💰', label:'Price', value:fmtP(token.price)},
-              {icon:'📊', label:'Market Cap', value:'+fmt(token.mcap)},
-              {icon:'📈', label:'24h Volume', value:'+fmt(token.volume)},
-              {icon:'🔄', label:'Vol/MCap', value:token.volMcap?.toFixed(2)+'%'},
-              {icon:'💎', label:'Circulating Supply', value:fmt(token.supply) + ' ' + token.symbol},
-              {icon:'🏆', label:'Dominance', value:(token.dominance||0).toFixed(3)+'%'},
-            ].map(x => (
-              <div key={x.label} className="bg-white/5 rounded-xl p-4">
-                <p className="text-xs text-gray-500 mb-2">{x.icon} {x.label}</p>
-                <p className="text-lg font-bold truncate" title={x.value}>{x.value}</p>
-              </div>
+            {[{icon:'💰', label:'Price', value:fmtP(token.price)},{icon:'📊', label:'Market Cap', value:'$'+fmt(token.mcap)},{icon:'📈', label:'24h Volume', value:'$'+fmt(token.volume)},{icon:'🔄', label:'Vol/MCap', value:token.volMcap?.toFixed(2)+'%'},{icon:'💎', label:'Supply', value:fmt(token.supply)+' '+token.symbol},{icon:'🏆', label:'Dominance', value:(token.dominance||0).toFixed(3)+'%'}].map(x => (
+              <div key={x.label} className="bg-white/5 rounded-xl p-4"><p className="text-xs text-gray-500 mb-2">{x.icon} {x.label}</p><p className="text-lg font-bold truncate">{x.value}</p></div>
             ))}
           </div>
         </div>
-
-        <div className="mt-6">
-          <a href={`https://coingecko.com/en/coins/${token.id}`} target="_blank" rel="noreferrer" 
-            className="block w-full py-4 bg-green-500/20 hover:bg-green-500/30 rounded-xl text-center text-green-400 font-medium transition-colors text-lg">
-            View on CoinGecko ↗
-          </a>
-        </div>
+        <div className="mt-6"><a href={`https://coingecko.com/en/coins/${token.id}`} target="_blank" rel="noreferrer" className="block w-full py-4 bg-green-500/20 hover:bg-green-500/30 rounded-xl text-center text-green-400 font-medium transition-colors text-lg">View on CoinGecko ↗</a></div>
       </div>
     </div>
   );
 };
 
 const API_URL = '/api/crypto';
-// ==================================================
-// CONTINUE: Add this after the API_URL line in Part 1
-// ==================================================
 
 export default function App() {
   const [tokens, setTokens] = useState([]);
@@ -1053,7 +516,9 @@ export default function App() {
   const [rsiSortDir, setRsiSortDir] = useState('desc');
   const [showLoginModal, setShowLoginModal] = useState(false);
   const [user, setUser] = useState(null);
-  
+  const [pageTokenId, setPageTokenId] = useState(null);
+  const [currentPage, setCurrentPage] = useState('home');
+
   useEffect(() => {
     const savedUser = localStorage.getItem('oversold_user');
     if (savedUser) {
@@ -1066,36 +531,17 @@ export default function App() {
     }
   }, []);
 
-  useEffect(() => {
-    if (user) localStorage.setItem(`oversold_watchlist_${user.id}`, JSON.stringify([...watchlist]));
-  }, [watchlist, user]);
+  useEffect(() => { if (user) localStorage.setItem(`oversold_watchlist_${user.id}`, JSON.stringify([...watchlist])); }, [watchlist, user]);
 
-  const handleLogin = (loggedInUser) => {
-    setUser(loggedInUser);
-    const savedWatchlist = localStorage.getItem(`oversold_watchlist_${loggedInUser.id}`);
-    if (savedWatchlist) setWatchlist(new Set(JSON.parse(savedWatchlist)));
-    else setWatchlist(new Set());
-  };
+  const handleLogin = (loggedInUser) => { setUser(loggedInUser); const saved = localStorage.getItem(`oversold_watchlist_${loggedInUser.id}`); if (saved) setWatchlist(new Set(JSON.parse(saved))); else setWatchlist(new Set()); };
+  const handleLogout = () => { localStorage.removeItem('oversold_user'); setUser(null); setWatchlist(new Set()); setShowWL(false); if (window.google?.accounts?.id) window.google.accounts.id.disableAutoSelect(); };
 
-  const handleLogout = () => {
-    localStorage.removeItem('oversold_user');
-    setUser(null);
-    setWatchlist(new Set());
-    setShowWL(false);
-    if (window.google?.accounts?.id) window.google.accounts.id.disableAutoSelect();
-  };
-  
-  const [pageTokenId, setPageTokenId] = useState(null);
-  const [currentPage, setCurrentPage] = useState('home');
-  
   useEffect(() => {
     const parseHash = () => {
       const hash = window.location.hash;
       if (hash.startsWith('#/token/')) { setPageTokenId(hash.replace('#/token/', '')); setCurrentPage('token'); }
       else if (hash === '#/methodology') { setPageTokenId(null); setCurrentPage('methodology'); }
       else if (hash === '#/watchlist') { setPageTokenId(null); setCurrentPage('watchlist'); }
-      else if (hash === '#/terms') { setPageTokenId(null); setCurrentPage('terms'); }
-      else if (hash === '#/privacy') { setPageTokenId(null); setCurrentPage('privacy'); }
       else { setPageTokenId(null); setCurrentPage('home'); }
     };
     parseHash();
@@ -1118,18 +564,14 @@ export default function App() {
       setLastUpdate(new Date(data.timestamp));
       setApiStats(data.stats);
       setLoading(false);
-    } catch (e) { setError(e.message); setLoading(false); }
+    } catch (e) {setError(e.message); setLoading(false);
+    }
   }, []);
 
   useEffect(() => { fetchData(); const i = setInterval(fetchData, 60000); return () => clearInterval(i); }, [fetchData]);
 
   const resetFilters = () => { setSearch(''); setCat('all'); setPreset(null); setShowWL(false); setRsiFilter(null); setRsiSortDir('desc'); setSortBy('rsi_asc'); };
-
-  const toggleWatch = useCallback((id, e) => {
-    e?.stopPropagation();
-    if (!user) { setShowLoginModal(true); return; }
-    setWatchlist(p => { const n = new Set(p); n.has(id) ? n.delete(id) : n.add(id); return n; });
-  }, [user]);
+  const toggleWatch = useCallback((id, e) => { e?.stopPropagation(); if (!user) { setShowLoginModal(true); return; } setWatchlist(p => { const n = new Set(p); n.has(id) ? n.delete(id) : n.add(id); return n; }); }, [user]);
 
   const filtered = useMemo(() => {
     let r = [...tokens];
@@ -1144,26 +586,13 @@ export default function App() {
     let activeSort = preset ? PRESETS.find(x => x.id === preset)?.sort || sortBy : sortBy;
     if (rsiFilter) activeSort = `rsi_${rsiSortDir}`;
     const [field, dir] = activeSort.split('_');
-    r.sort((a, b) => {
-      let va = a[field], vb = b[field];
-      if (va === null || va === undefined) va = dir === 'asc' ? Infinity : -Infinity;
-      if (vb === null || vb === undefined) vb = dir === 'asc' ? Infinity : -Infinity;
-      return dir === 'asc' ? va - vb : vb - va;
-    });
+    r.sort((a, b) => { let va = a[field], vb = b[field]; if (va === null || va === undefined) va = dir === 'asc' ? Infinity : -Infinity; if (vb === null || vb === undefined) vb = dir === 'asc' ? Infinity : -Infinity; return dir === 'asc' ? va - vb : vb - va; });
     return r;
   }, [tokens, search, cat, sortBy, showWL, watchlist, preset, rsiFilter, rsiSortDir]);
 
   const stats = useMemo(() => {
     const withRSI = tokens.filter(t => t.rsi !== null);
-    return {
-      extreme: withRSI.filter(t => t.rsi < 20).length,
-      oversold: withRSI.filter(t => t.rsi >= 20 && t.rsi < 30).length,
-      neutral: withRSI.filter(t => t.rsi >= 30 && t.rsi < 70).length,
-      overbought: withRSI.filter(t => t.rsi >= 70).length,
-      totalMcap: tokens.reduce((s, t) => s + (t.mcap || 0), 0),
-      avgRsi: withRSI.length ? withRSI.reduce((s, t) => s + t.rsi, 0) / withRSI.length : 50,
-      withRSI: withRSI.length,
-    };
+    return { extreme: withRSI.filter(t => t.rsi < 20).length, oversold: withRSI.filter(t => t.rsi >= 20 && t.rsi < 30).length, neutral: withRSI.filter(t => t.rsi >= 30 && t.rsi < 70).length, overbought: withRSI.filter(t => t.rsi >= 70).length, totalMcap: tokens.reduce((s, t) => s + (t.mcap || 0), 0), avgRsi: withRSI.length ? withRSI.reduce((s, t) => s + t.rsi, 0) / withRSI.length : 50, withRSI: withRSI.length };
   }, [tokens]);
 
   const exportCSV = useCallback(() => {
@@ -1174,138 +603,50 @@ export default function App() {
   }, [filtered]);
 
   const pageToken = pageTokenId ? tokens.find(t => t.id === pageTokenId) : null;
-  
+
   if (pageTokenId) {
-    if (loading) return (
-      <div className="min-h-screen bg-[#0a0a0f] text-white flex items-center justify-center">
-        <div className="text-center">
-          <div className="w-12 h-12 border-4 border-orange-500 border-t-transparent rounded-full animate-spin mx-auto mb-4"/>
-          <p className="text-gray-400">Loading token data...</p>
-        </div>
-      </div>
-    );
-    if (!pageToken) return (
-      <div className="min-h-screen bg-[#0a0a0f] text-white flex items-center justify-center">
-        <div className="text-center">
-          <p className="text-4xl mb-4">😕</p>
-          <p className="text-xl mb-2">Token not found</p>
-          <p className="text-gray-400 mb-4">"{pageTokenId}" is not in the top 1000 tokens</p>
-          <button onClick={goBack} className="px-6 py-2 bg-orange-500 rounded-lg hover:bg-orange-600 transition-colors">Back to list</button>
-        </div>
-      </div>
-    );
+    if (loading) return <div className="min-h-screen bg-[#0a0a0f] text-white flex items-center justify-center"><div className="text-center"><div className="w-12 h-12 border-4 border-orange-500 border-t-transparent rounded-full animate-spin mx-auto mb-4"/><p className="text-gray-400">Loading...</p></div></div>;
+    if (!pageToken) return <div className="min-h-screen bg-[#0a0a0f] text-white flex items-center justify-center"><div className="text-center"><p className="text-4xl mb-4">😕</p><p className="text-xl mb-2">Token not found</p><button onClick={goBack} className="px-6 py-2 bg-orange-500 rounded-lg">Back</button></div></div>;
     return <TokenDetailPage token={pageToken} onBack={goBack} />;
   }
-
   if (currentPage === 'methodology') return <MethodologyPage onBack={() => window.location.hash = ''} />;
-
-  if (currentPage === 'watchlist') {
-    if (!user) { window.location.hash = ''; setShowLoginModal(true); return null; }
-    return <WatchlistPage tokens={tokens} watchlist={watchlist} onRemove={toggleWatch} onBack={() => window.location.hash = ''} user={user} />;
-  }
+  if (currentPage === 'watchlist') { if (!user) { window.location.hash = ''; setShowLoginModal(true); return null; } return <WatchlistPage tokens={tokens} watchlist={watchlist} onRemove={toggleWatch} onBack={() => window.location.hash = ''} user={user} />; }
 
   return (
     <div className="min-h-screen bg-[#0a0a0f] text-white selection:bg-orange-500/30">
-      <div className="fixed inset-0 pointer-events-none">
-        <div className="absolute top-0 left-1/3 w-[800px] h-[800px] bg-red-600/5 rounded-full blur-[120px]"/>
-        <div className="absolute bottom-0 right-1/3 w-[800px] h-[800px] bg-orange-500/5 rounded-full blur-[120px]"/>
-      </div>
-
+      <div className="fixed inset-0 pointer-events-none"><div className="absolute top-0 left-1/3 w-[800px] h-[800px] bg-red-600/5 rounded-full blur-[120px]"/><div className="absolute bottom-0 right-1/3 w-[800px] h-[800px] bg-orange-500/5 rounded-full blur-[120px]"/></div>
       <div className="relative z-10 max-w-7xl mx-auto px-4 py-6">
         <header className="flex flex-col lg:flex-row lg:items-center justify-between gap-4 mb-6">
           <div>
-            <h1 onClick={resetFilters} className="text-4xl font-black tracking-tight cursor-pointer hover:opacity-80 transition-opacity">
-              <span className="bg-gradient-to-r from-red-500 via-orange-500 to-yellow-500 bg-clip-text text-transparent">OVERSOLD</span>
-              <span className="text-gray-600">.crypto</span>
-            </h1>
-            <div className="flex items-center gap-3 mt-2">
-              <div className="flex items-center gap-1.5">
-                <span className="w-2 h-2 bg-green-500 rounded-full animate-pulse"/>
-                <span className="text-gray-400 text-sm">Live</span>
-              </div>
-              <span className="text-gray-600">•</span>
-              <span className="text-gray-500 text-sm">{lastUpdate?.toLocaleTimeString() || 'Loading...'}</span>
-              {apiStats && (<><span className="text-gray-600">•</span><span className="text-gray-500 text-sm">{apiStats.withRSI}/{apiStats.total} RSI</span></>)}
-            </div>
+            <h1 onClick={resetFilters} className="text-4xl font-black tracking-tight cursor-pointer hover:opacity-80 transition-opacity"><span className="bg-gradient-to-r from-red-500 via-orange-500 to-yellow-500 bg-clip-text text-transparent">OVERSOLD</span><span className="text-gray-600">.crypto</span></h1>
+            <div className="flex items-center gap-3 mt-2"><div className="flex items-center gap-1.5"><span className="w-2 h-2 bg-green-500 rounded-full animate-pulse"/><span className="text-gray-400 text-sm">Live</span></div><span className="text-gray-600">•</span><span className="text-gray-500 text-sm">{lastUpdate?.toLocaleTimeString() || 'Loading...'}</span>{apiStats && <><span className="text-gray-600">•</span><span className="text-gray-500 text-sm">{apiStats.withRSI}/{apiStats.total} RSI</span></>}</div>
           </div>
           <div className="flex items-center gap-3 flex-wrap">
-            <div className="bg-white/5 border border-white/10 px-4 py-2.5 rounded-xl text-sm flex items-center gap-3">
-              <div><span className="text-gray-500">MCap</span> <span className="font-mono font-semibold">${fmt(stats.totalMcap)}</span></div>
-              <div className="w-px h-4 bg-white/10"/>
-              <div><span className="text-gray-500">Avg RSI</span><span className={`font-mono font-semibold ml-1 ${stats.avgRsi<30?'text-red-400':stats.avgRsi>70?'text-green-400':'text-gray-300'}`}>{stats.avgRsi.toFixed(0)}</span></div>
-            </div>
-            {user ? <UserMenu user={user} onLogout={handleLogout} watchlistCount={watchlist.size} /> : (
-              <button onClick={() => setShowLoginModal(true)} className="bg-white/5 hover:bg-white/10 border border-white/10 px-4 py-2.5 rounded-xl text-sm font-medium transition-all flex items-center gap-2">
-                <svg className="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" /></svg>
-                Sign In
-              </button>
-            )}
+            <div className="bg-white/5 border border-white/10 px-4 py-2.5 rounded-xl text-sm flex items-center gap-3"><div><span className="text-gray-500">MCap</span> <span className="font-mono font-semibold">${fmt(stats.totalMcap)}</span></div><div className="w-px h-4 bg-white/10"/><div><span className="text-gray-500">Avg RSI</span><span className={`font-mono font-semibold ml-1 ${stats.avgRsi<30?'text-red-400':stats.avgRsi>70?'text-green-400':'text-gray-300'}`}>{stats.avgRsi.toFixed(0)}</span></div></div>
+            {user ? <UserMenu user={user} onLogout={handleLogout} watchlistCount={watchlist.size} /> : <button onClick={() => setShowLoginModal(true)} className="bg-white/5 hover:bg-white/10 border border-white/10 px-4 py-2.5 rounded-xl text-sm font-medium transition-all flex items-center gap-2"><svg className="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" /></svg>Sign In</button>}
           </div>
         </header>
 
         <div className="grid grid-cols-2 md:grid-cols-4 gap-3 mb-5">
-          {[
-            {k:'extreme',color:'red',label:'EXTREME',sub:'RSI < 20'},
-            {k:'oversold',color:'orange',label:'OVERSOLD',sub:'RSI < 30'},
-            {k:'neutral',color:'gray',label:'NEUTRAL',sub:'RSI 30-70'},
-            {k:'overbought',color:'green',label:'OVERBOUGHT',sub:'RSI > 70'},
-          ].map(s => (
-            <div key={s.k} onClick={() => { setRsiFilter(rsiFilter === s.k ? null : s.k); setPreset(null); }}
-              className={`bg-${s.color}-500/10 border-2 rounded-xl p-4 text-center transition-all cursor-pointer hover:scale-[1.03] ${rsiFilter === s.k ? `border-${s.color}-500 shadow-lg shadow-${s.color}-500/20` : `border-${s.color}-500/20 hover:border-${s.color}-500/50`}`}>
-              <p className={`text-3xl font-bold text-${s.color}-400`}>{stats[s.k]}</p>
-              <p className="text-xs text-gray-400 mt-1 font-medium">{s.label}</p>
-              <p className="text-[10px] text-gray-600">{s.sub}</p>
+          {[{k:'extreme',color:'red',label:'EXTREME',sub:'RSI < 20'},{k:'oversold',color:'orange',label:'OVERSOLD',sub:'RSI < 30'},{k:'neutral',color:'gray',label:'NEUTRAL',sub:'RSI 30-70'},{k:'overbought',color:'green',label:'OVERBOUGHT',sub:'RSI > 70'}].map(s => (
+            <div key={s.k} onClick={() => { setRsiFilter(rsiFilter === s.k ? null : s.k); setPreset(null); }} className={`bg-${s.color}-500/10 border-2 rounded-xl p-4 text-center transition-all cursor-pointer hover:scale-[1.03] ${rsiFilter === s.k ? `border-${s.color}-500 shadow-lg shadow-${s.color}-500/20` : `border-${s.color}-500/20 hover:border-${s.color}-500/50`}`}>
+              <p className={`text-3xl font-bold text-${s.color}-400`}>{stats[s.k]}</p><p className="text-xs text-gray-400 mt-1 font-medium">{s.label}</p><p className="text-[10px] text-gray-600">{s.sub}</p>
             </div>
           ))}
         </div>
 
-        {rsiFilter && (
-          <div className="flex items-center gap-3 mb-4 px-4 py-2 bg-white/5 rounded-xl w-fit">
-            <span className="text-sm text-gray-400">Showing: <span className="text-white font-medium capitalize">{rsiFilter}</span> tokens</span>
-            <div className="flex items-center gap-1 border-l border-white/10 pl-3">
-              <span className="text-xs text-gray-500">Sort:</span>
-              <button onClick={() => setRsiSortDir(d => d === 'desc' ? 'asc' : 'desc')}
-                className={`px-2 py-1 rounded-lg text-xs font-medium transition-all ${rsiSortDir === 'desc' ? 'bg-orange-500/20 text-orange-400 border border-orange-500/30' : 'bg-blue-500/20 text-blue-400 border border-blue-500/30'}`}>
-                {rsiSortDir === 'desc' ? '↓ High→Low' : '↑ Low→High'}
-              </button>
-            </div>
-            <button onClick={() => setRsiFilter(null)} className="text-gray-400 hover:text-white ml-1 text-lg">✕</button>
-          </div>
-        )}
+        {rsiFilter && <div className="flex items-center gap-3 mb-4 px-4 py-2 bg-white/5 rounded-xl w-fit"><span className="text-sm text-gray-400">Showing: <span className="text-white font-medium capitalize">{rsiFilter}</span></span><div className="flex items-center gap-1 border-l border-white/10 pl-3"><span className="text-xs text-gray-500">Sort:</span><button onClick={() => setRsiSortDir(d => d === 'desc' ? 'asc' : 'desc')} className={`px-2 py-1 rounded-lg text-xs font-medium ${rsiSortDir === 'desc' ? 'bg-orange-500/20 text-orange-400 border border-orange-500/30' : 'bg-blue-500/20 text-blue-400 border border-blue-500/30'}`}>{rsiSortDir === 'desc' ? '↓ High→Low' : '↑ Low→High'}</button></div><button onClick={() => setRsiFilter(null)} className="text-gray-400 hover:text-white ml-1 text-lg">✕</button></div>}
 
         <div className="flex gap-2 mb-4 overflow-x-auto pb-1 scrollbar-hide">
-          {PRESETS.map(p => (
-            <button key={p.id} onClick={() => { setPreset(preset === p.id ? null : p.id); setRsiFilter(null); }}
-              className={`px-4 py-2 rounded-xl text-sm whitespace-nowrap transition-all font-medium ${preset === p.id ? 'bg-gradient-to-r from-orange-500 to-red-500 text-white shadow-lg shadow-orange-500/20' : 'bg-white/5 text-gray-400 hover:bg-white/10 border border-white/5'}`}>
-              {p.name}
-            </button>
-          ))}
+          {PRESETS.map(p => <button key={p.id} onClick={() => { setPreset(preset === p.id ? null : p.id); setRsiFilter(null); }} className={`px-4 py-2 rounded-xl text-sm whitespace-nowrap transition-all font-medium ${preset === p.id ? 'bg-gradient-to-r from-orange-500 to-red-500 text-white shadow-lg shadow-orange-500/20' : 'bg-white/5 text-gray-400 hover:bg-white/10 border border-white/5'}`}>{p.name}</button>)}
         </div>
 
         <div className="flex flex-col lg:flex-row gap-3 mb-5">
-          <div className="relative flex-1">
-            <input type="text" placeholder="Search tokens..." value={search} onChange={e => setSearch(e.target.value)}
-              className="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-3 pl-11 focus:outline-none focus:border-orange-500/50 focus:bg-white/[0.07] transition-all"/>
-            <span className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-500">🔍</span>
-          </div>
-          <div className="flex gap-2 overflow-x-auto">
-            {CATS.map(c => (
-              <button key={c.id} onClick={() => setCat(c.id)}
-                className={`px-4 py-2.5 rounded-xl text-sm whitespace-nowrap transition-all font-medium ${cat === c.id ? 'bg-white text-gray-900' : 'bg-white/5 text-gray-400 hover:bg-white/10 border border-white/5'}`}>
-                {c.icon} {c.name}
-              </button>
-            ))}
-          </div>
+          <div className="relative flex-1"><input type="text" placeholder="Search tokens..." value={search} onChange={e => setSearch(e.target.value)} className="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-3 pl-11 focus:outline-none focus:border-orange-500/50 transition-all"/><span className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-500">🔍</span></div>
+          <div className="flex gap-2 overflow-x-auto">{CATS.map(c => <button key={c.id} onClick={() => setCat(c.id)} className={`px-4 py-2.5 rounded-xl text-sm whitespace-nowrap transition-all font-medium ${cat === c.id ? 'bg-white text-gray-900' : 'bg-white/5 text-gray-400 hover:bg-white/10 border border-white/5'}`}>{c.icon} {c.name}</button>)}</div>
           <div className="flex gap-2">
-            <select value={sortBy} onChange={e => { setSortBy(e.target.value); setPreset(null); setRsiFilter(null); }}
-              className="bg-gray-900 border border-white/10 rounded-xl px-4 py-2.5 text-sm focus:outline-none cursor-pointer text-white appearance-none min-w-[180px]"
-              style={{ backgroundImage: `url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 24 24' stroke='%239ca3af'%3E%3Cpath stroke-linecap='round' stroke-linejoin='round' stroke-width='2' d='M19 9l-7 7-7-7'%3E%3C/path%3E%3C/svg%3E")`, backgroundRepeat: 'no-repeat', backgroundPosition: 'right 12px center', backgroundSize: '16px', paddingRight: '40px' }}>
-              <option value="rank_asc">Rank ↑</option><option value="rank_desc">Rank ↓</option>
-              <option value="price_desc">Price ↓</option><option value="price_asc">Price ↑</option>
-              <option value="rsi_asc">RSI ↑ (Oversold)</option><option value="rsi_desc">RSI ↓ (Overbought)</option>
-              <option value="change24h_asc">24h % ↑</option><option value="change24h_desc">24h % ↓</option>
-              <option value="change7d_asc">7d % ↑</option><option value="change7d_desc">7d % ↓</option>
-              <option value="mcap_desc">MCap ↓</option><option value="volume_desc">Volume ↓</option>
+            <select value={sortBy} onChange={e => { setSortBy(e.target.value); setPreset(null); setRsiFilter(null); }} className="bg-gray-900 border border-white/10 rounded-xl px-4 py-2.5 text-sm focus:outline-none cursor-pointer text-white appearance-none min-w-[180px]" style={{ backgroundImage: `url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 24 24' stroke='%239ca3af'%3E%3Cpath stroke-linecap='round' stroke-linejoin='round' stroke-width='2' d='M19 9l-7 7-7-7'%3E%3C/path%3E%3C/svg%3E")`, backgroundRepeat: 'no-repeat', backgroundPosition: 'right 12px center', backgroundSize: '16px', paddingRight: '40px' }}>
+              <option value="rank_asc">Rank ↑</option><option value="rank_desc">Rank ↓</option><option value="price_desc">Price ↓</option><option value="price_asc">Price ↑</option><option value="rsi_asc">RSI ↑ (Oversold)</option><option value="rsi_desc">RSI ↓ (Overbought)</option><option value="change24h_asc">24h % ↑</option><option value="change24h_desc">24h % ↓</option><option value="change7d_asc">7d % ↑</option><option value="change7d_desc">7d % ↓</option><option value="mcap_desc">MCap ↓</option><option value="volume_desc">Volume ↓</option>
             </select>
             <button onClick={() => user ? setShowWL(w => !w) : setShowLoginModal(true)} className={`px-4 py-2.5 rounded-xl text-sm font-medium transition-all ${showWL ? 'bg-yellow-500 text-black' : 'bg-white/5 text-gray-400 hover:bg-white/10 border border-white/5'}`}>⭐ {user ? watchlist.size : ''}</button>
             <button onClick={exportCSV} className="px-4 py-2.5 rounded-xl text-sm bg-white/5 text-gray-400 hover:bg-white/10 border border-white/5">📥</button>
@@ -1313,135 +654,58 @@ export default function App() {
           </div>
         </div>
 
-        {loading ? (
-          <div className="text-center py-24">
-            <div className="w-14 h-14 border-4 border-orange-500/30 border-t-orange-500 rounded-full animate-spin mx-auto"/>
-            <p className="text-gray-400 mt-5">Loading market data...</p>
-          </div>
-        ) : error ? (
-          <div className="text-center py-20 bg-red-500/10 border border-red-500/20 rounded-2xl">
-            <p className="text-red-400 text-xl mb-2">⚠️ {error}</p>
-            <button onClick={fetchData} className="px-6 py-2.5 bg-red-500/20 hover:bg-red-500/30 rounded-xl font-medium transition-colors">Retry</button>
-          </div>
-        ) : (
+        {loading ? <div className="text-center py-24"><div className="w-14 h-14 border-4 border-orange-500/30 border-t-orange-500 rounded-full animate-spin mx-auto"/><p className="text-gray-400 mt-5">Loading market data...</p></div>
+        : error ? <div className="text-center py-20 bg-red-500/10 border border-red-500/20 rounded-2xl"><p className="text-red-400 text-xl mb-2">⚠️ {error}</p><button onClick={fetchData} className="px-6 py-2.5 bg-red-500/20 hover:bg-red-500/30 rounded-xl font-medium">Retry</button></div>
+        : (
           <div className="bg-white/[0.03] backdrop-blur-sm rounded-2xl border border-white/10 overflow-hidden">
             <div className="hidden lg:grid grid-cols-12 gap-3 px-5 py-3 border-b border-white/10 text-xs text-gray-500 font-semibold uppercase tracking-wider">
-              <div className="col-span-3 flex items-center gap-1 cursor-pointer hover:text-white transition-colors group" onClick={() => { setSortBy(sortBy === 'rank_asc' ? 'rank_desc' : 'rank_asc'); setPreset(null); setRsiFilter(null); }}>
-                <span>Token</span><span className={`transition-opacity ${sortBy.startsWith('rank') ? 'opacity-100 text-orange-400' : 'opacity-0 group-hover:opacity-50'}`}>{sortBy === 'rank_asc' ? '↑' : '↓'}</span>
-              </div>
-              <div className="col-span-2 text-right flex items-center justify-end gap-1 cursor-pointer hover:text-white transition-colors group" onClick={() => { setSortBy(sortBy === 'price_desc' ? 'price_asc' : 'price_desc'); setPreset(null); setRsiFilter(null); }}>
-                <span>Price</span><span className={`transition-opacity ${sortBy.startsWith('price') ? 'opacity-100 text-orange-400' : 'opacity-0 group-hover:opacity-50'}`}>{sortBy === 'price_asc' ? '↑' : '↓'}</span>
-              </div>
-              <div className="col-span-1 text-right flex items-center justify-end gap-1 cursor-pointer hover:text-white transition-colors group" onClick={() => { setSortBy(sortBy === 'change24h_desc' ? 'change24h_asc' : 'change24h_desc'); setPreset(null); setRsiFilter(null); }}>
-                <span>24H</span><span className={`transition-opacity ${sortBy.startsWith('change24h') ? 'opacity-100 text-orange-400' : 'opacity-0 group-hover:opacity-50'}`}>{sortBy === 'change24h_asc' ? '↑' : '↓'}</span>
-              </div>
-              <div className="col-span-1 text-right flex items-center justify-end gap-1 cursor-pointer hover:text-white transition-colors group" onClick={() => { setSortBy(sortBy === 'change7d_desc' ? 'change7d_asc' : 'change7d_desc'); setPreset(null); setRsiFilter(null); }}>
-                <span>7D</span><span className={`transition-opacity ${sortBy.startsWith('change7d') ? 'opacity-100 text-orange-400' : 'opacity-0 group-hover:opacity-50'}`}>{sortBy === 'change7d_asc' ? '↑' : '↓'}</span>
-              </div>
-              <div className="col-span-2 text-center flex items-center justify-center gap-1 cursor-pointer hover:text-white transition-colors group" onClick={() => { setSortBy(sortBy === 'rsi_desc' ? 'rsi_asc' : 'rsi_desc'); setPreset(null); setRsiFilter(null); }}>
-                <span>RSI (14)</span><span className={`transition-opacity ${sortBy.startsWith('rsi') ? 'opacity-100 text-orange-400' : 'opacity-0 group-hover:opacity-50'}`}>{sortBy === 'rsi_asc' ? '↑' : '↓'}</span>
-              </div>
+              <div className="col-span-3 flex items-center gap-1 cursor-pointer hover:text-white transition-colors group" onClick={() => { setSortBy(sortBy === 'rank_asc' ? 'rank_desc' : 'rank_asc'); setPreset(null); setRsiFilter(null); }}><span>Token</span><span className={`transition-opacity ${sortBy.startsWith('rank') ? 'opacity-100 text-orange-400' : 'opacity-0 group-hover:opacity-50'}`}>{sortBy === 'rank_asc' ? '↑' : '↓'}</span></div>
+              <div className="col-span-2 text-right flex items-center justify-end gap-1 cursor-pointer hover:text-white transition-colors group" onClick={() => { setSortBy(sortBy === 'price_desc' ? 'price_asc' : 'price_desc'); setPreset(null); setRsiFilter(null); }}><span>Price</span><span className={`transition-opacity ${sortBy.startsWith('price') ? 'opacity-100 text-orange-400' : 'opacity-0 group-hover:opacity-50'}`}>{sortBy === 'price_asc' ? '↑' : '↓'}</span></div>
+              <div className="col-span-1 text-right flex items-center justify-end gap-1 cursor-pointer hover:text-white transition-colors group" onClick={() => { setSortBy(sortBy === 'change24h_desc' ? 'change24h_asc' : 'change24h_desc'); setPreset(null); setRsiFilter(null); }}><span>24H</span><span className={`transition-opacity ${sortBy.startsWith('change24h') ? 'opacity-100 text-orange-400' : 'opacity-0 group-hover:opacity-50'}`}>{sortBy === 'change24h_asc' ? '↑' : '↓'}</span></div>
+              <div className="col-span-1 text-right flex items-center justify-end gap-1 cursor-pointer hover:text-white transition-colors group" onClick={() => { setSortBy(sortBy === 'change7d_desc' ? 'change7d_asc' : 'change7d_desc'); setPreset(null); setRsiFilter(null); }}><span>7D</span><span className={`transition-opacity ${sortBy.startsWith('change7d') ? 'opacity-100 text-orange-400' : 'opacity-0 group-hover:opacity-50'}`}>{sortBy === 'change7d_asc' ? '↑' : '↓'}</span></div>
+              <div className="col-span-2 text-center flex items-center justify-center gap-1 cursor-pointer hover:text-white transition-colors group" onClick={() => { setSortBy(sortBy === 'rsi_desc' ? 'rsi_asc' : 'rsi_desc'); setPreset(null); setRsiFilter(null); }}><span>RSI (14)</span><span className={`transition-opacity ${sortBy.startsWith('rsi') ? 'opacity-100 text-orange-400' : 'opacity-0 group-hover:opacity-50'}`}>{sortBy === 'rsi_asc' ? '↑' : '↓'}</span></div>
               <div className="col-span-2 text-right">Chart</div>
               <div className="col-span-1 text-center">Actions</div>
             </div>
-
             <div className="max-h-[58vh] overflow-y-auto">
-              {filtered.length === 0 ? (
-                <div className="text-center py-16"><p className="text-4xl mb-3">🔍</p><p className="text-gray-400">No tokens match your filters</p></div>
-              ) : filtered.map((t) => {
-                const rs = rsiStyle(t.rsi);
-                const watched = watchlist.has(t.id);
-                const sparkColor = t.sparkline?.length > 1 ? (t.sparkline[t.sparkline.length-1] >= t.sparkline[0] ? '#22c55e' : '#ef4444') : '#6b7280';
+              {filtered.length === 0 ? <div className="text-center py-16"><p className="text-4xl mb-3">🔍</p><p className="text-gray-400">No tokens match your filters</p></div>
+              : filtered.map(t => {
+                const rs = rsiStyle(t.rsi), watched = watchlist.has(t.id), sparkColor = t.sparkline?.length > 1 ? (t.sparkline[t.sparkline.length-1] >= t.sparkline[0] ? '#22c55e' : '#ef4444') : '#6b7280';
                 return (
                   <div key={t.id} onClick={() => setSel(t)} className={`grid grid-cols-8 lg:grid-cols-12 gap-3 px-5 py-3.5 border-b border-white/5 hover:bg-white/[0.04] cursor-pointer transition-colors ${watched ? 'bg-yellow-500/[0.04]' : ''}`}>
-                    <div className="col-span-3 flex items-center gap-3">
-                      <span className="text-xs text-gray-600 w-5 text-right">{t.rank}</span>
-                      <img src={t.image} alt={t.symbol} className="w-9 h-9 rounded-full shrink-0 bg-gray-800" onError={(e) => { e.target.style.display = 'none'; e.target.nextSibling.style.display = 'flex'; }}/>
-                      <div className="w-9 h-9 rounded-full bg-gradient-to-br from-gray-700 to-gray-800 items-center justify-center text-sm font-bold shrink-0 hidden">{t.symbol?.charAt(0)}</div>
-                      <div className="min-w-0">
-                        <div className="flex items-center gap-1.5"><span className="font-semibold">{t.symbol}</span>{t.rsi !== null && t.rsi < 25 && <span className="text-xs">🔴</span>}{t.rsi !== null && t.rsi > 75 && <span className="text-xs">🟢</span>}</div>
-                        <p className="text-xs text-gray-500 truncate">{t.name}</p>
-                      </div>
-                    </div>
+                    <div className="col-span-3 flex items-center gap-3"><span className="text-xs text-gray-600 w-5 text-right">{t.rank}</span><img src={t.image} alt={t.symbol} className="w-9 h-9 rounded-full shrink-0 bg-gray-800"/><div className="min-w-0"><div className="flex items-center gap-1.5"><span className="font-semibold">{t.symbol}</span>{t.rsi !== null && t.rsi < 25 && <span className="text-xs">🔴</span>}{t.rsi !== null && t.rsi > 75 && <span className="text-xs">🟢</span>}</div><p className="text-xs text-gray-500 truncate">{t.name}</p></div></div>
                     <div className="col-span-2 text-right self-center font-mono text-sm">{fmtP(t.price)}</div>
                     <div className="col-span-1 text-right self-center text-sm hidden lg:block"><span className={t.change24h >= 0 ? 'text-green-400' : 'text-red-400'}>{t.change24h >= 0 ? '+' : ''}{t.change24h?.toFixed(1)}%</span></div>
                     <div className="col-span-1 text-right self-center text-sm"><span className={t.change7d >= 0 ? 'text-green-400' : 'text-red-400'}>{t.change7d >= 0 ? '+' : ''}{t.change7d?.toFixed(1)}%</span></div>
-                    <div className="col-span-2 self-center flex justify-center">
-                      <div className={`inline-flex items-center gap-2 px-3 py-1.5 rounded-lg border ${rs.bg} ${rs.text}`}><span className={`w-1.5 h-1.5 rounded-full ${rs.dot}`}/><span className="font-bold text-sm">{t.rsi !== null ? t.rsi.toFixed(0) : '--'}</span><span className="text-[10px] opacity-70 hidden sm:inline">{rs.label}</span></div>
-                    </div>
+                    <div className="col-span-2 self-center flex justify-center"><div className={`inline-flex items-center gap-2 px-3 py-1.5 rounded-lg border ${rs.bg} ${rs.text}`}><span className={`w-1.5 h-1.5 rounded-full ${rs.dot}`}/><span className="font-bold text-sm">{t.rsi !== null ? t.rsi.toFixed(0) : '--'}</span><span className="text-[10px] opacity-70 hidden sm:inline">{rs.label}</span></div></div>
                     <div className="col-span-2 self-center hidden lg:flex justify-end"><Spark data={t.sparkline} color={sparkColor} h={24}/></div>
-                    <div className="col-span-1 self-center flex justify-center gap-2">
-                      <button onClick={e => openTokenPage(t.id, e)} className="p-1.5 rounded-lg hover:bg-white/10 text-gray-500 hover:text-white transition-colors">
-                        <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14" /></svg>
-                      </button>
-                      <button onClick={e => toggleWatch(t.id, e)} className={`text-lg hover:scale-110 transition-transform ${watched ? 'text-yellow-400' : 'text-gray-600 hover:text-yellow-400'}`}>{watched ? '★' : '☆'}</button>
-                    </div>
+                    <div className="col-span-1 self-center flex justify-center gap-2"><button onClick={e => openTokenPage(t.id, e)} className="p-1.5 rounded-lg hover:bg-white/10 text-gray-500 hover:text-white transition-colors"><svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14" /></svg></button><button onClick={e => toggleWatch(t.id, e)} className={`text-lg hover:scale-110 transition-transform ${watched ? 'text-yellow-400' : 'text-gray-600 hover:text-yellow-400'}`}>{watched ? '★' : '☆'}</button></div>
                   </div>
                 );
               })}
             </div>
-            <div className="px-5 py-3 border-t border-white/10 bg-white/[0.02] flex flex-col sm:flex-row justify-between gap-2 text-xs text-gray-500">
-              <span>{filtered.length} tokens • {stats.withRSI} with RSI</span>
-              <span>Data: CoinGecko • RSI (14) • Auto-refresh 1min</span>
-            </div>
+            <div className="px-5 py-3 border-t border-white/10 bg-white/[0.02] flex flex-col sm:flex-row justify-between gap-2 text-xs text-gray-500"><span>{filtered.length} tokens • {stats.withRSI} with RSI</span><span>Data: CoinGecko • RSI (14) • Auto-refresh 1min</span></div>
           </div>
         )}
 
         {sel && (
           <div className="fixed inset-0 bg-black/90 backdrop-blur-sm z-50 flex items-center justify-center p-4" onClick={() => setSel(null)}>
             <div className="bg-[#12121a] border border-white/10 rounded-2xl p-6 max-w-lg w-full max-h-[90vh] overflow-y-auto shadow-2xl" onClick={e => e.stopPropagation()}>
-              <div className="flex items-center gap-4 mb-5">
-                <img src={`${sel.image}`} alt={sel.symbol} className="w-16 h-16 rounded-2xl bg-gray-800" onError={(e) => { e.target.style.display = 'none'; e.target.nextSibling.style.display = 'flex'; }}/>
-                <div className="w-16 h-16 rounded-2xl bg-gradient-to-br from-gray-700 to-gray-800 items-center justify-center text-2xl font-bold hidden">{sel.symbol?.charAt(0)}</div>
-                <div className="flex-1">
-                  <div className="flex items-center gap-2"><h2 className="text-2xl font-bold">{sel.name}</h2><button onClick={e => toggleWatch(sel.id, e)} className={`text-xl ${watchlist.has(sel.id) ? 'text-yellow-400' : 'text-gray-600'}`}>{watchlist.has(sel.id) ? '★' : '☆'}</button></div>
-                  <p className="text-gray-400">{sel.symbol} • Rank #{sel.rank}</p>
-                </div>
-              </div>
-              <div className="bg-white/5 rounded-xl p-4 mb-5">
-                <div className="flex justify-between items-center mb-3"><span className="text-gray-400">RSI (14)</span><div className="flex items-center gap-2"><span className={`w-2 h-2 rounded-full ${rsiStyle(sel.rsi).dot}`}/><span className={`text-2xl font-bold ${rsiStyle(sel.rsi).text}`}>{sel.rsi !== null ? sel.rsi.toFixed(1) : 'N/A'}</span><span className={`text-sm ${rsiStyle(sel.rsi).text} opacity-70`}>{rsiStyle(sel.rsi).label}</span></div></div>
-                <RSIMeter value={sel.rsi}/>
-              </div>
-              <div className="grid grid-cols-2 gap-3 mb-5">
-                {[{icon:'💰', label:'Price', value:fmtP(sel.price)},{icon:'📊', label:'Market Cap', value:'$'+fmt(sel.mcap)},{icon:'📈', label:'24h Volume', value:'$'+fmt(sel.volume)},{icon:'🔄', label:'Vol/MCap', value:sel.volMcap?.toFixed(2)+'%'},{icon:'💎', label:'Circulating', value:fmt(sel.supply)},{icon:'🏆', label:'Dominance', value:(sel.dominance||0).toFixed(2)+'%'}].map(x => (
-                  <div key={x.label} className="bg-white/5 rounded-xl p-3"><p className="text-xs text-gray-500 mb-1">{x.icon} {x.label}</p><p className="text-lg font-bold">{x.value}</p></div>
-                ))}
-              </div>
-              <div className="grid grid-cols-4 gap-2 mb-5">
-                {[{l:'1H', v:sel.change1h},{l:'24H', v:sel.change24h},{l:'7D', v:sel.change7d},{l:'30D', v:sel.change30d}].map(x => (
-                  <div key={x.l} className="bg-white/5 rounded-xl p-3 text-center"><p className="text-[10px] text-gray-500 mb-1">{x.l}</p><p className={`font-bold ${(x.v||0) >= 0 ? 'text-green-400' : 'text-red-400'}`}>{x.v != null ? `${x.v >= 0 ? '+' : ''}${x.v.toFixed(1)}%` : '--'}</p></div>
-                ))}
-              </div>
-              {sel.sparkline && sel.sparkline.length > 1 && (
-                <div className="bg-white/5 rounded-xl p-4 mb-5">
-                  <div className="flex justify-between items-center mb-3"><p className="text-sm text-gray-400 font-medium">7-Day Price Chart</p><span className={`text-xs px-2 py-0.5 rounded ${sel.change7d >= 0 ? 'bg-green-500/20 text-green-400' : 'bg-red-500/20 text-red-400'}`}>{sel.change7d >= 0 ? '+' : ''}{sel.change7d?.toFixed(2)}%</span></div>
-                  <DetailChart data={sel.sparkline} basePrice={sel.price} symbol={sel.symbol} change7d={sel.change7d}/>
-                </div>
-              )}
+              <div className="flex items-center gap-4 mb-5"><img src={sel.image} alt={sel.symbol} className="w-16 h-16 rounded-2xl bg-gray-800"/><div className="flex-1"><div className="flex items-center gap-2"><h2 className="text-2xl font-bold">{sel.name}</h2><button onClick={e => toggleWatch(sel.id, e)} className={`text-xl ${watchlist.has(sel.id) ? 'text-yellow-400' : 'text-gray-600'}`}>{watchlist.has(sel.id) ? '★' : '☆'}</button></div><p className="text-gray-400">{sel.symbol} • Rank #{sel.rank}</p></div></div>
+              <div className="bg-white/5 rounded-xl p-4 mb-5"><div className="flex justify-between items-center mb-3"><span className="text-gray-400">RSI (14)</span><div className="flex items-center gap-2"><span className={`w-2 h-2 rounded-full ${rsiStyle(sel.rsi).dot}`}/><span className={`text-2xl font-bold ${rsiStyle(sel.rsi).text}`}>{sel.rsi !== null ? sel.rsi.toFixed(1) : 'N/A'}</span><span className={`text-sm ${rsiStyle(sel.rsi).text} opacity-70`}>{rsiStyle(sel.rsi).label}</span></div></div><RSIMeter value={sel.rsi}/></div>
+              <div className="grid grid-cols-2 gap-3 mb-5">{[{icon:'💰', label:'Price', value:fmtP(sel.price)},{icon:'📊', label:'Market Cap', value:'$'+fmt(sel.mcap)},{icon:'📈', label:'24h Volume', value:'$'+fmt(sel.volume)},{icon:'🔄', label:'Vol/MCap', value:sel.volMcap?.toFixed(2)+'%'},{icon:'💎', label:'Circulating', value:fmt(sel.supply)},{icon:'🏆', label:'Dominance', value:(sel.dominance||0).toFixed(2)+'%'}].map(x => <div key={x.label} className="bg-white/5 rounded-xl p-3"><p className="text-xs text-gray-500 mb-1">{x.icon} {x.label}</p><p className="text-lg font-bold">{x.value}</p></div>)}</div>
+              <div className="grid grid-cols-4 gap-2 mb-5">{[{l:'1H', v:sel.change1h},{l:'24H', v:sel.change24h},{l:'7D', v:sel.change7d},{l:'30D', v:sel.change30d}].map(x => <div key={x.l} className="bg-white/5 rounded-xl p-3 text-center"><p className="text-[10px] text-gray-500 mb-1">{x.l}</p><p className={`font-bold ${(x.v||0) >= 0 ? 'text-green-400' : 'text-red-400'}`}>{x.v != null ? `${x.v >= 0 ? '+' : ''}${x.v.toFixed(1)}%` : '--'}</p></div>)}</div>
+              {sel.sparkline && sel.sparkline.length > 1 && <div className="bg-white/5 rounded-xl p-4 mb-5"><div className="flex justify-between items-center mb-3"><p className="text-sm text-gray-400 font-medium">7-Day Chart</p><span className={`text-xs px-2 py-0.5 rounded ${sel.change7d >= 0 ? 'bg-green-500/20 text-green-400' : 'bg-red-500/20 text-red-400'}`}>{sel.change7d >= 0 ? '+' : ''}{sel.change7d?.toFixed(2)}%</span></div><DetailChart data={sel.sparkline} basePrice={sel.price} change7d={sel.change7d}/></div>}
               <a href={`https://www.coingecko.com/en/coins/${sel.id}`} target="_blank" rel="noreferrer" className="block w-full py-3 bg-green-500/20 hover:bg-green-500/30 rounded-xl text-center text-green-400 font-medium transition-colors">View on CoinGecko ↗</a>
-              <button onClick={(e) => { openTokenPage(sel.id, e); setSel(null); }} className="w-full mt-3 py-3 bg-orange-500/20 hover:bg-orange-500/30 rounded-xl text-orange-400 font-medium transition-colors flex items-center justify-center gap-2">
-                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" /></svg>
-                View Detailed Analysis
-              </button>
+              <button onClick={(e) => { openTokenPage(sel.id, e); setSel(null); }} className="w-full mt-3 py-3 bg-orange-500/20 hover:bg-orange-500/30 rounded-xl text-orange-400 font-medium transition-colors">View Detailed Analysis</button>
               <button onClick={() => setSel(null)} className="w-full mt-2 py-3 bg-white/10 hover:bg-white/15 rounded-xl font-medium transition-colors">Close</button>
             </div>
           </div>
         )}
 
-        <footer className="text-center py-8 mt-8 border-t border-white/10">
-          <p className="text-gray-500 text-sm mb-4">Nothing on this site is financial advice. For educational purposes only.</p>
-          <div className="flex items-center justify-center gap-6 text-sm">
-            <a href="#/terms" className="text-gray-400 hover:text-white transition-colors">Terms</a>
-            <span className="text-gray-700">|</span>
-            <a href="#/privacy" className="text-gray-400 hover:text-white transition-colors">Privacy</a>
-            <span className="text-gray-700">|</span>
-            <a href="#/methodology" className="text-gray-400 hover:text-white transition-colors">Methodology</a>
-          </div>
-          <p className="text-gray-600 text-xs mt-4">Data from CoinGecko • RSI (14)</p>
-        </footer>
+        <footer className="text-center py-8 mt-8 border-t border-white/10"><p className="text-gray-500 text-sm mb-4">Nothing on this site is financial advice. For educational purposes only.</p><div className="flex items-center justify-center gap-6 text-sm"><a href="#/terms" className="text-gray-400 hover:text-white transition-colors">Terms</a><span className="text-gray-700">|</span><a href="#/privacy" className="text-gray-400 hover:text-white transition-colors">Privacy</a><span className="text-gray-700">|</span><a href="#/methodology" className="text-gray-400 hover:text-white transition-colors">Methodology</a></div><p className="text-gray-600 text-xs mt-4">Data from CoinGecko • RSI (14)</p></footer>
       </div>
       {showLoginModal && <LoginModal onClose={() => setShowLoginModal(false)} onLogin={handleLogin} />}
     </div>
   );
 }
-
