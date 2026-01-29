@@ -46,7 +46,7 @@ const PRESETS = [
 
 // ⚠️ REPLACE THIS WITH YOUR GOOGLE CLIENT ID FROM GOOGLE CLOUD CONSOLE
 // Instructions: https://developers.google.com/identity/gsi/web/guides/get-google-api-clientid
-const GOOGLE_CLIENT_ID = '889475479271-64c68ua41no083lq5g82v8pp2cvf9r9k.apps.googleusercontent.com';
+const GOOGLE_CLIENT_ID = 'YOUR_GOOGLE_CLIENT_ID.apps.googleusercontent.com';
 
 // Login Modal Component with Google OAuth
 const LoginModal = ({ onClose, onLogin }) => {
@@ -882,28 +882,25 @@ export default function App() {
       } catch (e) {
         console.error('Failed to load user:', e);
       }
-    } else {
-      // Load anonymous watchlist
-      const savedWatchlist = localStorage.getItem('oversold_watchlist_anonymous');
-      if (savedWatchlist) {
-        setWatchlist(new Set(JSON.parse(savedWatchlist)));
-      }
     }
   }, []);
 
-  // Save watchlist to localStorage whenever it changes
+  // Save watchlist to localStorage whenever it changes (only for logged-in users)
   useEffect(() => {
-    const key = user ? `oversold_watchlist_${user.id}` : 'oversold_watchlist_anonymous';
-    localStorage.setItem(key, JSON.stringify([...watchlist]));
+    if (user) {
+      localStorage.setItem(`oversold_watchlist_${user.id}`, JSON.stringify([...watchlist]));
+    }
   }, [watchlist, user]);
 
   // Handle login
   const handleLogin = (loggedInUser) => {
     setUser(loggedInUser);
-    // Load the user's watchlist (might merge with anonymous)
+    // Load the user's watchlist
     const savedWatchlist = localStorage.getItem(`oversold_watchlist_${loggedInUser.id}`);
     if (savedWatchlist) {
       setWatchlist(new Set(JSON.parse(savedWatchlist)));
+    } else {
+      setWatchlist(new Set());
     }
   };
 
@@ -911,13 +908,8 @@ export default function App() {
   const handleLogout = () => {
     localStorage.removeItem('oversold_user');
     setUser(null);
-    // Optionally clear watchlist on logout or keep anonymous one
-    const anonWatchlist = localStorage.getItem('oversold_watchlist_anonymous');
-    if (anonWatchlist) {
-      setWatchlist(new Set(JSON.parse(anonWatchlist)));
-    } else {
-      setWatchlist(new Set());
-    }
+    setWatchlist(new Set());
+    setShowWL(false);
     // Revoke Google token if available
     if (window.google?.accounts?.id) {
       window.google.accounts.id.disableAutoSelect();
@@ -1003,8 +995,12 @@ export default function App() {
 
   const toggleWatch = useCallback((id, e) => {
     e?.stopPropagation();
+    if (!user) {
+      setShowLoginModal(true);
+      return;
+    }
     setWatchlist(p => { const n = new Set(p); n.has(id) ? n.delete(id) : n.add(id); return n; });
-  }, []);
+  }, [user]);
 
   const filtered = useMemo(() => {
     let r = [...tokens];
@@ -1243,8 +1239,12 @@ export default function App() {
               <option value="mcap_desc" className="bg-gray-900 py-2">Market Cap ↓</option>
               <option value="volume_desc" className="bg-gray-900 py-2">Volume ↓</option>
             </select>
-            <button onClick={() => setShowWL(w => !w)} className={`px-4 py-2.5 rounded-xl text-sm font-medium transition-all ${showWL ? 'bg-yellow-500 text-black' : 'bg-white/5 text-gray-400 hover:bg-white/10 border border-white/5'}`}>
-              ⭐ {watchlist.size}
+            <button 
+              onClick={() => user ? setShowWL(w => !w) : setShowLoginModal(true)} 
+              className={`px-4 py-2.5 rounded-xl text-sm font-medium transition-all ${showWL ? 'bg-yellow-500 text-black' : 'bg-white/5 text-gray-400 hover:bg-white/10 border border-white/5'}`}
+              title={user ? 'View watchlist' : 'Sign in to use watchlist'}
+            >
+              ⭐ {user ? watchlist.size : ''}
             </button>
             <button onClick={exportCSV} className="px-4 py-2.5 rounded-xl text-sm bg-white/5 text-gray-400 hover:bg-white/10 border border-white/5" title="Export CSV">📥</button>
             <button onClick={fetchData} className="px-4 py-2.5 rounded-xl text-sm bg-white/5 text-gray-400 hover:bg-white/10 border border-white/5" title="Refresh">🔄</button>
