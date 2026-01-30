@@ -16,25 +16,6 @@ const ThemeToggle = ({ darkMode, setDarkMode }) => (
   </button>
 );
 
-const CAT_MAP = {
-  bitcoin:'layer-1',ethereum:'layer-1',solana:'layer-1',cardano:'layer-1','avalanche-2':'layer-1',
-  polkadot:'layer-1',tron:'layer-1',litecoin:'layer-1',monero:'layer-1',stellar:'layer-1',
-  cosmos:'layer-1','near-protocol':'layer-1',algorand:'layer-1',fantom:'layer-1',sui:'layer-1',
-  aptos:'layer-1',kaspa:'layer-1',hedera:'layer-1',arbitrum:'layer-1',optimism:'layer-1',
-  sei:'layer-1',celestia:'layer-1',injective:'layer-1',mantle:'layer-1',stacks:'layer-1',
-  dogecoin:'meme','shiba-inu':'meme',pepe:'meme',floki:'meme',bonk:'meme','dogwifhat':'meme',
-  'book-of-meme':'meme',brett:'meme',popcat:'meme',turbo:'meme','mog-coin':'meme',
-  chainlink:'defi',uniswap:'defi',aave:'defi',maker:'defi','lido-dao':'defi','curve-dao-token':'defi',
-  jupiter:'defi',raydium:'defi',pendle:'defi',thorchain:'defi','the-graph':'defi',
-  'render-token':'ai','fetch-ai':'ai',bittensor:'ai',worldcoin:'ai',akash:'ai',
-  'ocean-protocol':'ai',singularitynet:'ai',arkham:'ai',
-  'the-sandbox':'gaming',decentraland:'gaming','axie-infinity':'gaming',gala:'gaming',
-  'immutable-x':'gaming',enjincoin:'gaming',beam:'gaming','super-token':'gaming',
-  'bnb':'exchange',cronos:'exchange',okb:'exchange','kucoin-token':'exchange','gate-token':'exchange',
-  tether:'stable','usd-coin':'stable',dai:'stable','first-digital-usd':'stable',
-};
-const getCat = id => CAT_MAP[id] || 'other';
-
 const CATS = [
   {id:'all',name:'All',icon:'🌍'},
   {id:'layer-1',name:'L1/L2',icon:'⛓️'},
@@ -973,7 +954,7 @@ export default function App() {
       if (!res.ok) throw new Error(`API Error: ${res.status}`);
       const data = await res.json();
       if (data.error) throw new Error(data.error);
-      const processed = data.tokens.map(t => ({ ...t, category: getCat(t.id), volMcap: t.mcap ? (t.volume / t.mcap) * 100 : 0 }));
+      const processed = data.tokens.map(t => ({ ...t, volMcap: t.mcap ? (t.volume / t.mcap) * 100 : 0 }));
       setTokens(processed);
       setLastUpdate(new Date(data.timestamp));
       setApiStats(data.stats);
@@ -1126,6 +1107,7 @@ export default function App() {
     </div>
   );
 }
+
 
 
 
