@@ -381,6 +381,7 @@ const MethodologyPage = ({ onBack, darkMode, setDarkMode }) => (
         <p className={`text-lg ${darkMode ? 'text-gray-400' : 'text-gray-600'}`}>How we calculate RSI and analyze cryptocurrency markets</p>
       </div>
 
+      {/* Three Feature Cards */}
       <div className="grid md:grid-cols-3 gap-6 mb-16">
         <div className={`${darkMode ? 'bg-white/5 border-white/10' : 'bg-white border-gray-200'} border rounded-2xl p-6 hover:scale-[1.02] transition-transform`}>
           <div className="w-14 h-14 bg-gradient-to-br from-orange-500 to-red-500 rounded-2xl flex items-center justify-center mb-5">
@@ -407,6 +408,7 @@ const MethodologyPage = ({ onBack, darkMode, setDarkMode }) => (
         </div>
       </div>
 
+      {/* Understanding RSI Calculation */}
       <div className={`${darkMode ? 'bg-white/5 border-white/10' : 'bg-white border-gray-200'} border rounded-2xl p-8 mb-8`}>
         <h2 className="text-3xl font-bold mb-6">Understanding RSI Calculation</h2>
         
@@ -459,6 +461,7 @@ const MethodologyPage = ({ onBack, darkMode, setDarkMode }) => (
         </div>
       </div>
 
+      {/* Interpreting RSI Values */}
       <div className="mb-8">
         <h2 className="text-3xl font-bold mb-6">Interpreting RSI Values</h2>
         <div className="grid md:grid-cols-2 gap-4">
@@ -504,6 +507,7 @@ const MethodologyPage = ({ onBack, darkMode, setDarkMode }) => (
         </div>
       </div>
 
+      {/* Data Sources & Limitations */}
       <div className={`${darkMode ? 'bg-white/5 border-white/10' : 'bg-white border-gray-200'} border rounded-2xl p-8 mb-8`}>
         <h2 className="text-2xl font-bold mb-6">Data Sources & Limitations</h2>
         
@@ -1126,6 +1130,7 @@ export default function App() {
     </div>
   );
 }
+
 
 
 
