@@ -381,7 +381,6 @@ const MethodologyPage = ({ onBack, darkMode, setDarkMode }) => (
         <p className={`text-lg ${darkMode ? 'text-gray-400' : 'text-gray-600'}`}>How we calculate RSI and analyze cryptocurrency markets</p>
       </div>
 
-      {/* Three Feature Cards */}
       <div className="grid md:grid-cols-3 gap-6 mb-16">
         <div className={`${darkMode ? 'bg-white/5 border-white/10' : 'bg-white border-gray-200'} border rounded-2xl p-6 hover:scale-[1.02] transition-transform`}>
           <div className="w-14 h-14 bg-gradient-to-br from-orange-500 to-red-500 rounded-2xl flex items-center justify-center mb-5">
@@ -408,7 +407,6 @@ const MethodologyPage = ({ onBack, darkMode, setDarkMode }) => (
         </div>
       </div>
 
-      {/* Understanding RSI Calculation */}
       <div className={`${darkMode ? 'bg-white/5 border-white/10' : 'bg-white border-gray-200'} border rounded-2xl p-8 mb-8`}>
         <h2 className="text-3xl font-bold mb-6">Understanding RSI Calculation</h2>
         
@@ -461,13 +459,12 @@ const MethodologyPage = ({ onBack, darkMode, setDarkMode }) => (
         </div>
       </div>
 
-      {/* Interpreting RSI Values */}
       <div className="mb-8">
         <h2 className="text-3xl font-bold mb-6">Interpreting RSI Values</h2>
         <div className="grid md:grid-cols-2 gap-4">
           <div className={`${darkMode ? 'bg-red-500/10 border-red-500/30' : 'bg-red-50 border-red-200'} border rounded-2xl p-6`}>
             <div className="flex items-center gap-3 mb-3">
-              <div className="w-3 h-3 rounded-full bg-red-500"/>
+              <div className="w-3 h-3 rounded-full bg-red-500"></div>
               <h3 className="font-bold text-lg text-red-500">Oversold (RSI &lt; 30)</h3>
             </div>
             <p className={`text-sm leading-relaxed ${darkMode ? 'text-gray-300' : 'text-gray-700'}`}>
@@ -477,7 +474,7 @@ const MethodologyPage = ({ onBack, darkMode, setDarkMode }) => (
 
           <div className={`${darkMode ? 'bg-orange-500/10 border-orange-500/30' : 'bg-orange-50 border-orange-200'} border rounded-2xl p-6`}>
             <div className="flex items-center gap-3 mb-3">
-              <div className="w-3 h-3 rounded-full bg-orange-500"/>
+              <div className="w-3 h-3 rounded-full bg-orange-500"></div>
               <h3 className="font-bold text-lg text-orange-500">Extreme (RSI &lt; 20)</h3>
             </div>
             <p className={`text-sm leading-relaxed ${darkMode ? 'text-gray-300' : 'text-gray-700'}`}>
@@ -487,7 +484,7 @@ const MethodologyPage = ({ onBack, darkMode, setDarkMode }) => (
 
           <div className={`${darkMode ? 'bg-gray-500/10 border-gray-500/30' : 'bg-gray-50 border-gray-200'} border rounded-2xl p-6`}>
             <div className="flex items-center gap-3 mb-3">
-              <div className="w-3 h-3 rounded-full bg-gray-500"/>
+              <div className="w-3 h-3 rounded-full bg-gray-500"></div>
               <h3 className="font-bold text-lg text-gray-500">Neutral (RSI 30-70)</h3>
             </div>
             <p className={`text-sm leading-relaxed ${darkMode ? 'text-gray-300' : 'text-gray-700'}`}>
@@ -497,7 +494,7 @@ const MethodologyPage = ({ onBack, darkMode, setDarkMode }) => (
 
           <div className={`${darkMode ? 'bg-green-500/10 border-green-500/30' : 'bg-green-50 border-green-200'} border rounded-2xl p-6`}>
             <div className="flex items-center gap-3 mb-3">
-              <div className="w-3 h-3 rounded-full bg-green-500"/>
+              <div className="w-3 h-3 rounded-full bg-green-500"></div>
               <h3 className="font-bold text-lg text-green-500">Overbought (RSI &gt; 70)</h3>
             </div>
             <p className={`text-sm leading-relaxed ${darkMode ? 'text-gray-300' : 'text-gray-700'}`}>
@@ -507,7 +504,6 @@ const MethodologyPage = ({ onBack, darkMode, setDarkMode }) => (
         </div>
       </div>
 
-      {/* Data Sources & Limitations */}
       <div className={`${darkMode ? 'bg-white/5 border-white/10' : 'bg-white border-gray-200'} border rounded-2xl p-8 mb-8`}>
         <h2 className="text-2xl font-bold mb-6">Data Sources & Limitations</h2>
         
@@ -554,7 +550,7 @@ const MethodologyPage = ({ onBack, darkMode, setDarkMode }) => (
           <span className={darkMode ? 'text-gray-700' : 'text-gray-300'}>|</span>
           <a href="#/privacy" className={`${darkMode ? 'text-gray-400 hover:text-white' : 'text-gray-500 hover:text-gray-900'} transition-colors`}>Privacy Policy</a>
         </div>
-      </div>
+      </footer>
     </div>
   </div>
 );
@@ -1130,6 +1126,7 @@ export default function App() {
     </div>
   );
 }
+
 
 
 
