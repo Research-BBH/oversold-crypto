@@ -1,5 +1,5 @@
 // ==================================================
-// FILE: api/crypto.js (Updated with Categories)
+// FILE: api/crypto.js (Optimized - No Extra Calls)
 // ==================================================
 
 export const config = {
@@ -51,49 +51,68 @@ const calculateRSI = (prices, period = 14) => {
   return Math.round(rsi * 10) / 10;
 };
 
-// Map CoinGecko categories to our simplified categories
-const mapCategory = (categories) => {
-  if (!categories || categories.length === 0) return 'other';
+// Smart categorization based on coin ID and name
+const getCategoryFromMetadata = (id, name, symbol) => {
+  const idLower = id.toLowerCase();
+  const nameLower = name.toLowerCase();
+  const symbolLower = symbol.toLowerCase();
   
-  // Check categories array for matches (case-insensitive)
-  const cats = categories.map(c => c.toLowerCase());
-  
-  // Layer 1 / Layer 2
-  if (cats.some(c => c.includes('layer-1') || c.includes('layer-2') || 
-                     c.includes('smart-contract') || c.includes('platform'))) {
+  // Layer 1 / Layer 2 - Major blockchains
+  const layer1Ids = ['bitcoin', 'ethereum', 'solana', 'cardano', 'avalanche-2', 'polkadot', 
+                     'polygon-ecosystem-token', 'matic-network', 'arbitrum', 'optimism',
+                     'cosmos', 'near-protocol', 'aptos', 'sui', 'kaspa', 'tron', 'litecoin',
+                     'stellar', 'algorand', 'fantom', 'hedera-hashgraph', 'internet-computer',
+                     'the-open-network', 'stacks', 'injective-protocol', 'sei-network', 'celestia'];
+  if (layer1Ids.includes(idLower) || nameLower.includes('network') || nameLower.includes('chain')) {
     return 'layer-1';
   }
   
-  // Meme coins
-  if (cats.some(c => c.includes('meme') || c.includes('dog') || c.includes('cat'))) {
+  // Meme coins - Check for meme-related keywords
+  const memeKeywords = ['doge', 'shib', 'inu', 'pepe', 'floki', 'bonk', 'meme', 'wojak',
+                        'shiba', 'baby', 'elon', 'cat', 'popcat', 'mog', 'turbo', 'brett',
+                        'wif', 'bome', 'coq', 'myro', 'wen', 'neiro', 'dogs', 'ponke'];
+  if (memeKeywords.some(keyword => idLower.includes(keyword) || nameLower.includes(keyword) || symbolLower.includes(keyword))) {
     return 'meme';
   }
   
-  // DeFi
-  if (cats.some(c => c.includes('defi') || c.includes('decentralized-finance') || 
-                     c.includes('dex') || c.includes('lending') || c.includes('yield'))) {
+  // DeFi protocols
+  const defiIds = ['chainlink', 'uniswap', 'aave', 'maker', 'lido-dao', 'curve-dao-token',
+                   'pancakeswap-token', 'compound-governance-token', 'synthetix-network-token',
+                   'thorchain', 'the-graph', 'raydium', 'jupiter-exchange-solana', 'pendle',
+                   '1inch', 'sushi', 'balancer', 'convex-finance', 'yearn-finance'];
+  const defiKeywords = ['swap', 'dex', 'lending', 'defi', 'finance', 'protocol'];
+  if (defiIds.includes(idLower) || defiKeywords.some(k => idLower.includes(k) || nameLower.includes(k))) {
     return 'defi';
   }
   
-  // AI
-  if (cats.some(c => c.includes('artificial-intelligence') || c.includes('ai') || 
-                     c.includes('machine-learning'))) {
+  // AI tokens
+  const aiIds = ['render-token', 'fetch-ai', 'singularitynet', 'ocean-protocol', 'bittensor',
+                 'worldcoin', 'akash-network', 'arkham', 'artificial-superintelligence-alliance'];
+  const aiKeywords = ['ai', 'artificial', 'intelligence', 'neural', 'render', 'compute'];
+  if (aiIds.includes(idLower) || aiKeywords.some(k => idLower.includes(k) || nameLower.includes(k))) {
     return 'ai';
   }
   
-  // Gaming
-  if (cats.some(c => c.includes('gaming') || c.includes('metaverse') || 
-                     c.includes('nft') || c.includes('collectibles'))) {
+  // Gaming & Metaverse
+  const gamingIds = ['the-sandbox', 'decentraland', 'axie-infinity', 'gala', 'immutable-x',
+                     'enjincoin', 'beam', 'echelon-prime', 'gala-games'];
+  const gamingKeywords = ['game', 'gaming', 'meta', 'verse', 'land', 'sandbox', 'axie', 'play'];
+  if (gamingIds.includes(idLower) || gamingKeywords.some(k => idLower.includes(k) || nameLower.includes(k))) {
     return 'gaming';
   }
   
   // Exchange tokens
-  if (cats.some(c => c.includes('exchange') || c.includes('centralized-exchange'))) {
+  const exchangeIds = ['binancecoin', 'crypto-com-chain', 'okb', 'kucoin-shares', 'gate-token',
+                       'ftx-token', 'huobi-token'];
+  if (exchangeIds.includes(idLower) || idLower.includes('exchange')) {
     return 'exchange';
   }
   
   // Stablecoins
-  if (cats.some(c => c.includes('stablecoin'))) {
+  const stableIds = ['tether', 'usd-coin', 'dai', 'first-digital-usd', 'true-usd',
+                     'paxos-standard', 'frax', 'tusd', 'usdd'];
+  const stableKeywords = ['usd', 'dollar', 'stable'];
+  if (stableIds.includes(idLower) || stableKeywords.some(k => symbolLower.includes(k))) {
     return 'stable';
   }
   
@@ -111,7 +130,7 @@ export default async function handler(req) {
   }
 
   try {
-    // Fetch market data with sparklines
+    // Fetch market data with sparklines (only 4 calls total)
     const pages = [1, 2, 3, 4];
     const allData = [];
     
@@ -142,50 +161,10 @@ export default async function handler(req) {
       allData.push(...pageData);
     }
     
-    // Fetch detailed data with categories for each coin (in batches to avoid rate limits)
-    const detailedDataMap = new Map();
-    
-    // Process in batches of 50 to avoid overwhelming the API
-    const batchSize = 50;
-    for (let i = 0; i < allData.length; i += batchSize) {
-      const batch = allData.slice(i, i + batchSize);
-      
-      await Promise.all(
-        batch.map(async (coin) => {
-          try {
-            const detailRes = await fetch(
-              `https://pro-api.coingecko.com/api/v3/coins/${coin.id}?localization=false&tickers=false&community_data=false&developer_data=false`,
-              {
-                headers: {
-                  'x-cg-pro-api-key': CG_API_KEY,
-                  'Accept': 'application/json',
-                },
-              }
-            );
-            
-            if (detailRes.ok) {
-              const detailData = await detailRes.json();
-              detailedDataMap.set(coin.id, {
-                categories: detailData.categories || [],
-                description: detailData.description?.en || '',
-              });
-            }
-          } catch (err) {
-            console.error(`Failed to fetch details for ${coin.id}:`, err);
-          }
-        })
-      );
-      
-      // Small delay between batches to respect rate limits
-      if (i + batchSize < allData.length) {
-        await new Promise(resolve => setTimeout(resolve, 100));
-      }
-    }
-    
     const cgData = allData;
     const totalMcap = cgData.reduce((sum, c) => sum + (c.market_cap || 0), 0);
 
-    // Process tokens with category information
+    // Process tokens with smart categorization
     const tokens = cgData.map((coin, index) => {
       const sparklineData = coin.sparkline_in_7d?.price || [];
       const rsi = calculateRSI(sparklineData, 14);
@@ -196,10 +175,8 @@ export default async function handler(req) {
         normalizedSparkline = sparklineData.map(p => (p / startPrice) * 100);
       }
       
-      // Get categories from detailed data
-      const detailData = detailedDataMap.get(coin.id);
-      const categories = detailData?.categories || [];
-      const category = mapCategory(categories);
+      // Smart categorization based on metadata
+      const category = getCategoryFromMetadata(coin.id, coin.name, coin.symbol);
       
       return {
         id: coin.id,
@@ -227,8 +204,7 @@ export default async function handler(req) {
         sparkline: normalizedSparkline,
         sparklineRaw: sparklineData,
         image: coin.image,
-        category: category, // Now using CoinGecko's categories!
-        categories: categories, // Store original categories for reference
+        category: category,
       };
     });
 
