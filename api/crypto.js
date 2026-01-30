@@ -1,5 +1,5 @@
 // ==================================================
-// FILE: api/crypto.js (CoinGecko API with Real RSI)
+// FILE: api/crypto.js (Updated with Categories)
 // ==================================================
 
 export const config = {
@@ -7,28 +7,21 @@ export const config = {
 };
 
 // Calculate actual RSI from price data
-// RSI = 100 - (100 / (1 + RS))
-// RS = Average Gain / Average Loss over N periods
 const calculateRSI = (prices, period = 14) => {
   if (!prices || prices.length < period + 1) return null;
   
-  // Calculate price changes
   const changes = [];
   for (let i = 1; i < prices.length; i++) {
     changes.push(prices[i] - prices[i - 1]);
   }
   
-  // We need at least 'period' changes
   if (changes.length < period) return null;
   
-  // Use the most recent data for RSI calculation
-  // For 7-day hourly data (168 points), we'll use the last 'period' hours
-  const recentChanges = changes.slice(-period * 2); // Get more data for smoothing
+  const recentChanges = changes.slice(-period * 2);
   
   let avgGain = 0;
   let avgLoss = 0;
   
-  // Initial SMA for first 'period' changes
   for (let i = 0; i < period; i++) {
     const change = recentChanges[i] || 0;
     if (change > 0) {
@@ -41,7 +34,6 @@ const calculateRSI = (prices, period = 14) => {
   avgGain /= period;
   avgLoss /= period;
   
-  // Apply smoothing for remaining changes (Wilder's smoothing)
   for (let i = period; i < recentChanges.length; i++) {
     const change = recentChanges[i] || 0;
     const gain = change > 0 ? change : 0;
@@ -51,12 +43,61 @@ const calculateRSI = (prices, period = 14) => {
     avgLoss = (avgLoss * (period - 1) + loss) / period;
   }
   
-  if (avgLoss === 0) return 100; // No losses = RSI 100
+  if (avgLoss === 0) return 100;
   
   const rs = avgGain / avgLoss;
   const rsi = 100 - (100 / (1 + rs));
   
-  return Math.round(rsi * 10) / 10; // Round to 1 decimal
+  return Math.round(rsi * 10) / 10;
+};
+
+// Map CoinGecko categories to our simplified categories
+const mapCategory = (categories) => {
+  if (!categories || categories.length === 0) return 'other';
+  
+  // Check categories array for matches (case-insensitive)
+  const cats = categories.map(c => c.toLowerCase());
+  
+  // Layer 1 / Layer 2
+  if (cats.some(c => c.includes('layer-1') || c.includes('layer-2') || 
+                     c.includes('smart-contract') || c.includes('platform'))) {
+    return 'layer-1';
+  }
+  
+  // Meme coins
+  if (cats.some(c => c.includes('meme') || c.includes('dog') || c.includes('cat'))) {
+    return 'meme';
+  }
+  
+  // DeFi
+  if (cats.some(c => c.includes('defi') || c.includes('decentralized-finance') || 
+                     c.includes('dex') || c.includes('lending') || c.includes('yield'))) {
+    return 'defi';
+  }
+  
+  // AI
+  if (cats.some(c => c.includes('artificial-intelligence') || c.includes('ai') || 
+                     c.includes('machine-learning'))) {
+    return 'ai';
+  }
+  
+  // Gaming
+  if (cats.some(c => c.includes('gaming') || c.includes('metaverse') || 
+                     c.includes('nft') || c.includes('collectibles'))) {
+    return 'gaming';
+  }
+  
+  // Exchange tokens
+  if (cats.some(c => c.includes('exchange') || c.includes('centralized-exchange'))) {
+    return 'exchange';
+  }
+  
+  // Stablecoins
+  if (cats.some(c => c.includes('stablecoin'))) {
+    return 'stable';
+  }
+  
+  return 'other';
 };
 
 export default async function handler(req) {
@@ -70,9 +111,7 @@ export default async function handler(req) {
   }
 
   try {
-    // CoinGecko Pro API endpoint with sparkline data
-    // sparkline=true gives us 7 days of hourly price data (168 data points)
-    // Fetch 1000 coins (4 pages of 250)
+    // Fetch market data with sparklines
     const pages = [1, 2, 3, 4];
     const allData = [];
     
@@ -103,24 +142,64 @@ export default async function handler(req) {
       allData.push(...pageData);
     }
     
-    const cgData = allData;
+    // Fetch detailed data with categories for each coin (in batches to avoid rate limits)
+    const detailedDataMap = new Map();
     
-    // Calculate total market cap for dominance
+    // Process in batches of 50 to avoid overwhelming the API
+    const batchSize = 50;
+    for (let i = 0; i < allData.length; i += batchSize) {
+      const batch = allData.slice(i, i + batchSize);
+      
+      await Promise.all(
+        batch.map(async (coin) => {
+          try {
+            const detailRes = await fetch(
+              `https://pro-api.coingecko.com/api/v3/coins/${coin.id}?localization=false&tickers=false&community_data=false&developer_data=false`,
+              {
+                headers: {
+                  'x-cg-pro-api-key': CG_API_KEY,
+                  'Accept': 'application/json',
+                },
+              }
+            );
+            
+            if (detailRes.ok) {
+              const detailData = await detailRes.json();
+              detailedDataMap.set(coin.id, {
+                categories: detailData.categories || [],
+                description: detailData.description?.en || '',
+              });
+            }
+          } catch (err) {
+            console.error(`Failed to fetch details for ${coin.id}:`, err);
+          }
+        })
+      );
+      
+      // Small delay between batches to respect rate limits
+      if (i + batchSize < allData.length) {
+        await new Promise(resolve => setTimeout(resolve, 100));
+      }
+    }
+    
+    const cgData = allData;
     const totalMcap = cgData.reduce((sum, c) => sum + (c.market_cap || 0), 0);
 
-    // Process tokens
+    // Process tokens with category information
     const tokens = cgData.map((coin, index) => {
       const sparklineData = coin.sparkline_in_7d?.price || [];
-      
-      // Calculate real RSI from sparkline data
       const rsi = calculateRSI(sparklineData, 14);
       
-      // Normalize sparkline to percentage scale (starting at 100) for chart compatibility
       let normalizedSparkline = [];
       if (sparklineData.length > 0) {
         const startPrice = sparklineData[0];
         normalizedSparkline = sparklineData.map(p => (p / startPrice) * 100);
       }
+      
+      // Get categories from detailed data
+      const detailData = detailedDataMap.get(coin.id);
+      const categories = detailData?.categories || [];
+      const category = mapCategory(categories);
       
       return {
         id: coin.id,
@@ -146,8 +225,10 @@ export default async function handler(req) {
         dominance: coin.market_cap ? (coin.market_cap / totalMcap) * 100 : 0,
         rsi: rsi,
         sparkline: normalizedSparkline,
-        sparklineRaw: sparklineData, // Keep raw prices for detailed view
-        image: coin.image, // CoinGecko provides image URLs directly
+        sparklineRaw: sparklineData,
+        image: coin.image,
+        category: category, // Now using CoinGecko's categories!
+        categories: categories, // Store original categories for reference
       };
     });
 
