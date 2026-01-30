@@ -1048,7 +1048,6 @@ export default function App() {
             </select>
             <button onClick={() => user ? setShowWL(w => !w) : setShowLoginModal(true)} className={`px-4 py-2.5 rounded-xl text-sm font-medium transition-all ${showWL ? 'bg-yellow-500 text-black' : darkMode ? 'bg-white/5 text-gray-400 hover:bg-white/10 border border-white/5' : 'bg-white text-gray-600 hover:bg-gray-50 border border-gray-200'}`}>⭐ {user ? watchlist.size : ''}</button>
             <button onClick={exportCSV} className={`px-4 py-2.5 rounded-xl text-sm ${darkMode ? 'bg-white/5 text-gray-400 hover:bg-white/10 border border-white/5' : 'bg-white text-gray-600 hover:bg-gray-50 border border-gray-200'}`}>📥</button>
-            <button onClick={fetchData} className={`px-4 py-2.5 rounded-xl text-sm ${darkMode ? 'bg-white/5 text-gray-400 hover:bg-white/10 border border-white/5' : 'bg-white text-gray-600 hover:bg-gray-50 border border-gray-200'}`}>🔄</button>
           </div>
         </div>
 
