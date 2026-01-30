@@ -1,10 +1,5 @@
-// ==================================================
-// FILE: src/App.jsx
-// ==================================================
-
 import { useState, useEffect, useMemo, useCallback } from 'react';
 
-// Theme Toggle Component
 const ThemeToggle = ({ darkMode, setDarkMode }) => (
   <button
     onClick={() => setDarkMode(!darkMode)}
@@ -41,9 +36,9 @@ const CAT_MAP = {
 const getCat = id => CAT_MAP[id] || 'other';
 
 const CATS = [
-  {id:'all',name:'All',icon:'🌐'},
+  {id:'all',name:'All',icon:'🌍'},
   {id:'layer-1',name:'L1/L2',icon:'⛓️'},
-  {id:'defi',name:'DeFi',icon:'🦏'},
+  {id:'defi',name:'DeFi',icon:'🦄'},
   {id:'meme',name:'Meme',icon:'🐸'},
   {id:'gaming',name:'Gaming',icon:'🎮'},
   {id:'ai',name:'AI',icon:'🤖'},
@@ -169,6 +164,200 @@ const UserMenu = ({ user, onLogout, watchlistCount }) => {
     </div>
   );
 };
+
+const TermsPage = ({ onBack, darkMode, setDarkMode }) => (
+  <div className={`min-h-screen transition-colors duration-200 ${darkMode ? 'bg-[#0a0a0f] text-white' : 'bg-gray-100 text-gray-900'}`}>
+    {darkMode && <div className="fixed inset-0 pointer-events-none">
+      <div className="absolute top-0 left-1/3 w-[800px] h-[800px] bg-blue-600/5 rounded-full blur-[120px]"/>
+      <div className="absolute bottom-0 right-1/3 w-[800px] h-[800px] bg-purple-500/5 rounded-full blur-[120px]"/>
+    </div>}
+    <div className="relative z-10 max-w-4xl mx-auto px-4 py-8">
+      <div className="flex items-center justify-between mb-8">
+        <button onClick={onBack} className={`flex items-center gap-2 ${darkMode ? 'text-gray-400 hover:text-white' : 'text-gray-600 hover:text-gray-900'} transition-colors`}>
+          <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" /></svg>
+          Back to Dashboard
+        </button>
+        <ThemeToggle darkMode={darkMode} setDarkMode={setDarkMode} />
+      </div>
+      <h1 className="text-4xl font-black mb-2"><span className="bg-gradient-to-r from-blue-500 via-purple-500 to-pink-500 bg-clip-text text-transparent">Terms of Service</span></h1>
+      <p className={`text-sm mb-8 ${darkMode ? 'text-gray-500' : 'text-gray-400'}`}>Last updated: {new Date().toLocaleDateString()}</p>
+      
+      <div className={`${darkMode ? 'bg-white/5 border-white/10' : 'bg-white border-gray-200'} border rounded-2xl p-8 mb-8 space-y-6`}>
+        <section>
+          <h2 className="text-2xl font-bold mb-3">1. Acceptance of Terms</h2>
+          <p className={darkMode ? 'text-gray-300' : 'text-gray-700'}>By accessing and using Oversold.crypto, you accept and agree to be bound by the terms and provision of this agreement. If you do not agree to these terms, please do not use this service.</p>
+        </section>
+
+        <section>
+          <h2 className="text-2xl font-bold mb-3">2. Description of Service</h2>
+          <p className={darkMode ? 'text-gray-300' : 'text-gray-700'}>Oversold.crypto provides cryptocurrency market analysis tools, including RSI (Relative Strength Index) calculations, price tracking, and portfolio watchlist features. All data is provided for informational and educational purposes only.</p>
+        </section>
+
+        <section>
+          <h2 className="text-2xl font-bold mb-3">3. Not Financial Advice</h2>
+          <div className={`${darkMode ? 'bg-yellow-500/10 border-yellow-500/30' : 'bg-yellow-50 border-yellow-200'} border rounded-xl p-4 mb-4`}>
+            <p className={`font-semibold ${darkMode ? 'text-yellow-400' : 'text-yellow-700'}`}>⚠️ Important Disclaimer</p>
+            <p className={`text-sm mt-2 ${darkMode ? 'text-yellow-300' : 'text-yellow-800'}`}>Nothing on this platform constitutes financial, investment, legal, or tax advice. All content is for educational and informational purposes only. Always conduct your own research and consult with qualified financial advisors before making investment decisions.</p>
+          </div>
+        </section>
+
+        <section>
+          <h2 className="text-2xl font-bold mb-3">4. Data Accuracy</h2>
+          <p className={darkMode ? 'text-gray-300' : 'text-gray-700'}>While we strive to provide accurate and up-to-date information, we make no warranties about the completeness, reliability, or accuracy of the data. Cryptocurrency markets are highly volatile and data may be delayed or incorrect.</p>
+        </section>
+
+        <section>
+          <h2 className="text-2xl font-bold mb-3">5. User Accounts</h2>
+          <p className={darkMode ? 'text-gray-300' : 'text-gray-700'}>When you create an account using Google Sign-In, you are responsible for maintaining the security of your account. You agree to accept responsibility for all activities that occur under your account.</p>
+        </section>
+
+        <section>
+          <h2 className="text-2xl font-bold mb-3">6. Prohibited Uses</h2>
+          <p className={`mb-3 ${darkMode ? 'text-gray-300' : 'text-gray-700'}`}>You may not use our service to:</p>
+          <ul className={`list-disc list-inside space-y-2 ${darkMode ? 'text-gray-300' : 'text-gray-700'}`}>
+            <li>Engage in any illegal activities</li>
+            <li>Manipulate or attempt to manipulate market data</li>
+            <li>Scrape or harvest data without permission</li>
+            <li>Interfere with the proper working of the service</li>
+            <li>Impersonate any person or entity</li>
+          </ul>
+        </section>
+
+        <section>
+          <h2 className="text-2xl font-bold mb-3">7. Intellectual Property</h2>
+          <p className={darkMode ? 'text-gray-300' : 'text-gray-700'}>All content, features, and functionality of Oversold.crypto are owned by us and are protected by international copyright, trademark, and other intellectual property laws.</p>
+        </section>
+
+        <section>
+          <h2 className="text-2xl font-bold mb-3">8. Limitation of Liability</h2>
+          <p className={darkMode ? 'text-gray-300' : 'text-gray-700'}>Oversold.crypto and its operators shall not be liable for any indirect, incidental, special, consequential, or punitive damages resulting from your use of or inability to use the service, including but not limited to investment losses.</p>
+        </section>
+
+        <section>
+          <h2 className="text-2xl font-bold mb-3">9. Changes to Terms</h2>
+          <p className={darkMode ? 'text-gray-300' : 'text-gray-700'}>We reserve the right to modify these terms at any time. Continued use of the service after changes constitutes acceptance of the modified terms.</p>
+        </section>
+
+        <section>
+          <h2 className="text-2xl font-bold mb-3">10. Contact</h2>
+          <p className={darkMode ? 'text-gray-300' : 'text-gray-700'}>If you have any questions about these Terms of Service, please contact us through our support channels.</p>
+        </section>
+      </div>
+
+      <footer className={`text-center py-8 border-t ${darkMode ? 'border-white/10' : 'border-gray-200'}`}>
+        <p className="text-gray-500 text-sm">© 2025 Oversold.crypto. All rights reserved.</p>
+      </footer>
+    </div>
+  </div>
+);
+
+const PrivacyPage = ({ onBack, darkMode, setDarkMode }) => (
+  <div className={`min-h-screen transition-colors duration-200 ${darkMode ? 'bg-[#0a0a0f] text-white' : 'bg-gray-100 text-gray-900'}`}>
+    {darkMode && <div className="fixed inset-0 pointer-events-none">
+      <div className="absolute top-0 left-1/3 w-[800px] h-[800px] bg-green-600/5 rounded-full blur-[120px]"/>
+      <div className="absolute bottom-0 right-1/3 w-[800px] h-[800px] bg-blue-500/5 rounded-full blur-[120px]"/>
+    </div>}
+    <div className="relative z-10 max-w-4xl mx-auto px-4 py-8">
+      <div className="flex items-center justify-between mb-8">
+        <button onClick={onBack} className={`flex items-center gap-2 ${darkMode ? 'text-gray-400 hover:text-white' : 'text-gray-600 hover:text-gray-900'} transition-colors`}>
+          <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" /></svg>
+          Back to Dashboard
+        </button>
+        <ThemeToggle darkMode={darkMode} setDarkMode={setDarkMode} />
+      </div>
+      <h1 className="text-4xl font-black mb-2"><span className="bg-gradient-to-r from-green-500 via-blue-500 to-purple-500 bg-clip-text text-transparent">Privacy Policy</span></h1>
+      <p className={`text-sm mb-8 ${darkMode ? 'text-gray-500' : 'text-gray-400'}`}>Last updated: {new Date().toLocaleDateString()}</p>
+      
+      <div className={`${darkMode ? 'bg-white/5 border-white/10' : 'bg-white border-gray-200'} border rounded-2xl p-8 mb-8 space-y-6`}>
+        <section>
+          <h2 className="text-2xl font-bold mb-3">1. Information We Collect</h2>
+          <p className={`mb-3 ${darkMode ? 'text-gray-300' : 'text-gray-700'}`}>We collect the following types of information:</p>
+          <div className="space-y-3">
+            <div>
+              <h3 className={`font-semibold mb-2 ${darkMode ? 'text-gray-200' : 'text-gray-800'}`}>Account Information</h3>
+              <p className={darkMode ? 'text-gray-300' : 'text-gray-700'}>When you sign in with Google, we collect your name, email address, and profile picture provided by Google OAuth.</p>
+            </div>
+            <div>
+              <h3 className={`font-semibold mb-2 ${darkMode ? 'text-gray-200' : 'text-gray-800'}`}>Usage Data</h3>
+              <p className={darkMode ? 'text-gray-300' : 'text-gray-700'}>We collect information about how you interact with our service, including watchlist data, filters used, and preferences.</p>
+            </div>
+            <div>
+              <h3 className={`font-semibold mb-2 ${darkMode ? 'text-gray-200' : 'text-gray-800'}`}>Technical Data</h3>
+              <p className={darkMode ? 'text-gray-300' : 'text-gray-700'}>We may collect browser type, device information, IP address, and other technical information for service improvement.</p>
+            </div>
+          </div>
+        </section>
+
+        <section>
+          <h2 className="text-2xl font-bold mb-3">2. How We Use Your Information</h2>
+          <ul className={`list-disc list-inside space-y-2 ${darkMode ? 'text-gray-300' : 'text-gray-700'}`}>
+            <li>To provide and maintain our service</li>
+            <li>To manage your watchlists and preferences</li>
+            <li>To improve and personalize your experience</li>
+            <li>To communicate with you about service updates</li>
+            <li>To ensure security and prevent fraud</li>
+          </ul>
+        </section>
+
+        <section>
+          <h2 className="text-2xl font-bold mb-3">3. Data Storage</h2>
+          <p className={darkMode ? 'text-gray-300' : 'text-gray-700'}>Your watchlist and preferences are stored locally in your browser's localStorage. We do not store your trading decisions or financial information on our servers. Your Google account information is only used for authentication purposes.</p>
+        </section>
+
+        <section>
+          <h2 className="text-2xl font-bold mb-3">4. Third-Party Services</h2>
+          <p className={`mb-3 ${darkMode ? 'text-gray-300' : 'text-gray-700'}`}>We use the following third-party services:</p>
+          <ul className={`list-disc list-inside space-y-2 ${darkMode ? 'text-gray-300' : 'text-gray-700'}`}>
+            <li><strong>Google OAuth:</strong> For secure authentication</li>
+            <li><strong>CoinGecko API:</strong> For cryptocurrency market data</li>
+          </ul>
+          <p className={`mt-3 ${darkMode ? 'text-gray-300' : 'text-gray-700'}`}>These services have their own privacy policies governing the use of your information.</p>
+        </section>
+
+        <section>
+          <h2 className="text-2xl font-bold mb-3">5. Cookies and Local Storage</h2>
+          <p className={darkMode ? 'text-gray-300' : 'text-gray-700'}>We use browser localStorage to save your preferences, theme settings, and watchlist data. This data remains on your device and is not transmitted to our servers.</p>
+        </section>
+
+        <section>
+          <h2 className="text-2xl font-bold mb-3">6. Data Security</h2>
+          <p className={darkMode ? 'text-gray-300' : 'text-gray-700'}>We implement reasonable security measures to protect your information. However, no method of transmission over the Internet is 100% secure, and we cannot guarantee absolute security.</p>
+        </section>
+
+        <section>
+          <h2 className="text-2xl font-bold mb-3">7. Your Rights</h2>
+          <p className={`mb-3 ${darkMode ? 'text-gray-300' : 'text-gray-700'}`}>You have the right to:</p>
+          <ul className={`list-disc list-inside space-y-2 ${darkMode ? 'text-gray-300' : 'text-gray-700'}`}>
+            <li>Access the personal information we hold about you</li>
+            <li>Request correction of inaccurate information</li>
+            <li>Request deletion of your account and data</li>
+            <li>Opt-out of certain data collection practices</li>
+            <li>Export your watchlist data</li>
+          </ul>
+        </section>
+
+        <section>
+          <h2 className="text-2xl font-bold mb-3">8. Children's Privacy</h2>
+          <p className={darkMode ? 'text-gray-300' : 'text-gray-700'}>Our service is not intended for users under the age of 18. We do not knowingly collect information from children under 18. If you believe we have collected such information, please contact us immediately.</p>
+        </section>
+
+        <section>
+          <h2 className="text-2xl font-bold mb-3">9. Changes to Privacy Policy</h2>
+          <p className={darkMode ? 'text-gray-300' : 'text-gray-700'}>We may update this Privacy Policy from time to time. We will notify you of any changes by posting the new Privacy Policy on this page and updating the "Last updated" date.</p>
+        </section>
+
+        <section>
+          <h2 className="text-2xl font-bold mb-3">10. Contact Us</h2>
+          <p className={darkMode ? 'text-gray-300' : 'text-gray-700'}>If you have any questions about this Privacy Policy or how we handle your data, please contact us through our support channels.</p>
+        </section>
+      </div>
+
+      <footer className={`text-center py-8 border-t ${darkMode ? 'border-white/10' : 'border-gray-200'}`}>
+        <p className="text-gray-500 text-sm">© 2025 Oversold.crypto. Your privacy matters to us.</p>
+      </footer>
+    </div>
+  </div>
+);
 
 const MethodologyPage = ({ onBack, darkMode, setDarkMode }) => (
   <div className={`min-h-screen transition-colors duration-200 ${darkMode ? 'bg-[#0a0a0f] text-white' : 'bg-gray-100 text-gray-900'}`}>
@@ -471,50 +660,94 @@ const FullPageChart = ({ data, basePrice, change7d }) => {
   );
 };
 
-const TokenDetailPage = ({ token, onBack }) => {
+const TokenDetailPage = ({ token, onBack, darkMode, setDarkMode }) => {
   if (!token) return null;
   const rs = rsiStyle(token.rsi);
   return (
-    <div className="min-h-screen bg-[#0a0a0f] text-white">
+    <div className={`min-h-screen transition-colors duration-200 ${darkMode ? 'bg-[#0a0a0f] text-white' : 'bg-gray-100 text-gray-900'}`}>
       <div className="max-w-6xl mx-auto px-6 py-8">
-        <div className="flex items-center gap-4 mb-8">
-          <button onClick={onBack} className="p-2 rounded-lg bg-white/5 hover:bg-white/10 transition-colors"><svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 19l-7-7m0 0l7-7m-7 7h18" /></svg></button>
-          <img src={token.image} alt={token.symbol} className="w-16 h-16 rounded-2xl bg-gray-800"/>
-          <div className="flex-1">
-            <div className="flex items-center gap-3"><h1 className="text-3xl font-bold">{token.name}</h1><span className="text-xl text-gray-400">{token.symbol}</span><span className="px-2 py-1 rounded bg-white/10 text-sm text-gray-400">Rank #{token.rank}</span></div>
-            <div className="flex items-center gap-4 mt-2"><span className="text-2xl font-bold">{fmtP(token.price)}</span><span className={`text-lg font-semibold ${token.change24h >= 0 ? 'text-green-400' : 'text-red-400'}`}>{token.change24h >= 0 ? '+' : ''}{token.change24h?.toFixed(2)}% (24h)</span></div>
+        <div className="flex items-center justify-between mb-8">
+          <div className="flex items-center gap-4">
+            <button onClick={onBack} className={`p-2 rounded-lg ${darkMode ? 'bg-white/5 hover:bg-white/10' : 'bg-white hover:bg-gray-50 border border-gray-200'} transition-colors`}>
+              <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 19l-7-7m0 0l7-7m-7 7h18" />
+              </svg>
+            </button>
+            <img src={token.image} alt={token.symbol} className="w-16 h-16 rounded-2xl bg-gray-800"/>
+            <div className="flex-1">
+              <div className="flex items-center gap-3">
+                <h1 className="text-3xl font-bold">{token.name}</h1>
+                <span className={`text-xl ${darkMode ? 'text-gray-400' : 'text-gray-500'}`}>{token.symbol}</span>
+                <span className={`px-2 py-1 rounded text-sm ${darkMode ? 'bg-white/10 text-gray-400' : 'bg-gray-200 text-gray-600'}`}>Rank #{token.rank}</span>
+              </div>
+              <div className="flex items-center gap-4 mt-2">
+                <span className="text-2xl font-bold">{fmtP(token.price)}</span>
+                <span className={`text-lg font-semibold ${token.change24h >= 0 ? 'text-green-400' : 'text-red-400'}`}>
+                  {token.change24h >= 0 ? '+' : ''}{token.change24h?.toFixed(2)}% (24h)
+                </span>
+              </div>
+            </div>
           </div>
+          <ThemeToggle darkMode={darkMode} setDarkMode={setDarkMode} />
         </div>
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-          <div className="lg:col-span-2 bg-white/5 rounded-2xl p-6 border border-white/10">
-            <div className="flex justify-between items-center mb-6"><h2 className="text-xl font-semibold">7-Day Price Chart</h2><span className={`px-3 py-1 rounded-lg text-sm font-medium ${token.change7d >= 0 ? 'bg-green-500/20 text-green-400' : 'bg-red-500/20 text-red-400'}`}>{token.change7d >= 0 ? '+' : ''}{token.change7d?.toFixed(2)}%</span></div>
+          <div className={`lg:col-span-2 ${darkMode ? 'bg-white/5 border-white/10' : 'bg-white border-gray-200'} rounded-2xl p-6 border`}>
+            <div className="flex justify-between items-center mb-6">
+              <h2 className="text-xl font-semibold">7-Day Price Chart</h2>
+              <span className={`px-3 py-1 rounded-lg text-sm font-medium ${token.change7d >= 0 ? 'bg-green-500/20 text-green-400' : 'bg-red-500/20 text-red-400'}`}>
+                {token.change7d >= 0 ? '+' : ''}{token.change7d?.toFixed(2)}%
+              </span>
+            </div>
             <FullPageChart data={token.sparkline} basePrice={token.price} change7d={token.change7d}/>
           </div>
           <div className="space-y-6">
-            <div className="bg-white/5 rounded-2xl p-6 border border-white/10">
-              <div className="flex justify-between items-center mb-4"><h2 className="text-lg font-semibold">RSI (14)</h2><div className="flex items-center gap-2"><span className={`w-3 h-3 rounded-full ${rs.dot}`}/><span className={`text-2xl font-bold ${rs.text}`}>{token.rsi !== null ? token.rsi.toFixed(1) : 'N/A'}</span></div></div>
+            <div className={`${darkMode ? 'bg-white/5 border-white/10' : 'bg-white border-gray-200'} rounded-2xl p-6 border`}>
+              <div className="flex justify-between items-center mb-4">
+                <h2 className="text-lg font-semibold">RSI (14)</h2>
+                <div className="flex items-center gap-2">
+                  <span className={`w-3 h-3 rounded-full ${rs.dot}`}/>
+                  <span className={`text-2xl font-bold ${rs.text}`}>{token.rsi !== null ? token.rsi.toFixed(1) : 'N/A'}</span>
+                </div>
+              </div>
               <RSIMeter value={token.rsi}/>
-              <div className={`mt-4 p-3 rounded-xl ${rs.bg} border ${rs.text}`}><span className="font-semibold">{rs.label}</span><p className="text-sm opacity-80 mt-1">{token.rsi < 30 ? 'This token may be oversold.' : token.rsi > 70 ? 'This token may be overbought.' : 'Neutral territory.'}</p></div>
+              <div className={`mt-4 p-3 rounded-xl ${rs.bg} border ${rs.text}`}>
+                <span className="font-semibold">{rs.label}</span>
+                <p className="text-sm opacity-80 mt-1">
+                  {token.rsi < 30 ? 'This token may be oversold.' : token.rsi > 70 ? 'This token may be overbought.' : 'Neutral territory.'}
+                </p>
+              </div>
             </div>
-            <div className="bg-white/5 rounded-2xl p-6 border border-white/10">
+            <div className={`${darkMode ? 'bg-white/5 border-white/10' : 'bg-white border-gray-200'} rounded-2xl p-6 border`}>
               <h2 className="text-lg font-semibold mb-4">Price Changes</h2>
               <div className="grid grid-cols-2 gap-3">
                 {[{l:'1 Hour', v:token.change1h},{l:'24 Hours', v:token.change24h},{l:'7 Days', v:token.change7d},{l:'30 Days', v:token.change30d}].map(x => (
-                  <div key={x.l} className="bg-white/5 rounded-xl p-4 text-center"><p className="text-xs text-gray-500 mb-1">{x.l}</p><p className={`text-lg font-bold ${(x.v||0) >= 0 ? 'text-green-400' : 'text-red-400'}`}>{x.v != null ? `${x.v >= 0 ? '+' : ''}${x.v.toFixed(2)}%` : '--'}</p></div>
+                  <div key={x.l} className={`${darkMode ? 'bg-white/5' : 'bg-gray-100'} rounded-xl p-4 text-center`}>
+                    <p className={`text-xs mb-1 ${darkMode ? 'text-gray-500' : 'text-gray-600'}`}>{x.l}</p>
+                    <p className={`text-lg font-bold ${(x.v||0) >= 0 ? 'text-green-400' : 'text-red-400'}`}>
+                      {x.v != null ? `${x.v >= 0 ? '+' : ''}${x.v.toFixed(2)}%` : '--'}
+                    </p>
+                  </div>
                 ))}
               </div>
             </div>
           </div>
         </div>
-        <div className="mt-6 bg-white/5 rounded-2xl p-6 border border-white/10">
+        <div className={`mt-6 ${darkMode ? 'bg-white/5 border-white/10' : 'bg-white border-gray-200'} rounded-2xl p-6 border`}>
           <h2 className="text-lg font-semibold mb-4">Market Data</h2>
           <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-4">
             {[{icon:'💰', label:'Price', value:fmtP(token.price)},{icon:'📊', label:'Market Cap', value:'$'+fmt(token.mcap)},{icon:'📈', label:'24h Volume', value:'$'+fmt(token.volume)},{icon:'🔄', label:'Vol/MCap', value:token.volMcap?.toFixed(2)+'%'},{icon:'💎', label:'Supply', value:fmt(token.supply)+' '+token.symbol},{icon:'🏆', label:'Dominance', value:(token.dominance||0).toFixed(3)+'%'}].map(x => (
-              <div key={x.label} className="bg-white/5 rounded-xl p-4"><p className="text-xs text-gray-500 mb-2">{x.icon} {x.label}</p><p className="text-lg font-bold truncate">{x.value}</p></div>
+              <div key={x.label} className={`${darkMode ? 'bg-white/5' : 'bg-gray-100'} rounded-xl p-4`}>
+                <p className={`text-xs mb-2 ${darkMode ? 'text-gray-500' : 'text-gray-600'}`}>{x.icon} {x.label}</p>
+                <p className="text-lg font-bold truncate">{x.value}</p>
+              </div>
             ))}
           </div>
         </div>
-        <div className="mt-6"><a href={`https://coingecko.com/en/coins/${token.id}`} target="_blank" rel="noreferrer" className="block w-full py-4 bg-green-500/20 hover:bg-green-500/30 rounded-xl text-center text-green-400 font-medium transition-colors text-lg">View on CoinGecko ↗</a></div>
+        <div className="mt-6">
+          <a href={`https://coingecko.com/en/coins/${token.id}`} target="_blank" rel="noreferrer" className="block w-full py-4 bg-green-500/20 hover:bg-green-500/30 rounded-xl text-center text-green-400 font-medium transition-colors text-lg">
+            View on CoinGecko ↗
+          </a>
+        </div>
       </div>
     </div>
   );
@@ -573,6 +806,8 @@ export default function App() {
       if (hash.startsWith('#/token/')) { setPageTokenId(hash.replace('#/token/', '')); setCurrentPage('token'); }
       else if (hash === '#/methodology') { setPageTokenId(null); setCurrentPage('methodology'); }
       else if (hash === '#/watchlist') { setPageTokenId(null); setCurrentPage('watchlist'); }
+      else if (hash === '#/terms') { setPageTokenId(null); setCurrentPage('terms'); }
+      else if (hash === '#/privacy') { setPageTokenId(null); setCurrentPage('privacy'); }
       else { setPageTokenId(null); setCurrentPage('home'); }
     };
     parseHash();
@@ -638,9 +873,11 @@ export default function App() {
   if (pageTokenId) {
     if (loading) return <div className="min-h-screen bg-[#0a0a0f] text-white flex items-center justify-center"><div className="text-center"><div className="w-12 h-12 border-4 border-orange-500 border-t-transparent rounded-full animate-spin mx-auto mb-4"/><p className="text-gray-400">Loading...</p></div></div>;
     if (!pageToken) return <div className="min-h-screen bg-[#0a0a0f] text-white flex items-center justify-center"><div className="text-center"><p className="text-4xl mb-4">😕</p><p className="text-xl mb-2">Token not found</p><button onClick={goBack} className="px-6 py-2 bg-orange-500 rounded-lg">Back</button></div></div>;
-    return <TokenDetailPage token={pageToken} onBack={goBack} />;
+    return <TokenDetailPage token={pageToken} onBack={goBack} darkMode={darkMode} setDarkMode={setDarkMode} />;
   }
   if (currentPage === 'methodology') return <MethodologyPage onBack={() => window.location.hash = ''} darkMode={darkMode} setDarkMode={setDarkMode} />;
+  if (currentPage === 'terms') return <TermsPage onBack={() => window.location.hash = ''} darkMode={darkMode} setDarkMode={setDarkMode} />;
+  if (currentPage === 'privacy') return <PrivacyPage onBack={() => window.location.hash = ''} darkMode={darkMode} setDarkMode={setDarkMode} />;
   if (currentPage === 'watchlist') { if (!user) { window.location.hash = ''; setShowLoginModal(true); return null; } return <WatchlistPage tokens={tokens} watchlist={watchlist} onRemove={toggleWatch} onBack={() => window.location.hash = ''} user={user} darkMode={darkMode} setDarkMode={setDarkMode} />; }
 
   return (
