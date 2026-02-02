@@ -332,7 +332,12 @@ export const analyzeToken = (token, historicalData = null) => {
   
   const scoreResult = calculateSignalScore(scoreData);
   analysis.score = scoreResult.score;
-  analysis.signalDetails = scoreResult.signals;
+  // Store the full result including signals array, activeCount, and totalSignals
+  analysis.signalDetails = {
+    signals: scoreResult.signals,
+    activeCount: scoreResult.activeCount,
+    totalSignals: scoreResult.totalSignals
+  };
   analysis.strength = getSignalStrength(scoreResult.score);
   
   // Market cap reliability
