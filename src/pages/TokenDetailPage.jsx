@@ -7,20 +7,72 @@ import { ThemeToggle } from '../components/ThemeToggle';
 import { RSIMeter, FullPageChart } from '../components/Charts';
 import { FullSignalAnalysis } from '../components/SignalAnalysis';
 import { analyzeToken } from '../utils/signals';
+import { getEnrichedTokenData, calculateHistoricalRSI } from '../utils/binance';
+import { useState, useEffect } from 'react';
 
 export const TokenDetailPage = ({ token, onBack, darkMode, setDarkMode }) => {
   if (!token) return null;
 
   const rs = getRsiStyle(token.rsi);
   
-  // Perform comprehensive signal analysis
-  const historicalData = token.sparklineRaw ? {
-    prices: token.sparklineRaw,
-    volumes: [], // Would need separate API call for volume history
-    rsiValues: [] // Would need to calculate RSI for each point
-  } : null;
+// Perform comprehensive signal analysis with Binance data
+const [signalAnalysis, setSignalAnalysis] = useState(null);
+const [loadingSignals, setLoadingSignals] = useState(true);
+
+useEffect(() => {
+  const fetchSignalData = async () => {
+    setLoadingSignals(true);
+    
+    try {
+      // Try to get Binance data first (best quality)
+      const binanceData = await getEnrichedTokenData(token.symbol, 168);
+      
+      let historicalData;
+      
+      if (binanceData) {
+        // Use Binance data (highest quality)
+        const rsiValues = calculateHistoricalRSI(binanceData.prices, 14);
+        
+        historicalData = {
+          prices: binanceData.prices,
+          volumes: binanceData.volumes,
+          rsiValues: rsiValues,
+          fundingRate: binanceData.fundingRate
+        };
+        
+        console.log('✅ Using Binance data:', {
+          pricePoints: binanceData.prices.length,
+          volumePoints: binanceData.volumes.length,
+          rsiPoints: rsiValues.length,
+          fundingRate: binanceData.fundingRate
+        });
+      } else {
+        // Fallback to CoinGecko sparkline
+        historicalData = {
+          prices: token.sparklineRaw || [],
+          volumes: [],
+          rsiValues: []
+        };
+        
+        console.log('⚠️ Using CoinGecko data (limited)');
+      }
+      
+      const analysis = analyzeToken(token, historicalData);
+      setSignalAnalysis(analysis);
+    } catch (error) {
+      console.error('Error fetching signal data:', error);
+      // Fallback analysis
+      setSignalAnalysis({
+        score: 0,
+        signalDetails: { signals: [], activeCount: 0, totalSignals: 0 }
+      });
+    } finally {
+      setLoadingSignals(false);
+    }
+  };
   
-  const signalAnalysis = analyzeToken(token, historicalData);
+  fetchSignalData();
+}, [token.id, token.symbol]);
 
   return (
     <div
@@ -169,11 +221,18 @@ export const TokenDetailPage = ({ token, onBack, darkMode, setDarkMode }) => {
           </div>
         </div>
 
-        {/* Signal Analysis Section */}
-        <div className="mt-6">
-          <h2 className="text-2xl font-bold mb-4">📊 Trading Signal Analysis</h2>
-          <FullSignalAnalysis analysis={signalAnalysis} darkMode={darkMode} />
-        </div>
+{/* Signal Analysis Section */}
+<div className="mt-6">
+  <h2 className="text-2xl font-bold mb-4">📊 Trading Signal Analysis</h2>
+  {loadingSignals ? (
+    <div className={`${darkMode ? 'bg-white/5 border-white/10' : 'bg-white border-gray-200'} border rounded-xl p-12 text-center`}>
+      <div className="w-12 h-12 border-4 border-orange-500 border-t-transparent rounded-full animate-spin mx-auto mb-4" />
+      <p className="text-gray-500">Fetching enhanced signal data from Binance...</p>
+    </div>
+  ) : (
+    <FullSignalAnalysis analysis={signalAnalysis} darkMode={darkMode} />
+  )}
+</div>
 
         <div
           className={`mt-6 ${
