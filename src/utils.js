@@ -102,5 +102,8 @@ export const PRESETS = [
 // Application constants
 export const REFRESH_INTERVAL = 60000; // 60 seconds
 export const RSI_PERIOD = 14;
+export const SMA_PERIOD = 50;
+export const BB_PERIOD = 20;
+export const VOLUME_PERIOD = 20;
 export const GOOGLE_CLIENT_ID = '889475479271-64c68ua41no083lq5g82v8pp2cvf9r9k.apps.googleusercontent.com';
 export const API_URL = '/api/crypto';
