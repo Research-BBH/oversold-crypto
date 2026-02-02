@@ -199,10 +199,21 @@ export default async function handler(req) {
     }
     
     const cgData = allData;
-    const totalMcap = cgData.reduce((sum, c) => sum + (c.market_cap || 0), 0);
+    
+    // Deduplicate tokens by ID (CoinGecko sometimes returns duplicates)
+    const seenIds = new Set();
+    const dedupedData = cgData.filter(coin => {
+      if (seenIds.has(coin.id)) {
+        return false;
+      }
+      seenIds.add(coin.id);
+      return true;
+    });
+    
+    const totalMcap = dedupedData.reduce((sum, c) => sum + (c.market_cap || 0), 0);
 
     // Process tokens with smart categorization and all signals
-    const tokens = cgData.map((coin, index) => {
+    const tokens = dedupedData.map((coin, index) => {
       const sparklineData = coin.sparkline_in_7d?.price || [];
       const rsi = calculateRSI(sparklineData, 14);
       
