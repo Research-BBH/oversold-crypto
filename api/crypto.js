@@ -1,5 +1,5 @@
 // ==================================================
-// FILE: api/crypto.js (Optimized - No Extra Calls)
+// FILE: api/crypto.js (Complete - With All Signals)
 // ==================================================
 
 export const config = {
@@ -49,6 +49,43 @@ const calculateRSI = (prices, period = 14) => {
   const rsi = 100 - (100 / (1 + rs));
   
   return Math.round(rsi * 10) / 10;
+};
+
+// Calculate Simple Moving Average
+const calculateSMA = (prices, period) => {
+  if (!prices || prices.length < period) return null;
+  const slice = prices.slice(-period);
+  const sum = slice.reduce((a, b) => a + b, 0);
+  return sum / period;
+};
+
+// Calculate Bollinger Bands
+const calculateBollingerBands = (prices, period = 20, stdDev = 2) => {
+  if (!prices || prices.length < period) return null;
+  
+  const slice = prices.slice(-period);
+  const sma = slice.reduce((a, b) => a + b, 0) / period;
+  
+  const squaredDiffs = slice.map(price => Math.pow(price - sma, 2));
+  const variance = squaredDiffs.reduce((a, b) => a + b, 0) / period;
+  const std = Math.sqrt(variance);
+  
+  return {
+    upper: sma + (std * stdDev),
+    middle: sma,
+    lower: sma - (std * stdDev)
+  };
+};
+
+// Calculate volume ratio
+const calculateVolumeRatio = (volumes, period = 20) => {
+  if (!volumes || volumes.length < period + 1) return null;
+  
+  const currentVolume = volumes[volumes.length - 1];
+  const avgVolume = calculateSMA(volumes.slice(0, -1), period);
+  
+  if (!avgVolume || avgVolume === 0) return null;
+  return currentVolume / avgVolume;
 };
 
 // Smart categorization based on coin ID and name
@@ -164,7 +201,7 @@ export default async function handler(req) {
     const cgData = allData;
     const totalMcap = cgData.reduce((sum, c) => sum + (c.market_cap || 0), 0);
 
-    // Process tokens with smart categorization
+    // Process tokens with smart categorization and all signals
     const tokens = cgData.map((coin, index) => {
       const sparklineData = coin.sparkline_in_7d?.price || [];
       const rsi = calculateRSI(sparklineData, 14);
@@ -174,6 +211,15 @@ export default async function handler(req) {
         const startPrice = sparklineData[0];
         normalizedSparkline = sparklineData.map(p => (p / startPrice) * 100);
       }
+      
+      // Calculate additional signals
+      const sma50 = calculateSMA(sparklineData, 50);
+      const bollingerBands = calculateBollingerBands(sparklineData, 20, 2);
+      
+      // Volume analysis note: CoinGecko doesn't provide volume history in sparkline
+      // Would need separate API call for historical volume data
+      // For now, we can use the 24h volume but can't calculate ratio without history
+      let volumeRatio = null;
       
       // Smart categorization based on metadata
       const category = getCategoryFromMetadata(coin.id, coin.name, coin.symbol);
@@ -201,6 +247,9 @@ export default async function handler(req) {
         atlDate: coin.atl_date,
         dominance: coin.market_cap ? (coin.market_cap / totalMcap) * 100 : 0,
         rsi: rsi,
+        sma50: sma50,
+        bollingerBands: bollingerBands,
+        volumeRatio: volumeRatio,
         sparkline: normalizedSparkline,
         sparklineRaw: sparklineData,
         image: coin.image,
