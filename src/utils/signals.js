@@ -211,6 +211,19 @@ export const calculateSignalScore = (data) => {
   } else {
     signals.push({ name: 'Bullish Divergence', weight: 10, active: false });
   }
+
+if (data.fundingRate !== undefined && data.fundingRate !== null) {
+    if (data.fundingRate < 0) {
+      score += 15;
+      signals.push({ name: 'Negative Funding', weight: 15, active: true });
+      if (data.fundingRate < -0.02) {
+        score += 5;
+        signals.push({ name: 'Extreme Negative Funding', weight: 5, active: true });
+      }
+    } else {
+      signals.push({ name: 'Negative Funding', weight: 15, active: false });
+    }
+  }
   
   return {
     score: Math.min(score, 100),
