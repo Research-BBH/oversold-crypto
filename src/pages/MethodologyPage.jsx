@@ -283,6 +283,169 @@ export const MethodologyPage = ({ onBack, darkMode, setDarkMode }) => (
         </div>
       </div>
 
+      {/* Trading Signal System Section */}
+      <div
+        className={`${
+          darkMode ? 'bg-white/5 border-white/10' : 'bg-white border-gray-200'
+        } border rounded-2xl p-8 mb-8`}
+      >
+        <h2 className="text-3xl font-bold mb-6">📊 Trading Signal System</h2>
+        <p className={`mb-6 leading-relaxed ${darkMode ? 'text-gray-300' : 'text-gray-700'}`}>
+          Our multi-factor signal system combines several technical indicators to identify high-probability 
+          trading opportunities. Each signal contributes points to an overall score (0-100), with higher 
+          scores indicating stronger setups.
+        </p>
+
+        <div className="space-y-6">
+          {/* RSI Oversold */}
+          <div className={`${darkMode ? 'bg-white/5' : 'bg-gray-50'} rounded-xl p-5`}>
+            <div className="flex items-center justify-between mb-3">
+              <h3 className="font-bold text-lg flex items-center gap-2">
+                <span className="w-3 h-3 rounded-full bg-red-500"></span>
+                RSI Oversold
+              </h3>
+              <span className={`text-sm font-medium ${darkMode ? 'text-orange-400' : 'text-orange-600'}`}>25-30 points</span>
+            </div>
+            <p className={`text-sm leading-relaxed ${darkMode ? 'text-gray-400' : 'text-gray-600'}`}>
+              <strong>Trigger:</strong> RSI below 30 (25pts), or below 25 for extreme oversold (+5pts bonus).<br/>
+              <strong>Why it matters:</strong> RSI below 30 indicates the asset may be undervalued. Historically, 
+              prices tend to bounce from oversold levels as selling pressure exhausts itself. Extreme readings 
+              below 25 often precede strong reversals but can also indicate serious fundamental issues.
+            </p>
+          </div>
+
+          {/* 50 SMA */}
+          <div className={`${darkMode ? 'bg-white/5' : 'bg-gray-50'} rounded-xl p-5`}>
+            <div className="flex items-center justify-between mb-3">
+              <h3 className="font-bold text-lg flex items-center gap-2">
+                <span className="w-3 h-3 rounded-full bg-blue-500"></span>
+                Above 50 SMA (Trend Filter)
+              </h3>
+              <span className={`text-sm font-medium ${darkMode ? 'text-orange-400' : 'text-orange-600'}`}>30 points</span>
+            </div>
+            <p className={`text-sm leading-relaxed ${darkMode ? 'text-gray-400' : 'text-gray-600'}`}>
+              <strong>Trigger:</strong> Current price is above the 50-period Simple Moving Average.<br/>
+              <strong>Why it matters:</strong> This is the most critical filter in the system. The 50 SMA acts 
+              as a trend indicator - when price is above it, the asset is in an uptrend. Buying oversold dips 
+              in uptrends has significantly higher success rates than buying in downtrends. This single filter 
+              can dramatically improve win rates.
+            </p>
+          </div>
+
+          {/* Volume */}
+          <div className={`${darkMode ? 'bg-white/5' : 'bg-gray-50'} rounded-xl p-5`}>
+            <div className="flex items-center justify-between mb-3">
+              <h3 className="font-bold text-lg flex items-center gap-2">
+                <span className="w-3 h-3 rounded-full bg-yellow-500"></span>
+                Volume Spike
+              </h3>
+              <span className={`text-sm font-medium ${darkMode ? 'text-orange-400' : 'text-orange-600'}`}>20-25 points</span>
+            </div>
+            <p className={`text-sm leading-relaxed ${darkMode ? 'text-gray-400' : 'text-gray-600'}`}>
+              <strong>Trigger:</strong> Volume 1.5x above 20-period average (20pts), or 2x+ for extreme volume (+5pts).<br/>
+              <strong>Why it matters:</strong> High volume during oversold conditions can indicate either 
+              capitulation (panic selling creating a bottom) or accumulation (smart money buying). Either way, 
+              unusual volume often marks significant turning points. Low-volume oversold readings are less reliable.
+            </p>
+          </div>
+
+          {/* Bollinger Bands */}
+          <div className={`${darkMode ? 'bg-white/5' : 'bg-gray-50'} rounded-xl p-5`}>
+            <div className="flex items-center justify-between mb-3">
+              <h3 className="font-bold text-lg flex items-center gap-2">
+                <span className="w-3 h-3 rounded-full bg-purple-500"></span>
+                Below Bollinger Band Lower
+              </h3>
+              <span className={`text-sm font-medium ${darkMode ? 'text-orange-400' : 'text-orange-600'}`}>15 points</span>
+            </div>
+            <p className={`text-sm leading-relaxed ${darkMode ? 'text-gray-400' : 'text-gray-600'}`}>
+              <strong>Trigger:</strong> Price drops below the lower Bollinger Band (20-period, 2 standard deviations).<br/>
+              <strong>Why it matters:</strong> Bollinger Bands contain approximately 95% of price action. When 
+              price moves outside the bands, it's statistically rare and often indicates an extreme that will 
+              revert to the mean. Combined with oversold RSI, this provides confluence for potential reversals.
+            </p>
+          </div>
+
+          {/* Divergence */}
+          <div className={`${darkMode ? 'bg-white/5' : 'bg-gray-50'} rounded-xl p-5`}>
+            <div className="flex items-center justify-between mb-3">
+              <h3 className="font-bold text-lg flex items-center gap-2">
+                <span className="w-3 h-3 rounded-full bg-green-500"></span>
+                Bullish Divergence
+              </h3>
+              <span className={`text-sm font-medium ${darkMode ? 'text-orange-400' : 'text-orange-600'}`}>10 points</span>
+            </div>
+            <p className={`text-sm leading-relaxed ${darkMode ? 'text-gray-400' : 'text-gray-600'}`}>
+              <strong>Trigger:</strong> Price makes a lower low, but RSI makes a higher low.<br/>
+              <strong>Why it matters:</strong> Divergence between price and momentum is a powerful signal. When 
+              price makes new lows but RSI doesn't confirm with new lows, it indicates weakening selling momentum. 
+              This often precedes bullish reversals as the downtrend loses steam.
+            </p>
+          </div>
+
+          {/* Funding Rate */}
+          <div className={`${darkMode ? 'bg-white/5' : 'bg-gray-50'} rounded-xl p-5`}>
+            <div className="flex items-center justify-between mb-3">
+              <h3 className="font-bold text-lg flex items-center gap-2">
+                <span className="w-3 h-3 rounded-full bg-cyan-500"></span>
+                Negative Funding Rate
+              </h3>
+              <span className={`text-sm font-medium ${darkMode ? 'text-orange-400' : 'text-orange-600'}`}>15-20 points</span>
+            </div>
+            <p className={`text-sm leading-relaxed ${darkMode ? 'text-gray-400' : 'text-gray-600'}`}>
+              <strong>Trigger:</strong> Perpetual futures funding rate is negative (15pts), or below -0.02% (+5pts).<br/>
+              <strong>Why it matters:</strong> Funding rates reflect market sentiment in derivatives. Negative 
+              funding means shorts are paying longs - indicating heavy bearish positioning. Historically, extreme 
+              negative funding often marks local bottoms as over-leveraged shorts get squeezed.
+            </p>
+          </div>
+        </div>
+
+        {/* Score Interpretation */}
+        <div className={`mt-8 p-5 rounded-xl ${darkMode ? 'bg-gradient-to-r from-orange-500/10 to-red-500/10 border border-orange-500/20' : 'bg-gradient-to-r from-orange-50 to-red-50 border border-orange-200'}`}>
+          <h3 className="font-bold text-lg mb-4">📈 Interpreting Signal Scores</h3>
+          <div className="grid md:grid-cols-4 gap-4">
+            <div className="text-center">
+              <div className="text-2xl font-bold text-green-500">75-100</div>
+              <div className={`text-sm font-medium ${darkMode ? 'text-green-400' : 'text-green-600'}`}>STRONG BUY</div>
+              <div className={`text-xs ${darkMode ? 'text-gray-400' : 'text-gray-600'}`}>4-5 signals confirmed</div>
+            </div>
+            <div className="text-center">
+              <div className="text-2xl font-bold text-blue-500">60-74</div>
+              <div className={`text-sm font-medium ${darkMode ? 'text-blue-400' : 'text-blue-600'}`}>BUY</div>
+              <div className={`text-xs ${darkMode ? 'text-gray-400' : 'text-gray-600'}`}>3-4 signals confirmed</div>
+            </div>
+            <div className="text-center">
+              <div className="text-2xl font-bold text-yellow-500">45-59</div>
+              <div className={`text-sm font-medium ${darkMode ? 'text-yellow-400' : 'text-yellow-600'}`}>CONSIDER</div>
+              <div className={`text-xs ${darkMode ? 'text-gray-400' : 'text-gray-600'}`}>2-3 signals confirmed</div>
+            </div>
+            <div className="text-center">
+              <div className="text-2xl font-bold text-gray-500">0-44</div>
+              <div className={`text-sm font-medium ${darkMode ? 'text-gray-400' : 'text-gray-600'}`}>WAIT</div>
+              <div className={`text-xs ${darkMode ? 'text-gray-400' : 'text-gray-600'}`}>Insufficient signals</div>
+            </div>
+          </div>
+        </div>
+
+        {/* Market Cap Warning */}
+        <div className={`mt-6 p-5 rounded-xl ${darkMode ? 'bg-yellow-500/10 border border-yellow-500/30' : 'bg-yellow-50 border border-yellow-200'}`}>
+          <div className="flex gap-3">
+            <span className="text-2xl">⚠️</span>
+            <div>
+              <h4 className={`font-semibold mb-1 ${darkMode ? 'text-yellow-400' : 'text-yellow-700'}`}>
+                Market Cap Reliability Adjustment
+              </h4>
+              <p className={`text-sm ${darkMode ? 'text-yellow-300' : 'text-yellow-800'}`}>
+                Signal scores are adjusted based on market cap. Large caps ($10B+) receive full scores, 
+                while smaller caps receive discounted scores due to lower liquidity and higher manipulation risk. 
+                Micro-cap tokens (&lt;$50M) may show technical signals but are generally unreliable for this type of analysis.
+              </p>
+            </div>
+          </div>
+        </div>
+      </div>
+
       <div
         className={`${
           darkMode ? 'bg-white/5 border-white/10' : 'bg-white border-gray-200'
