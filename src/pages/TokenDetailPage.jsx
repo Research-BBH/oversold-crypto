@@ -5,11 +5,22 @@
 import { formatPrice, formatNumber, getRsiStyle } from '../utils';
 import { ThemeToggle } from '../components/ThemeToggle';
 import { RSIMeter, FullPageChart } from '../components/Charts';
+import { FullSignalAnalysis } from '../components/SignalAnalysis';
+import { analyzeToken } from '../utils/signals';
 
 export const TokenDetailPage = ({ token, onBack, darkMode, setDarkMode }) => {
   if (!token) return null;
 
   const rs = getRsiStyle(token.rsi);
+  
+  // Perform comprehensive signal analysis
+  const historicalData = token.sparklineRaw ? {
+    prices: token.sparklineRaw,
+    volumes: [], // Would need separate API call for volume history
+    rsiValues: [] // Would need to calculate RSI for each point
+  } : null;
+  
+  const signalAnalysis = analyzeToken(token, historicalData);
 
   return (
     <div
@@ -156,6 +167,12 @@ export const TokenDetailPage = ({ token, onBack, darkMode, setDarkMode }) => {
               </div>
             </div>
           </div>
+        </div>
+
+        {/* Signal Analysis Section */}
+        <div className="mt-6">
+          <h2 className="text-2xl font-bold mb-4">📊 Trading Signal Analysis</h2>
+          <FullSignalAnalysis analysis={signalAnalysis} darkMode={darkMode} />
         </div>
 
         <div
