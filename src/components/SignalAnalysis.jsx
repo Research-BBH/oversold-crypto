@@ -75,14 +75,14 @@ export const SignalScoreCircle = ({ score }) => {
 
 // Signal descriptions for education
 const SIGNAL_DESCRIPTIONS = {
-  'RSI Oversold': 'RSI below 30 indicates the asset may be undervalued. Historically, prices tend to bounce from oversold levels.',
+  'RSI Oversold': 'RSI below 30 indicates the asset may be undervalued. Historically, prices tend to bounce from oversold levels. Bonus: +5pts if RSI drops below 25 (extreme).',
   'RSI Extreme': 'RSI below 25 is extremely oversold. This often precedes strong reversals, but can also indicate serious fundamental issues.',
   'Above 50 SMA': 'Price is above the 50-period Simple Moving Average, indicating an uptrend. This is the most critical filter - buying dips in uptrends has higher success rates.',
-  'Volume Spike': 'Trading volume is 1.5x+ higher than the 20-period average. High volume on dips can indicate capitulation or accumulation.',
+  'Volume Spike': 'Trading volume is 1.5x+ higher than the 20-period average. High volume on dips can indicate capitulation or accumulation. Bonus: +5pts if volume exceeds 2x average.',
   'Extreme Volume': 'Volume is 2x+ the average. Extreme volume often marks significant turning points in price action.',
   'Below BB Lower': 'Price is below the lower Bollinger Band (2 standard deviations below 20-period SMA). This is statistically rare and often precedes mean reversion.',
   'Bullish Divergence': 'Price made a lower low, but RSI made a higher low. This momentum divergence often precedes bullish reversals.',
-  'Negative Funding': 'Perpetual futures funding rate is negative, meaning shorts are paying longs. This indicates bearish sentiment that often marks bottoms.',
+  'Negative Funding': 'Perpetual futures funding rate is negative, meaning shorts are paying longs. This indicates bearish sentiment that often marks bottoms. Bonus: +5pts if funding rate is below -0.02%.',
   'Extreme Negative Funding': 'Funding rate below -0.02% shows extreme bearish positioning. Historically correlates with local bottoms.'
 };
 
