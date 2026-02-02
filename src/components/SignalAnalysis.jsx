@@ -1,10 +1,12 @@
 // ==================================================
-// FILE: src/components/SignalAnalysis.jsx
+// FILE: src/components/SignalAnalysis.jsx (FIXED)
 // ==================================================
 
 import { formatPrice } from '../utils';
 
 export const SignalStrengthBadge = ({ strength }) => {
+  if (!strength) return null;
+
   const colors = {
     HIGH: 'bg-green-500/20 border-green-500/40 text-green-400',
     MODERATE: 'bg-blue-500/20 border-blue-500/40 text-blue-400',
@@ -20,6 +22,8 @@ export const SignalStrengthBadge = ({ strength }) => {
 };
 
 export const SignalScoreCircle = ({ score }) => {
+  const safeScore = score || 0;
+
   const getColor = (s) => {
     if (s >= 75) return 'text-green-400';
     if (s >= 60) return 'text-blue-400';
@@ -36,7 +40,7 @@ export const SignalScoreCircle = ({ score }) => {
 
   const radius = 40;
   const circumference = 2 * Math.PI * radius;
-  const strokeDashoffset = circumference - (score / 100) * circumference;
+  const strokeDashoffset = circumference - (safeScore / 100) * circumference;
 
   return (
     <div className="relative w-24 h-24">
@@ -53,7 +57,7 @@ export const SignalScoreCircle = ({ score }) => {
           cx="48"
           cy="48"
           r={radius}
-          stroke={getStroke(score)}
+          stroke={getStroke(safeScore)}
           strokeWidth="8"
           fill="none"
           strokeDasharray={circumference}
@@ -63,13 +67,17 @@ export const SignalScoreCircle = ({ score }) => {
         />
       </svg>
       <div className="absolute inset-0 flex items-center justify-center">
-        <span className={`text-2xl font-bold ${getColor(score)}`}>{score}</span>
+        <span className={`text-2xl font-bold ${getColor(safeScore)}`}>{Math.round(safeScore)}</span>
       </div>
     </div>
   );
 };
 
 export const SignalsList = ({ signals, darkMode }) => {
+  if (!signals || !Array.isArray(signals) || signals.length === 0) {
+    return <p className="text-gray-500 text-sm">No signal data available</p>;
+  }
+
   return (
     <div className="space-y-2">
       {signals.map((signal, index) => (
@@ -96,6 +104,8 @@ export const SignalsList = ({ signals, darkMode }) => {
 };
 
 export const MarketCapReliability = ({ reliability, darkMode }) => {
+  if (!reliability) return null;
+
   const colors = {
     green: darkMode ? 'bg-green-500/10 border-green-500/30 text-green-400' : 'bg-green-50 border-green-200 text-green-700',
     blue: darkMode ? 'bg-blue-500/10 border-blue-500/30 text-blue-400' : 'bg-blue-50 border-blue-200 text-blue-700',
@@ -105,7 +115,7 @@ export const MarketCapReliability = ({ reliability, darkMode }) => {
   };
 
   return (
-    <div className={`border rounded-xl p-4 ${colors[reliability.color]}`}>
+    <div className={`border rounded-xl p-4 ${colors[reliability.color] || colors.gray}`}>
       <div className="flex items-center justify-between mb-2">
         <span className="font-semibold text-sm">{reliability.tier.replace(/_/g, ' ')}</span>
         <span className="text-xs opacity-75">{reliability.confidence}</span>
@@ -116,6 +126,8 @@ export const MarketCapReliability = ({ reliability, darkMode }) => {
 };
 
 export const BuyRecommendation = ({ recommendation, darkMode }) => {
+  if (!recommendation) return null;
+
   const colors = {
     STRONG_BUY: darkMode ? 'bg-green-500/20 border-green-500' : 'bg-green-50 border-green-500',
     BUY: darkMode ? 'bg-blue-500/20 border-blue-500' : 'bg-blue-50 border-blue-500',
@@ -124,7 +136,7 @@ export const BuyRecommendation = ({ recommendation, darkMode }) => {
   };
 
   return (
-    <div className={`border-2 rounded-xl p-4 ${colors[recommendation.action]}`}>
+    <div className={`border-2 rounded-xl p-4 ${colors[recommendation.action] || colors.WAIT}`}>
       <div className="flex items-center gap-3 mb-2">
         <span className="text-3xl">{recommendation.emoji}</span>
         <div>
@@ -138,14 +150,16 @@ export const BuyRecommendation = ({ recommendation, darkMode }) => {
 };
 
 export const TechnicalIndicators = ({ analysis, darkMode }) => {
+  if (!analysis) return null;
+
   return (
     <div className="grid grid-cols-2 gap-3">
       {analysis.sma50 && (
         <div className={`${darkMode ? 'bg-white/5' : 'bg-gray-100'} rounded-xl p-3`}>
           <p className="text-xs text-gray-500 mb-1">50 SMA</p>
           <p className="text-sm font-bold">{formatPrice(analysis.sma50)}</p>
-          <p className={`text-xs mt-1 ${analysis.signals.aboveSMA ? 'text-green-400' : 'text-red-400'}`}>
-            {analysis.signals.aboveSMA ? '↑ Above' : '↓ Below'}
+          <p className={`text-xs mt-1 ${analysis.signals?.aboveSMA ? 'text-green-400' : 'text-red-400'}`}>
+            {analysis.signals?.aboveSMA ? '↑ Above' : '↓ Below'}
           </p>
         </div>
       )}
@@ -155,8 +169,8 @@ export const TechnicalIndicators = ({ analysis, darkMode }) => {
           <p className="text-xs text-gray-500 mb-1">Bollinger Bands</p>
           <p className="text-xs">Upper: {formatPrice(analysis.bollingerBands.upper)}</p>
           <p className="text-xs">Lower: {formatPrice(analysis.bollingerBands.lower)}</p>
-          <p className={`text-xs mt-1 ${analysis.signals.belowBB ? 'text-orange-400' : 'text-gray-500'}`}>
-            {analysis.signals.belowBB ? '⚠️ Below Lower' : '✓ In Range'}
+          <p className={`text-xs mt-1 ${analysis.signals?.belowBB ? 'text-orange-400' : 'text-gray-500'}`}>
+            {analysis.signals?.belowBB ? '⚠️ Below Lower' : '✓ In Range'}
           </p>
         </div>
       )}
@@ -165,8 +179,8 @@ export const TechnicalIndicators = ({ analysis, darkMode }) => {
         <div className={`${darkMode ? 'bg-white/5' : 'bg-gray-100'} rounded-xl p-3`}>
           <p className="text-xs text-gray-500 mb-1">Volume Ratio</p>
           <p className="text-sm font-bold">{analysis.volumeRatio.toFixed(2)}x</p>
-          <p className={`text-xs mt-1 ${analysis.signals.volumeSpike ? 'text-green-400' : 'text-gray-500'}`}>
-            {analysis.signals.volumeSpike ? '🔥 High Volume' : '✓ Normal'}
+          <p className={`text-xs mt-1 ${analysis.signals?.volumeSpike ? 'text-green-400' : 'text-gray-500'}`}>
+            {analysis.signals?.volumeSpike ? '🔥 High Volume' : '✓ Normal'}
           </p>
         </div>
       )}
@@ -187,7 +201,15 @@ export const TechnicalIndicators = ({ analysis, darkMode }) => {
 };
 
 export const FullSignalAnalysis = ({ analysis, darkMode }) => {
-  if (!analysis) return null;
+  if (!analysis) {
+    return (
+      <div className={`${darkMode ? 'bg-white/5 border-white/10' : 'bg-white border-gray-200'} border rounded-xl p-6 text-center`}>
+        <p className="text-gray-500">Loading signal analysis...</p>
+      </div>
+    );
+  }
+
+  const recommendation = getBuyRecommendation(analysis);
 
   return (
     <div className="space-y-4">
@@ -195,14 +217,14 @@ export const FullSignalAnalysis = ({ analysis, darkMode }) => {
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
         <div className={`${darkMode ? 'bg-white/5 border-white/10' : 'bg-white border-gray-200'} border rounded-xl p-6 flex flex-col items-center justify-center`}>
           <p className="text-sm text-gray-500 mb-2">Signal Score</p>
-          <SignalScoreCircle score={analysis.score} />
+          <SignalScoreCircle score={analysis.score || 0} />
           <p className="text-xs text-gray-500 mt-2">
-            {analysis.signalDetails.activeCount}/{analysis.signalDetails.totalSignals} signals active
+            {analysis.signalDetails?.activeCount || 0}/{analysis.signalDetails?.totalSignals || 0} signals active
           </p>
         </div>
         
         <div className="flex flex-col gap-3">
-          <BuyRecommendation recommendation={getBuyRecommendation(analysis)} darkMode={darkMode} />
+          {recommendation && <BuyRecommendation recommendation={recommendation} darkMode={darkMode} />}
           {analysis.reliability && (
             <MarketCapReliability reliability={analysis.reliability} darkMode={darkMode} />
           )}
@@ -210,10 +232,12 @@ export const FullSignalAnalysis = ({ analysis, darkMode }) => {
       </div>
 
       {/* Signal Details */}
-      <div className={`${darkMode ? 'bg-white/5 border-white/10' : 'bg-white border-gray-200'} border rounded-xl p-6`}>
-        <h3 className="font-semibold mb-4">Signal Breakdown</h3>
-        <SignalsList signals={analysis.signalDetails.signals} darkMode={darkMode} />
-      </div>
+      {analysis.signalDetails && analysis.signalDetails.signals && analysis.signalDetails.signals.length > 0 && (
+        <div className={`${darkMode ? 'bg-white/5 border-white/10' : 'bg-white border-gray-200'} border rounded-xl p-6`}>
+          <h3 className="font-semibold mb-4">Signal Breakdown</h3>
+          <SignalsList signals={analysis.signalDetails.signals} darkMode={darkMode} />
+        </div>
+      )}
 
       {/* Technical Indicators */}
       {(analysis.sma50 || analysis.bollingerBands || analysis.volumeRatio || analysis.divergence) && (
@@ -230,15 +254,15 @@ export const FullSignalAnalysis = ({ analysis, darkMode }) => {
           <div className="grid grid-cols-3 gap-4">
             <div>
               <p className="text-xs text-gray-500 mb-1">Position Size</p>
-              <p className="text-sm font-bold">{analysis.strength.positionSize}</p>
+              <p className="text-sm font-bold">{analysis.strength.positionSize || 'N/A'}</p>
             </div>
             <div>
               <p className="text-xs text-gray-500 mb-1">Historical Win Rate</p>
-              <p className="text-sm font-bold text-green-400">{analysis.strength.winRate}</p>
+              <p className="text-sm font-bold text-green-400">{analysis.strength.winRate || 'N/A'}</p>
             </div>
             <div>
               <p className="text-xs text-gray-500 mb-1">Conviction</p>
-              <p className="text-sm font-bold">{analysis.strength.level}</p>
+              <p className="text-sm font-bold">{analysis.strength.level || 'N/A'}</p>
             </div>
           </div>
         </div>
@@ -247,11 +271,13 @@ export const FullSignalAnalysis = ({ analysis, darkMode }) => {
   );
 };
 
-// Helper to get recommendation (imported from signals.js)
+// Helper to get recommendation
 const getBuyRecommendation = (analysis) => {
+  if (!analysis) return null;
+
   const { score, reliability } = analysis;
   
-  let adjustedScore = score;
+  let adjustedScore = score || 0;
   
   if (reliability) {
     switch (reliability.tier) {
