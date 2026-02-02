@@ -73,30 +73,50 @@ export const SignalScoreCircle = ({ score }) => {
   );
 };
 
-export const SignalsList = ({ signals, darkMode }) => {
+// Signal descriptions for education
+const SIGNAL_DESCRIPTIONS = {
+  'RSI Oversold': 'RSI below 30 indicates the asset may be undervalued. Historically, prices tend to bounce from oversold levels.',
+  'RSI Extreme': 'RSI below 25 is extremely oversold. This often precedes strong reversals, but can also indicate serious fundamental issues.',
+  'Above 50 SMA': 'Price is above the 50-period Simple Moving Average, indicating an uptrend. This is the most critical filter - buying dips in uptrends has higher success rates.',
+  'Volume Spike': 'Trading volume is 1.5x+ higher than the 20-period average. High volume on dips can indicate capitulation or accumulation.',
+  'Extreme Volume': 'Volume is 2x+ the average. Extreme volume often marks significant turning points in price action.',
+  'Below BB Lower': 'Price is below the lower Bollinger Band (2 standard deviations below 20-period SMA). This is statistically rare and often precedes mean reversion.',
+  'Bullish Divergence': 'Price made a lower low, but RSI made a higher low. This momentum divergence often precedes bullish reversals.',
+  'Negative Funding': 'Perpetual futures funding rate is negative, meaning shorts are paying longs. This indicates bearish sentiment that often marks bottoms.',
+  'Extreme Negative Funding': 'Funding rate below -0.02% shows extreme bearish positioning. Historically correlates with local bottoms.'
+};
+
+export const SignalsList = ({ signals, darkMode, showDescriptions = true }) => {
   if (!signals || !Array.isArray(signals) || signals.length === 0) {
     return <p className="text-gray-500 text-sm">No signal data available</p>;
   }
 
   return (
-    <div className="space-y-2">
+    <div className="space-y-3">
       {signals.map((signal, index) => (
         <div
           key={index}
-          className={`flex items-center justify-between p-2 rounded-lg ${
+          className={`p-3 rounded-lg ${
             darkMode ? 'bg-white/5' : 'bg-gray-100'
           }`}
         >
-          <div className="flex items-center gap-2">
-            <span className={`w-2 h-2 rounded-full ${signal.active ? 'bg-green-500' : 'bg-gray-500'}`} />
-            <span className={`text-sm ${signal.active ? (darkMode ? 'text-white' : 'text-gray-900') : 'text-gray-500'}`}>
-              {signal.name}
-            </span>
+          <div className="flex items-center justify-between">
+            <div className="flex items-center gap-2">
+              <span className={`w-2 h-2 rounded-full ${signal.active ? 'bg-green-500' : 'bg-gray-500'}`} />
+              <span className={`text-sm font-medium ${signal.active ? (darkMode ? 'text-white' : 'text-gray-900') : 'text-gray-500'}`}>
+                {signal.name}
+              </span>
+            </div>
+            <div className="flex items-center gap-2">
+              <span className="text-xs text-gray-500">{signal.weight}pts</span>
+              {signal.active && <span className="text-green-500 text-xs">✓</span>}
+            </div>
           </div>
-          <div className="flex items-center gap-2">
-            <span className="text-xs text-gray-500">{signal.weight}pts</span>
-            {signal.active && <span className="text-green-500 text-xs">✓</span>}
-          </div>
+          {showDescriptions && SIGNAL_DESCRIPTIONS[signal.name] && (
+            <p className={`text-xs mt-2 ${darkMode ? 'text-gray-400' : 'text-gray-600'}`}>
+              {SIGNAL_DESCRIPTIONS[signal.name]}
+            </p>
+          )}
         </div>
       ))}
     </div>
