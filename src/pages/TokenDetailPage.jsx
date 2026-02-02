@@ -24,48 +24,41 @@ useEffect(() => {
     setLoadingSignals(true);
     
     try {
-      // Try to get Binance data first (best quality)
+      // Try Binance first
       const binanceData = await getEnrichedTokenData(token.symbol, 168);
       
       let historicalData;
       
       if (binanceData) {
-        // Use Binance data (highest quality)
         const rsiValues = calculateHistoricalRSI(binanceData.prices, 14);
-        
         historicalData = {
           prices: binanceData.prices,
           volumes: binanceData.volumes,
           rsiValues: rsiValues,
           fundingRate: binanceData.fundingRate
         };
-        
-        console.log('✅ Using Binance data:', {
-          pricePoints: binanceData.prices.length,
-          volumePoints: binanceData.volumes.length,
-          rsiPoints: rsiValues.length,
-          fundingRate: binanceData.fundingRate
-        });
       } else {
-        // Fallback to CoinGecko sparkline
+        // IMPROVED FALLBACK - use CoinGecko sparkline
         historicalData = {
           prices: token.sparklineRaw || [],
-          volumes: [],
-          rsiValues: []
+          volumes: [],  // CoinGecko doesn't provide volume history
+          rsiValues: [],
+          fundingRate: null
         };
-        
-        console.log('⚠️ Using CoinGecko data (limited)');
       }
       
       const analysis = analyzeToken(token, historicalData);
       setSignalAnalysis(analysis);
+      
     } catch (error) {
       console.error('Error fetching signal data:', error);
-      // Fallback analysis
-      setSignalAnalysis({
-        score: 0,
-        signalDetails: { signals: [], activeCount: 0, totalSignals: 0 }
+      // BETTER FALLBACK - still analyze with limited data
+      const basicAnalysis = analyzeToken(token, {
+        prices: token.sparklineRaw || [],
+        volumes: [],
+        rsiValues: []
       });
+      setSignalAnalysis(basicAnalysis);
     } finally {
       setLoadingSignals(false);
     }
