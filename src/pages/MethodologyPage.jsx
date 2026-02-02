@@ -456,12 +456,20 @@ export const MethodologyPage = ({ onBack, darkMode, setDarkMode }) => (
         <div className="space-y-5">
           <div>
             <h3 className={`font-semibold mb-2 ${darkMode ? 'text-white' : 'text-gray-900'}`}>
-              Data Provider:
+              Data Providers:
             </h3>
-            <p className={`text-sm leading-relaxed ${darkMode ? 'text-gray-400' : 'text-gray-600'}`}>
-              All market data is sourced from CoinGecko's comprehensive cryptocurrency API, providing
-              coverage for the top 1000 tokens by market capitalization.
-            </p>
+            <div className={`text-sm leading-relaxed ${darkMode ? 'text-gray-400' : 'text-gray-600'}`}>
+              <p className="mb-3">
+                <strong className={darkMode ? 'text-orange-400' : 'text-orange-600'}>CoinGecko API:</strong> Primary source for market data including prices, market caps, 
+                volume, and 7-day sparkline data for the top 1000 tokens by market capitalization. Used for 
+                RSI calculation, Bollinger Bands, and 50 SMA indicators.
+              </p>
+              <p>
+                <strong className={darkMode ? 'text-yellow-400' : 'text-yellow-600'}>Binance API:</strong> Secondary source for enhanced signal analysis on supported tokens. 
+                Provides hourly candlestick data for more granular technical analysis, plus perpetual futures 
+                funding rates for sentiment analysis. Falls back to CoinGecko data for tokens not listed on Binance.
+              </p>
+            </div>
           </div>
 
           <div>
