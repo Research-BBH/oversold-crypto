@@ -183,8 +183,6 @@ export default function App() {
     }
     return newFilters;
   });
-  // Clear other filters when using signal filters
-  setPreset(null);
   setRsiFilter(null);
 }, []);
 
@@ -233,6 +231,9 @@ if (signalFilters.size > 0) {
             break;
           case 'rsi_extreme':
             if (token.rsi === null || token.rsi >= 20) return false;
+            break;
+          case 'rsi_overbought':
+            if (token.rsi === null || token.rsi < 70) return false;
             break;
           // Signal-based filters - require signals data
           case 'above_sma50':
@@ -588,10 +589,10 @@ if (signalFilters.size > 0) {
                 type: 'signal'
               },
               { 
-                id: 'overbought', 
+                id: 'rsi_overbought', 
                 label: '🟢 Overbought >70', 
                 desc: 'RSI above 70',
-                type: 'preset'
+                type: 'signal'
               },
               // Sort-based Filters
               { 
