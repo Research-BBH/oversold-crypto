@@ -315,10 +315,12 @@ export const FullSignalAnalysis = ({ analysis, darkMode }) => {
             <div className="flex-1">
               <p className="text-xs font-medium text-blue-500 mb-1">Data Source Information</p>
               <p className={`text-xs ${darkMode ? 'text-blue-400/80' : 'text-blue-700'}`}>
-                {analysis.dataSource === 'binance' && 
-                  `Using Binance real-time data (${analysis.dataPoints} data points). All 6 signals available with highest accuracy.`}
+                {analysis.dataSource === 'bybit' && 
+                  `Using Bybit real-time data (${analysis.dataPoints} data points). All 6 signals available with highest accuracy including funding rates.`}
+                {analysis.dataSource === 'okx' && 
+                  `Using OKX real-time data (${analysis.dataPoints} data points). All 6 signals available including funding rates.`}
                 {analysis.dataSource === 'coingecko' && 
-                  `Using CoinGecko historical data (${analysis.dataPoints} data points). Volume and funding rate signals may be limited.`}
+                  `Using CoinGecko historical data (${analysis.dataPoints} data points). 5/6 signals available - funding rate unavailable (requires futures market).`}
                 {analysis.dataSource === 'sparkline' && 
                   `Using limited 7-day data (${analysis.dataPoints} points). Some signals unavailable - needs longer historical data for SMA50 calculation.`}
                 {analysis.dataSource === 'fallback' && 
