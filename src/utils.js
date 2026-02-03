@@ -107,3 +107,4 @@ export const BB_PERIOD = 20;
 export const VOLUME_PERIOD = 20;
 export const GOOGLE_CLIENT_ID = '889475479271-64c68ua41no083lq5g82v8pp2cvf9r9k.apps.googleusercontent.com';
 export const API_URL = '/api/crypto';
+export const API_URL_ENHANCED = '/api/crypto-enhanced';
