@@ -16,6 +16,12 @@ import {
 import { ThemeToggle } from './components/ThemeToggle';
 import { LoginModal } from './components/LoginModal';
 import { UserMenu } from './components/UserMenu';
+import { Spark, RSIMeter, DetailChart } from './components/Charts';
+import { TermsPage } from './pages/TermsPage';
+import { PrivacyPage } from './pages/PrivacyPage';
+import { MethodologyPage } from './pages/MethodologyPage';
+import { WatchlistPage } from './pages/WatchlistPage';
+import { TokenDetailPage } from './pages/TokenDetailPage';
 
 export default function App() {
   // State management
@@ -1259,4 +1265,3 @@ if (signalFilters.size > 0) {
     </div>
   );
 }
-
