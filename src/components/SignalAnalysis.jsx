@@ -78,12 +78,10 @@ const SIGNAL_DESCRIPTIONS = {
   'RSI Oversold': 'RSI below 30 indicates the asset may be undervalued. Historically, prices tend to bounce from oversold levels. Bonus: +5pts if RSI drops below 25 (extreme).',
   'RSI Extreme': 'RSI below 25 is extremely oversold. This often precedes strong reversals, but can also indicate serious fundamental issues.',
   'Above 50 SMA': 'Price is above the 50-period Simple Moving Average, indicating an uptrend. This is the most critical filter - buying dips in uptrends has higher success rates.',
-  'Volume Spike': 'Trading volume is 1.5x+ higher than the 20-period average. High volume on dips can indicate capitulation or accumulation. Bonus: +5pts if volume exceeds 2x average.',
-  'Extreme Volume': 'Volume is 2x+ the average. Extreme volume often marks significant turning points in price action.',
   'Below BB Lower': 'Price is below the lower Bollinger Band (2 standard deviations below 20-period SMA). This is statistically rare and often precedes mean reversion.',
+  'Volume Spike': 'Trading volume is significantly higher than the 20-period average. High volume on dips can indicate capitulation or accumulation.',
   'Bullish Divergence': 'Price made a lower low, but RSI made a higher low. This momentum divergence often precedes bullish reversals.',
-  'Negative Funding': 'Perpetual futures funding rate is negative, meaning shorts are paying longs. This indicates bearish sentiment that often marks bottoms. Bonus: +5pts if funding rate is below -0.02%.',
-  'Extreme Negative Funding': 'Funding rate below -0.02% shows extreme bearish positioning. Historically correlates with local bottoms.'
+  'Negative Funding': 'Perpetual futures funding rate is negative, meaning shorts are paying longs. This indicates bearish sentiment that often marks bottoms. Only available for tokens with futures markets.',
 };
 
 export const SignalsList = ({ signals, darkMode, showDescriptions = true }) => {
@@ -93,32 +91,48 @@ export const SignalsList = ({ signals, darkMode, showDescriptions = true }) => {
 
   return (
     <div className="space-y-3">
-      {signals.map((signal, index) => (
-        <div
-          key={index}
-          className={`p-3 rounded-lg ${
-            darkMode ? 'bg-white/5' : 'bg-gray-100'
-          }`}
-        >
-          <div className="flex items-center justify-between">
-            <div className="flex items-center gap-2">
-              <span className={`w-2 h-2 rounded-full ${signal.active ? 'bg-green-500' : 'bg-gray-500'}`} />
-              <span className={`text-sm font-medium ${signal.active ? (darkMode ? 'text-white' : 'text-gray-900') : 'text-gray-500'}`}>
-                {signal.name}
-              </span>
+      {signals.map((signal, index) => {
+        const isUnavailable = signal.unavailable === true;
+        const isActive = signal.active && !isUnavailable;
+        
+        return (
+          <div
+            key={index}
+            className={`p-3 rounded-lg ${
+              darkMode ? 'bg-white/5' : 'bg-gray-100'
+            }`}
+          >
+            <div className="flex items-center justify-between">
+              <div className="flex items-center gap-2">
+                <span className={`w-2 h-2 rounded-full ${
+                  isUnavailable ? 'bg-gray-600' : 
+                  isActive ? 'bg-green-500' : 'bg-gray-500'
+                }`} />
+                <span className={`text-sm font-medium ${
+                  isUnavailable ? 'text-gray-600' :
+                  isActive ? (darkMode ? 'text-white' : 'text-gray-900') : 'text-gray-500'
+                }`}>
+                  {signal.name}
+                </span>
+                {isUnavailable && (
+                  <span className="text-xs px-2 py-0.5 rounded bg-gray-700/50 text-gray-500">
+                    Data N/A
+                  </span>
+                )}
+              </div>
+              <div className="flex items-center gap-2">
+                <span className="text-xs text-gray-500">{signal.weight}pts</span>
+                {isActive && <span className="text-green-500 text-xs">✓</span>}
+              </div>
             </div>
-            <div className="flex items-center gap-2">
-              <span className="text-xs text-gray-500">{signal.weight}pts</span>
-              {signal.active && <span className="text-green-500 text-xs">✓</span>}
-            </div>
+            {showDescriptions && SIGNAL_DESCRIPTIONS[signal.name] && (
+              <p className={`text-xs mt-2 ${darkMode ? 'text-gray-400' : 'text-gray-600'}`}>
+                {SIGNAL_DESCRIPTIONS[signal.name]}
+              </p>
+            )}
           </div>
-          {showDescriptions && SIGNAL_DESCRIPTIONS[signal.name] && (
-            <p className={`text-xs mt-2 ${darkMode ? 'text-gray-400' : 'text-gray-600'}`}>
-              {SIGNAL_DESCRIPTIONS[signal.name]}
-            </p>
-          )}
-        </div>
-      ))}
+        );
+      })}
     </div>
   );
 };
@@ -241,6 +255,11 @@ export const FullSignalAnalysis = ({ analysis, darkMode }) => {
           <p className="text-xs text-gray-500 mt-2">
             {analysis.signalDetails?.activeCount || 0}/{analysis.signalDetails?.totalSignals || 0} signals active
           </p>
+          {analysis.signalDetails?.availableSignals < analysis.signalDetails?.totalSignals && (
+            <p className="text-xs text-gray-600 mt-1">
+              ({analysis.signalDetails?.availableSignals} with data available)
+            </p>
+          )}
         </div>
         
         <div className="flex flex-col gap-3">
@@ -283,6 +302,28 @@ export const FullSignalAnalysis = ({ analysis, darkMode }) => {
             <div>
               <p className="text-xs text-gray-500 mb-1">Conviction</p>
               <p className="text-sm font-bold">{analysis.strength.level || 'N/A'}</p>
+            </div>
+          </div>
+        </div>
+      )}
+      
+      {/* Data Source Info */}
+      {analysis.dataSource && (
+        <div className={`${darkMode ? 'bg-blue-500/10 border-blue-500/20' : 'bg-blue-50 border-blue-200'} border rounded-xl p-4`}>
+          <div className="flex items-start gap-2">
+            <span className="text-blue-500 text-sm">ℹ️</span>
+            <div className="flex-1">
+              <p className="text-xs font-medium text-blue-500 mb-1">Data Source Information</p>
+              <p className={`text-xs ${darkMode ? 'text-blue-400/80' : 'text-blue-700'}`}>
+                {analysis.dataSource === 'binance' && 
+                  `Using Binance real-time data (${analysis.dataPoints} data points). All 6 signals available with highest accuracy.`}
+                {analysis.dataSource === 'coingecko' && 
+                  `Using CoinGecko historical data (${analysis.dataPoints} data points). Volume and funding rate signals may be limited.`}
+                {analysis.dataSource === 'sparkline' && 
+                  `Using limited 7-day data (${analysis.dataPoints} points). Some signals unavailable - needs longer historical data for SMA50 calculation.`}
+                {analysis.dataSource === 'fallback' && 
+                  'Using minimal data. Signal analysis is limited. Consider checking back later for updated data.'}
+              </p>
             </div>
           </div>
         </div>
