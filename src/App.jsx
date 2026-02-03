@@ -607,14 +607,14 @@ if (signalFilters.size > 0) {
     {[
       { 
         id: 'rsi_oversold', 
-        label: '📉 RSI Oversold', 
-        desc: 'RSI below 30',
+        label: '🔴 Oversold <30', 
+        desc: 'RSI between 20-30',
         available: 'All tokens'
       },
       { 
         id: 'rsi_extreme', 
-        label: '🚨 RSI Extreme', 
-        desc: 'RSI below 25',
+        label: '🚨 Extreme <20', 
+        desc: 'RSI below 20',
         available: 'All tokens'
       },
       { 
