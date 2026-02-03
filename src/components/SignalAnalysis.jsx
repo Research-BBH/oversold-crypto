@@ -230,6 +230,19 @@ export const TechnicalIndicators = ({ analysis, darkMode }) => {
           </p>
         </div>
       )}
+      
+      {/* Add Funding Rate Display */}
+      {analysis.fundingRate !== undefined && analysis.fundingRate !== null && (
+        <div className={`${darkMode ? 'bg-white/5' : 'bg-gray-100'} rounded-xl p-3`}>
+          <p className="text-xs text-gray-500 mb-1">Funding Rate</p>
+          <p className={`text-sm font-bold ${analysis.fundingRate < 0 ? 'text-green-400' : analysis.fundingRate > 0 ? 'text-red-400' : 'text-gray-400'}`}>
+            {(analysis.fundingRate * 100).toFixed(4)}%
+          </p>
+          <p className={`text-xs mt-1 ${analysis.fundingRate < 0 ? 'text-green-400' : 'text-gray-500'}`}>
+            {analysis.fundingRate < 0 ? '💰 Shorts Pay Longs' : analysis.fundingRate > 0 ? '⚠️ Longs Pay Shorts' : 'Neutral'}
+          </p>
+        </div>
+      )}
     </div>
   );
 };
