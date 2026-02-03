@@ -117,6 +117,8 @@ export default function App() {
         setPageTokenId(null);
         setCurrentPage('home');
       }
+      // Scroll to top when navigating
+      window.scrollTo(0, 0);
     };
     parseHash();
     window.addEventListener('hashchange', parseHash);
