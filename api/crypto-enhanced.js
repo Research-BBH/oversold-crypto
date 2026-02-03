@@ -194,8 +194,8 @@ const enhanceToken = async (token) => {
       ...token,
       // Signal flags for filtering
       signals: {
-        rsiOversold: token.rsi !== null && token.rsi < 30,
-        rsiExtreme: token.rsi !== null && token.rsi < 25,
+        rsiOversold: token.rsi !== null && token.rsi >= 20 && token.rsi < 30,
+        rsiExtreme: token.rsi !== null && token.rsi < 20,
         aboveSMA50: sma50 ? token.price > sma50 : null,
         belowBB: bb ? token.price < bb.lower : null,
         volumeSpike: volumeRatio ? volumeRatio > 1.5 : null,
@@ -216,8 +216,8 @@ const enhanceToken = async (token) => {
   return {
     ...token,
     signals: {
-      rsiOversold: token.rsi !== null && token.rsi < 30,
-      rsiExtreme: token.rsi !== null && token.rsi < 25,
+      rsiOversold: token.rsi !== null && token.rsi >= 20 && token.rsi < 30,
+      rsiExtreme: token.rsi !== null && token.rsi < 20,
       aboveSMA50: null,
       belowBB: null,
       volumeSpike: null,
