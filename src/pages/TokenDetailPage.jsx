@@ -7,7 +7,8 @@ import { ThemeToggle } from '../components/ThemeToggle';
 import { RSIMeter, FullPageChart } from '../components/Charts';
 import { FullSignalAnalysis } from '../components/SignalAnalysis';
 import { analyzeToken } from '../utils/signals';
-import { getEnrichedTokenData, calculateHistoricalRSI } from '../utils/binance';
+import { getBybitTokenData, calculateHistoricalRSI as calculateBybitRSI } from '../utils/bybit';
+import { getOKXTokenData, calculateHistoricalRSI as calculateOKXRSI } from '../utils/okx';
 import { getComprehensiveTokenData } from '../utils/coingecko-enhanced';
 import { useState, useEffect } from 'react';
 
@@ -24,22 +25,51 @@ export const TokenDetailPage = ({ token, onBack, darkMode, setDarkMode }) => {
       
       try {
         let historicalData = null;
+        let dataSource = 'none';
         
-        // Strategy 1: Try Binance first (best data, but limited tokens)
-        const binanceData = await getEnrichedTokenData(token.symbol, 168);
-        
-        if (binanceData && binanceData.prices.length >= 50) {
-          const rsiValues = calculateHistoricalRSI(binanceData.prices, 14);
-          historicalData = {
-            prices: binanceData.prices,
-            volumes: binanceData.volumes,
-            rsiValues: rsiValues,
-            fundingRate: binanceData.fundingRate,
-            source: 'binance'
-          };
+        // STRATEGY 1: Try Bybit first (best data for futures, free volume + funding)
+        try {
+          const bybitData = await getBybitTokenData(token.symbol, 168);
+          
+          if (bybitData && bybitData.prices.length >= 50) {
+            const rsiValues = calculateBybitRSI(bybitData.prices, 14);
+            historicalData = {
+              prices: bybitData.prices,
+              volumes: bybitData.volumes,
+              rsiValues: rsiValues,
+              fundingRate: bybitData.fundingRate,
+              source: 'bybit'
+            };
+            dataSource = 'bybit';
+            console.log(`✅ Bybit data loaded for ${token.symbol}: ${bybitData.dataPoints} points, funding: ${bybitData.fundingRate}`);
+          }
+        } catch (error) {
+          console.log(`Bybit failed for ${token.symbol}, trying OKX...`);
         }
         
-        // Strategy 2: Use enhanced CoinGecko data (works for all tokens)
+        // STRATEGY 2: Try OKX if Bybit failed (different token coverage)
+        if (!historicalData) {
+          try {
+            const okxData = await getOKXTokenData(token.symbol, 168);
+            
+            if (okxData && okxData.prices.length >= 50) {
+              const rsiValues = calculateOKXRSI(okxData.prices, 14);
+              historicalData = {
+                prices: okxData.prices,
+                volumes: okxData.volumes,
+                rsiValues: rsiValues,
+                fundingRate: okxData.fundingRate,
+                source: 'okx'
+              };
+              dataSource = 'okx';
+              console.log(`✅ OKX data loaded for ${token.symbol}: ${okxData.dataPoints} points, funding: ${okxData.fundingRate}`);
+            }
+          } catch (error) {
+            console.log(`OKX failed for ${token.symbol}, trying CoinGecko...`);
+          }
+        }
+        
+        // STRATEGY 3: Use enhanced CoinGecko data (works for all tokens, but no funding)
         if (!historicalData) {
           const cgData = await getComprehensiveTokenData(token.id, token.symbol);
           
@@ -48,13 +78,15 @@ export const TokenDetailPage = ({ token, onBack, darkMode, setDarkMode }) => {
               prices: cgData.prices,
               volumes: cgData.volumes || [],
               rsiValues: cgData.rsiValues || [],
-              fundingRate: null, // CoinGecko doesn't have funding rates
+              fundingRate: null,
               source: 'coingecko'
             };
+            dataSource = 'coingecko';
+            console.log(`✅ CoinGecko data loaded for ${token.symbol}: ${cgData.dataPoints} points`);
           }
         }
         
-        // Strategy 3: Last resort - use sparkline (limited but better than nothing)
+        // STRATEGY 4: Last resort - use sparkline (limited but better than nothing)
         if (!historicalData && token.sparklineRaw && token.sparklineRaw.length > 0) {
           historicalData = {
             prices: token.sparklineRaw,
@@ -63,13 +95,15 @@ export const TokenDetailPage = ({ token, onBack, darkMode, setDarkMode }) => {
             fundingRate: null,
             source: 'sparkline'
           };
+          dataSource = 'sparkline';
+          console.log(`⚠️ Using sparkline fallback for ${token.symbol}: ${token.sparklineRaw.length} points`);
         }
         
         // Analyze with whatever data we have
         const analysis = analyzeToken(token, historicalData);
         
         // Add data source info to analysis
-        analysis.dataSource = historicalData?.source || 'none';
+        analysis.dataSource = dataSource;
         analysis.dataPoints = historicalData?.prices?.length || 0;
         
         setSignalAnalysis(analysis);
