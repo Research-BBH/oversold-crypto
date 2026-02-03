@@ -8,6 +8,7 @@ import { RSIMeter, FullPageChart } from '../components/Charts';
 import { FullSignalAnalysis } from '../components/SignalAnalysis';
 import { analyzeToken } from '../utils/signals';
 import { getEnrichedTokenData, calculateHistoricalRSI } from '../utils/binance';
+import { getComprehensiveTokenData } from '../utils/coingecko-enhanced';
 import { useState, useEffect } from 'react';
 
 export const TokenDetailPage = ({ token, onBack, darkMode, setDarkMode }) => {
@@ -22,40 +23,67 @@ export const TokenDetailPage = ({ token, onBack, darkMode, setDarkMode }) => {
       setLoadingSignals(true);
       
       try {
-        // Try Binance first
+        let historicalData = null;
+        
+        // Strategy 1: Try Binance first (best data, but limited tokens)
         const binanceData = await getEnrichedTokenData(token.symbol, 168);
         
-        let historicalData;
-        
-        if (binanceData) {
+        if (binanceData && binanceData.prices.length >= 50) {
           const rsiValues = calculateHistoricalRSI(binanceData.prices, 14);
           historicalData = {
             prices: binanceData.prices,
             volumes: binanceData.volumes,
             rsiValues: rsiValues,
-            fundingRate: binanceData.fundingRate
-          };
-        } else {
-          // IMPROVED FALLBACK - use CoinGecko sparkline
-          historicalData = {
-            prices: token.sparklineRaw || [],
-            volumes: [],  // CoinGecko doesn't provide volume history
-            rsiValues: [],
-            fundingRate: null
+            fundingRate: binanceData.fundingRate,
+            source: 'binance'
           };
         }
         
+        // Strategy 2: Use enhanced CoinGecko data (works for all tokens)
+        if (!historicalData) {
+          const cgData = await getComprehensiveTokenData(token.id, token.symbol);
+          
+          if (cgData && cgData.prices.length >= 50) {
+            historicalData = {
+              prices: cgData.prices,
+              volumes: cgData.volumes || [],
+              rsiValues: cgData.rsiValues || [],
+              fundingRate: null, // CoinGecko doesn't have funding rates
+              source: 'coingecko'
+            };
+          }
+        }
+        
+        // Strategy 3: Last resort - use sparkline (limited but better than nothing)
+        if (!historicalData && token.sparklineRaw && token.sparklineRaw.length > 0) {
+          historicalData = {
+            prices: token.sparklineRaw,
+            volumes: [],
+            rsiValues: [],
+            fundingRate: null,
+            source: 'sparkline'
+          };
+        }
+        
+        // Analyze with whatever data we have
         const analysis = analyzeToken(token, historicalData);
+        
+        // Add data source info to analysis
+        analysis.dataSource = historicalData?.source || 'none';
+        analysis.dataPoints = historicalData?.prices?.length || 0;
+        
         setSignalAnalysis(analysis);
         
       } catch (error) {
         console.error('Error fetching signal data:', error);
-        // BETTER FALLBACK - still analyze with limited data
+        // Still provide basic analysis
         const basicAnalysis = analyzeToken(token, {
           prices: token.sparklineRaw || [],
           volumes: [],
-          rsiValues: []
+          rsiValues: [],
+          fundingRate: null
         });
+        basicAnalysis.dataSource = 'fallback';
         setSignalAnalysis(basicAnalysis);
       } finally {
         setLoadingSignals(false);
