@@ -334,6 +334,12 @@ export const analyzeToken = (token, historicalData = null) => {
       analysis.divergence = divergence;
       analysis.signals.bullishDivergence = divergence.bullish;
     }
+    
+    // Funding Rate (if available from exchange data)
+    if (historicalData.fundingRate !== undefined && historicalData.fundingRate !== null) {
+      analysis.fundingRate = historicalData.fundingRate;
+      analysis.signals.negativeFunding = historicalData.fundingRate < 0;
+    }
   }
   
   // Calculate score
@@ -343,7 +349,8 @@ export const analyzeToken = (token, historicalData = null) => {
     sma50: analysis.sma50,
     bollingerBands: analysis.bollingerBands,
     volumeRatio: analysis.volumeRatio,
-    divergence: analysis.divergence
+    divergence: analysis.divergence,
+    fundingRate: analysis.fundingRate
   };
   
   const scoreResult = calculateSignalScore(scoreData);
