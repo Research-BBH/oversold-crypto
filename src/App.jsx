@@ -543,130 +543,144 @@ if (signalFilters.size > 0) {
           </div>
         )}
 
-        {/* Preset Filters */}
-        <div className="flex gap-2 mb-4 overflow-x-auto pb-1 scrollbar-hide">
-          {PRESETS.map((p) => (
-            <button
-              key={p.id}
-              onClick={() => {
-                setPreset(preset === p.id ? null : p.id);
-                setRsiFilter(null);
-              }}
-              className={`px-4 py-2 rounded-xl text-sm whitespace-nowrap transition-all font-medium ${
-                preset === p.id
-                  ? 'bg-gradient-to-r from-orange-500 to-red-500 text-white shadow-lg shadow-orange-500/20'
-                  : darkMode
-                  ? 'bg-white/5 text-gray-400 hover:bg-white/10 border border-white/5'
-                  : 'bg-white text-gray-600 hover:bg-gray-50 border border-gray-200'
-              }`}
-            >
-              {p.name}
-            </button>
-          ))}
-        </div>
+        {/* Unified Filter Row */}
+        <div className="mb-4">
+          <div className="flex items-center gap-3 mb-3">
+            <span className={`text-sm font-semibold ${darkMode ? 'text-gray-300' : 'text-gray-700'}`}>
+              🎯 Filters
+            </span>
+            {(preset || signalFilters.size > 0) && (
+              <button
+                onClick={() => {
+                  setPreset(null);
+                  setSignalFilters(new Set());
+                  setRsiFilter(null);
+                }}
+                className={`text-xs px-3 py-1.5 rounded-lg font-medium transition-colors ${
+                  darkMode 
+                    ? 'bg-red-500/20 text-red-400 hover:bg-red-500/30 border border-red-500/30' 
+                    : 'bg-red-50 text-red-600 hover:bg-red-100 border border-red-200'
+                }`}
+              >
+                Clear All
+              </button>
+            )}
+            {!useEnhancedAPI && (
+              <button
+                onClick={() => setUseEnhancedAPI(true)}
+                className={`text-xs px-3 py-1.5 rounded-lg font-medium transition-colors ${
+                  darkMode 
+                    ? 'bg-blue-500/20 text-blue-400 hover:bg-blue-500/30 border border-blue-500/30' 
+                    : 'bg-blue-50 text-blue-600 hover:bg-blue-100 border border-blue-200'
+                }`}
+              >
+                Enable Enhanced Data
+              </button>
+            )}
+          </div>
+          
+          <div className="flex gap-2 flex-wrap">
+            {/* RSI Filters */}
+            {[
+              { id: 'oversold', label: '🔴 Oversold <30', desc: 'RSI 20-30' },
+              { id: 'extreme', label: '🚨 Extreme <20', desc: 'RSI below 20' },
+              { id: 'overbought', label: '🟢 Overbought >70', desc: 'RSI above 70' },
+            ].map((filter) => (
+              <button
+                key={filter.id}
+                onClick={() => {
+                  setPreset(preset === filter.id ? null : filter.id);
+                  setRsiFilter(null);
+                  setSignalFilters(new Set());
+                }}
+                className={`px-3 py-2 rounded-xl text-xs whitespace-nowrap transition-all font-medium group relative ${
+                  preset === filter.id
+                    ? 'bg-gradient-to-r from-orange-500 to-red-500 text-white shadow-lg shadow-orange-500/20'
+                    : darkMode
+                    ? 'bg-white/5 text-gray-400 hover:bg-white/10 border border-white/5'
+                    : 'bg-white text-gray-600 hover:bg-gray-50 border border-gray-200'
+                }`}
+              >
+                {filter.label}
+                <span className={`absolute bottom-full left-1/2 -translate-x-1/2 mb-2 px-2 py-1 text-xs rounded-lg opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap pointer-events-none z-10 ${
+                  darkMode ? 'bg-gray-800 text-white' : 'bg-gray-900 text-white'
+                }`}>
+                  {filter.desc}
+                </span>
+              </button>
+            ))}
 
-        {/* Signal Filters - NEW SECTION */}
-<div className="mb-4">
-  <div className="flex items-center gap-3 mb-3">
-    <span className={`text-sm font-semibold ${darkMode ? 'text-gray-300' : 'text-gray-700'}`}>
-      🎯 Filter by Trading Signals
-    </span>
-    {signalFilters.size > 0 && (
-      <button
-        onClick={() => setSignalFilters(new Set())}
-        className={`text-xs px-3 py-1.5 rounded-lg font-medium transition-colors ${
-          darkMode 
-            ? 'bg-red-500/20 text-red-400 hover:bg-red-500/30 border border-red-500/30' 
-            : 'bg-red-50 text-red-600 hover:bg-red-100 border border-red-200'
-        }`}
-      >
-        Clear All ({signalFilters.size})
-      </button>
-    )}
-    {!useEnhancedAPI && (
-      <button
-        onClick={() => setUseEnhancedAPI(true)}
-        className={`text-xs px-3 py-1.5 rounded-lg font-medium transition-colors ${
-          darkMode 
-            ? 'bg-blue-500/20 text-blue-400 hover:bg-blue-500/30 border border-blue-500/30' 
-            : 'bg-blue-50 text-blue-600 hover:bg-blue-100 border border-blue-200'
-        }`}
-      >
-        Enable Enhanced Data
-      </button>
-    )}
-  </div>
-  
-  <div className="flex gap-2 flex-wrap">
-    {[
-      { 
-        id: 'above_sma50', 
-        label: '📈 Above SMA50', 
-        desc: 'Price > 50-day SMA',
-        available: 'Top 250 tokens'
-      },
-      { 
-        id: 'below_bb', 
-        label: '⚠️ Below BB', 
-        desc: 'Price below lower Bollinger Band',
-        available: 'Top 250 tokens'
-      },
-      { 
-        id: 'volume_spike', 
-        label: '🔥 Volume Spike', 
-        desc: 'Volume > 1.5x average',
-        available: 'Top 250 tokens'
-      },
-      { 
-        id: 'has_funding', 
-        label: '💰 Has Futures', 
-        desc: 'Funding rate available',
-        available: 'Top 250 tokens'
-      },
-      { 
-        id: 'negative_funding', 
-        label: '💵 Negative Funding', 
-        desc: 'Shorts paying longs',
-        available: 'Top 250 tokens'
-      },
-    ].map((signal) => (
-      <button
-        key={signal.id}
-        onClick={() => toggleSignalFilter(signal.id)}
-        disabled={!useEnhancedAPI}
-        className={`px-3 py-2 rounded-xl text-xs whitespace-nowrap transition-all font-medium group relative disabled:opacity-50 disabled:cursor-not-allowed ${
-          signalFilters.has(signal.id)
-            ? 'bg-gradient-to-r from-blue-500 to-purple-500 text-white shadow-lg shadow-blue-500/20'
-            : darkMode
-            ? 'bg-white/5 text-gray-400 hover:bg-white/10 border border-white/5'
-            : 'bg-white text-gray-600 hover:bg-gray-50 border border-gray-200'
-        }`}
-      >
-        {signal.label}
-        {/* Tooltip */}
-        <span className={`absolute bottom-full left-1/2 -translate-x-1/2 mb-2 px-3 py-2 text-xs rounded-lg opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap pointer-events-none z-10 ${
-          darkMode ? 'bg-gray-800 text-white' : 'bg-gray-900 text-white'
-        }`}>
-          <div className="font-semibold">{signal.desc}</div>
-          <div className="text-[10px] opacity-75 mt-1">{signal.available}</div>
-        </span>
-      </button>
-    ))}
-  </div>
-  
-  {/* Info message */}
-  <div className={`mt-3 px-4 py-2.5 rounded-xl text-xs flex items-start gap-2 ${
-    darkMode 
-      ? 'bg-blue-500/10 text-blue-400 border border-blue-500/20' 
-      : 'bg-blue-50 text-blue-700 border border-blue-200'
-  }`}>
-    <span className="text-sm">ℹ️</span>
-    <div>
-      <span className="font-semibold">Enhanced filtering:</span> Top 250 tokens have complete signal data. 
-      {!useEnhancedAPI && <span className="font-semibold text-orange-400"> Enhanced API is disabled - enable it to use advanced filters.</span>}
-    </div>
-  </div>
-</div>
+            {/* Divider */}
+            <div className={`w-px h-8 self-center ${darkMode ? 'bg-white/10' : 'bg-gray-300'}`} />
+
+            {/* Price Action Filters */}
+            {[
+              { id: 'losers24h', label: '📉 24h Losers', desc: 'Biggest 24h drops' },
+              { id: 'losers7d', label: '📉 7d Losers', desc: 'Biggest 7d drops' },
+              { id: 'gainers', label: '📈 24h Gainers', desc: 'Biggest 24h gains' },
+              { id: 'volume', label: '🔥 High Volume', desc: 'High volume/mcap ratio' },
+            ].map((filter) => (
+              <button
+                key={filter.id}
+                onClick={() => {
+                  setPreset(preset === filter.id ? null : filter.id);
+                  setRsiFilter(null);
+                  setSignalFilters(new Set());
+                }}
+                className={`px-3 py-2 rounded-xl text-xs whitespace-nowrap transition-all font-medium group relative ${
+                  preset === filter.id
+                    ? 'bg-gradient-to-r from-orange-500 to-red-500 text-white shadow-lg shadow-orange-500/20'
+                    : darkMode
+                    ? 'bg-white/5 text-gray-400 hover:bg-white/10 border border-white/5'
+                    : 'bg-white text-gray-600 hover:bg-gray-50 border border-gray-200'
+                }`}
+              >
+                {filter.label}
+                <span className={`absolute bottom-full left-1/2 -translate-x-1/2 mb-2 px-2 py-1 text-xs rounded-lg opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap pointer-events-none z-10 ${
+                  darkMode ? 'bg-gray-800 text-white' : 'bg-gray-900 text-white'
+                }`}>
+                  {filter.desc}
+                </span>
+              </button>
+            ))}
+
+            {/* Divider */}
+            <div className={`w-px h-8 self-center ${darkMode ? 'bg-white/10' : 'bg-gray-300'}`} />
+
+            {/* Enhanced Signal Filters */}
+            {[
+              { id: 'above_sma50', label: '📈 Above SMA50', desc: 'Price > 50-day SMA', enhanced: true },
+              { id: 'below_bb', label: '⚠️ Below BB', desc: 'Below Bollinger Band', enhanced: true },
+              { id: 'volume_spike', label: '🔥 Volume Spike', desc: 'Volume > 1.5x avg', enhanced: true },
+              { id: 'has_funding', label: '💰 Has Futures', desc: 'Funding rate available', enhanced: true },
+              { id: 'negative_funding', label: '💵 Negative Funding', desc: 'Shorts paying longs', enhanced: true },
+            ].map((signal) => (
+              <button
+                key={signal.id}
+                onClick={() => {
+                  setPreset(null);
+                  toggleSignalFilter(signal.id);
+                }}
+                disabled={!useEnhancedAPI}
+                className={`px-3 py-2 rounded-xl text-xs whitespace-nowrap transition-all font-medium group relative disabled:opacity-50 disabled:cursor-not-allowed ${
+                  signalFilters.has(signal.id)
+                    ? 'bg-gradient-to-r from-blue-500 to-purple-500 text-white shadow-lg shadow-blue-500/20'
+                    : darkMode
+                    ? 'bg-white/5 text-gray-400 hover:bg-white/10 border border-white/5'
+                    : 'bg-white text-gray-600 hover:bg-gray-50 border border-gray-200'
+                }`}
+              >
+                {signal.label}
+                <span className={`absolute bottom-full left-1/2 -translate-x-1/2 mb-2 px-2 py-1 text-xs rounded-lg opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap pointer-events-none z-10 ${
+                  darkMode ? 'bg-gray-800 text-white' : 'bg-gray-900 text-white'
+                }`}>
+                  {signal.desc}
+                  {signal.enhanced && !useEnhancedAPI && <div className="text-orange-400 mt-1">Enable enhanced data</div>}
+                </span>
+              </button>
+            ))}
+          </div>
+        </div>
         
         {/* Search and Filters */}
         <div className="flex flex-col lg:flex-row gap-3 mb-5">
