@@ -151,13 +151,16 @@ export const getMarketCapReliability = (marketCap) => {
 
 /**
  * Calculate comprehensive signal score (0-100)
+ * IMPORTANT: Always show all 6 main signals, even if data is unavailable
  */
 export const calculateSignalScore = (data) => {
   let score = 0;
   const signals = [];
+  let availableSignals = 0; // Track how many signals have data
   
   // 1. RSI Signal (25 points base, +5 for extreme)
-  if (data.rsi !== null) {
+  if (data.rsi !== null && data.rsi !== undefined) {
+    availableSignals++;
     if (data.rsi < 30) {
       score += 25;
       signals.push({ name: 'RSI Oversold', weight: 25, active: true });
@@ -168,68 +171,81 @@ export const calculateSignalScore = (data) => {
     } else {
       signals.push({ name: 'RSI Oversold', weight: 25, active: false });
     }
+  } else {
+    signals.push({ name: 'RSI Oversold', weight: 25, active: false, unavailable: true });
   }
   
   // 2. Trend Filter - 50 SMA (30 points - CRITICAL)
   if (data.price && data.sma50) {
+    availableSignals++;
     if (data.price > data.sma50) {
       score += 30;
       signals.push({ name: 'Above 50 SMA', weight: 30, active: true });
     } else {
       signals.push({ name: 'Above 50 SMA', weight: 30, active: false });
     }
+  } else {
+    signals.push({ name: 'Above 50 SMA', weight: 30, active: false, unavailable: true });
   }
   
-  // 3. Volume Confirmation (20 points, +5 for extreme)
-  if (data.volumeRatio) {
-    if (data.volumeRatio > 1.5) {
-      score += 20;
-      signals.push({ name: 'Volume Spike', weight: 20, active: true });
-      if (data.volumeRatio > 2.0) {
-        score += 5;
-        signals.push({ name: 'Extreme Volume', weight: 5, active: true });
-      }
-    } else {
-      signals.push({ name: 'Volume Spike', weight: 20, active: false });
-    }
-  }
-  
-  // 4. Bollinger Bands (15 points)
+  // 3. Bollinger Bands (15 points)
   if (data.price && data.bollingerBands) {
+    availableSignals++;
     if (data.price < data.bollingerBands.lower) {
       score += 15;
       signals.push({ name: 'Below BB Lower', weight: 15, active: true });
     } else {
       signals.push({ name: 'Below BB Lower', weight: 15, active: false });
     }
+  } else {
+    signals.push({ name: 'Below BB Lower', weight: 15, active: false, unavailable: true });
+  }
+  
+  // 4. Volume Confirmation (15 points)
+  if (data.volumeRatio) {
+    availableSignals++;
+    if (data.volumeRatio > 1.5) {
+      score += 15;
+      signals.push({ name: 'Volume Spike', weight: 15, active: true });
+    } else {
+      signals.push({ name: 'Volume Spike', weight: 15, active: false });
+    }
+  } else {
+    signals.push({ name: 'Volume Spike', weight: 15, active: false, unavailable: true });
   }
   
   // 5. RSI Divergence (10 points)
-  if (data.divergence && data.divergence.bullish) {
-    score += 10;
-    signals.push({ name: 'Bullish Divergence', weight: 10, active: true });
+  if (data.divergence) {
+    availableSignals++;
+    if (data.divergence.bullish) {
+      score += 10;
+      signals.push({ name: 'Bullish Divergence', weight: 10, active: true });
+    } else {
+      signals.push({ name: 'Bullish Divergence', weight: 10, active: false });
+    }
   } else {
-    signals.push({ name: 'Bullish Divergence', weight: 10, active: false });
+    signals.push({ name: 'Bullish Divergence', weight: 10, active: false, unavailable: true });
   }
 
-if (data.fundingRate !== undefined && data.fundingRate !== null) {
+  // 6. Funding Rate (15 points) - Only available for tokens with futures
+  if (data.fundingRate !== undefined && data.fundingRate !== null) {
+    availableSignals++;
     if (data.fundingRate < 0) {
       score += 15;
       signals.push({ name: 'Negative Funding', weight: 15, active: true });
-      if (data.fundingRate < -0.02) {
-        score += 5;
-        signals.push({ name: 'Extreme Negative Funding', weight: 5, active: true });
-      }
     } else {
       signals.push({ name: 'Negative Funding', weight: 15, active: false });
     }
+  } else {
+    signals.push({ name: 'Negative Funding', weight: 15, active: false, unavailable: true });
   }
   
   return {
     score: Math.min(score, 100),
     signals,
-    activeCount: signals.filter(s => s.active).length,
-    totalSignals: signals.length
+    activeCount: signals.filter(s => s.active && !s.unavailable).length,
+    totalSignals: signals.length,
+    availableSignals: availableSignals
   };
 };
 
