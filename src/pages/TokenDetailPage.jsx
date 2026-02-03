@@ -5,18 +5,47 @@
 import { formatPrice, formatNumber, getRsiStyle } from '../utils';
 import { ThemeToggle } from '../components/ThemeToggle';
 import { Footer } from '../components/Footer';
-import { RSIMeter, FullPageChart } from '../components/Charts';
+import { RSIMeter, InteractiveChart, TIME_RANGES, CHART_TYPES } from '../components/Charts';
 import { FullSignalAnalysis } from '../components/SignalAnalysis';
 import { analyzeToken } from '../utils/signals';
 import { getBybitTokenData, calculateHistoricalRSI as calculateBybitRSI } from '../utils/bybit';
 import { getOKXTokenData, calculateHistoricalRSI as calculateOKXRSI } from '../utils/okx';
-import { getComprehensiveTokenData } from '../utils/coingecko-enhanced';
+import { getComprehensiveTokenData, fetchChartDataForRange } from '../utils/coingecko-enhanced';
 import { useState, useEffect } from 'react';
 
 export const TokenDetailPage = ({ token, onBack, darkMode, setDarkMode }) => {
   // All hooks must be called before any early returns (React rules of hooks)
   const [signalAnalysis, setSignalAnalysis] = useState(null);
   const [loadingSignals, setLoadingSignals] = useState(true);
+  
+  // Chart state
+  const [timeRange, setTimeRange] = useState('7d');
+  const [chartType, setChartType] = useState(CHART_TYPES.LINE);
+  const [chartData, setChartData] = useState(null);
+  const [ohlcData, setOhlcData] = useState(null);
+  const [loadingChart, setLoadingChart] = useState(false);
+
+  // Fetch chart data when time range changes
+  useEffect(() => {
+    if (!token) return;
+    
+    const fetchChartData = async () => {
+      setLoadingChart(true);
+      try {
+        const data = await fetchChartDataForRange(token.id, timeRange);
+        if (data) {
+          setChartData(data);
+          setOhlcData(data.ohlc);
+        }
+      } catch (error) {
+        console.error('Error fetching chart data:', error);
+      } finally {
+        setLoadingChart(false);
+      }
+    };
+    
+    fetchChartData();
+  }, [token?.id, timeRange]);
 
   useEffect(() => {
     if (!token) return;
@@ -201,19 +230,29 @@ export const TokenDetailPage = ({ token, onBack, darkMode, setDarkMode }) => {
             } rounded-2xl p-6 border`}
           >
             <div className="flex justify-between items-center mb-6">
-              <h2 className="text-xl font-semibold">7-Day Price Chart</h2>
+              <h2 className="text-xl font-semibold">Price Chart</h2>
               <span
                 className={`px-3 py-1 rounded-lg text-sm font-medium ${
-                  token.change7d >= 0
+                  (chartData?.change ?? token.change7d) >= 0
                     ? 'bg-green-500/20 text-green-400'
                     : 'bg-red-500/20 text-red-400'
                 }`}
               >
-                {token.change7d >= 0 ? '+' : ''}
-                {token.change7d?.toFixed(2)}%
+                {(chartData?.change ?? token.change7d) >= 0 ? '+' : ''}
+                {(chartData?.change ?? token.change7d)?.toFixed(2)}%
               </span>
             </div>
-            <FullPageChart data={token.sparkline} basePrice={token.price} change7d={token.change7d} />
+            <InteractiveChart
+              token={token}
+              chartData={chartData}
+              ohlcData={ohlcData}
+              timeRange={timeRange}
+              setTimeRange={setTimeRange}
+              chartType={chartType}
+              setChartType={setChartType}
+              loading={loadingChart}
+              darkMode={darkMode}
+            />
           </div>
 
           <div className="space-y-6">
