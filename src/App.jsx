@@ -475,7 +475,7 @@ if (signalFilters.size > 0) {
         <div className="grid grid-cols-2 md:grid-cols-4 gap-3 mb-5">
           {[
             { k: 'extreme', color: 'red', label: 'EXTREME', sub: 'RSI < 20' },
-            { k: 'oversold', color: 'orange', label: 'OVERSOLD', sub: 'RSI < 30' },
+            { k: 'oversold', color: 'orange', label: 'OVERSOLD', sub: 'RSI 20-30' },
             { k: 'neutral', color: 'gray', label: 'NEUTRAL', sub: 'RSI 30-70' },
             { k: 'overbought', color: 'green', label: 'OVERBOUGHT', sub: 'RSI > 70' },
           ].map((s) => (
@@ -968,7 +968,7 @@ if (signalFilters.size > 0) {
                         <div className="min-w-0">
                           <div className="flex items-center gap-1.5">
                             <span className="font-semibold">{t.symbol}</span>
-                            {t.rsi !== null && t.rsi < 25 && <span className="text-xs">🔴</span>}
+                            {t.rsi !== null && t.rsi < 20 && <span className="text-xs">🔴</span>}
                             {t.rsi !== null && t.rsi > 75 && <span className="text-xs">🟢</span>}
                           </div>
                           <p className="text-xs text-gray-500 truncate">{t.name}</p>
