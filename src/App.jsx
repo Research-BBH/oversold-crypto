@@ -226,28 +226,35 @@ if (signalFilters.size > 0) {
     r = r.filter((token) => {
       // Must match ALL selected filters (AND logic)
       for (const signalType of signalFilters) {
-        if (!token.signals) return false; // Skip tokens without signal data
-        
         switch (signalType) {
           case 'rsi_oversold':
-            if (!token.signals.rsiOversold) return false;
-            break;
+            // Use direct RSI check as fallback if signals not available
+            if (token.signals?.rsiOversold === true) break;
+            if (token.rsi !== null && token.rsi >= 20 && token.rsi < 30) break;
+            return false;
           case 'rsi_extreme':
-            if (!token.signals.rsiExtreme) return false;
-            break;
+            // Use direct RSI check as fallback if signals not available
+            if (token.signals?.rsiExtreme === true) break;
+            if (token.rsi !== null && token.rsi < 20) break;
+            return false;
           case 'above_sma50':
+            if (!token.signals) return false;
             if (token.signals.aboveSMA50 !== true) return false;
             break;
           case 'below_bb':
+            if (!token.signals) return false;
             if (token.signals.belowBB !== true) return false;
             break;
           case 'volume_spike':
+            if (!token.signals) return false;
             if (token.signals.volumeSpike !== true) return false;
             break;
           case 'has_funding':
+            if (!token.signals) return false;
             if (token.signals.hasFunding !== true) return false;
             break;
           case 'negative_funding':
+            if (!token.signals) return false;
             if (token.signals.negativeFunding !== true) return false;
             break;
         }
