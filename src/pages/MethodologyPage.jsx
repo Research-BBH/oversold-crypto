@@ -3,6 +3,7 @@
 // ==================================================
 
 import { ThemeToggle } from '../components/ThemeToggle';
+import { Footer } from '../components/Footer';
 
 export const MethodologyPage = ({ onBack, darkMode, setDarkMode }) => (
   <div
@@ -464,10 +465,15 @@ export const MethodologyPage = ({ onBack, darkMode, setDarkMode }) => (
                 volume, and 7-day sparkline data for the top 1000 tokens by market capitalization. Used for 
                 RSI calculation, Bollinger Bands, and 50 SMA indicators.
               </p>
-              <p>
-                <strong className={darkMode ? 'text-yellow-400' : 'text-yellow-600'}>Binance API:</strong> Secondary source for enhanced signal analysis on supported tokens. 
+              <p className="mb-3">
+                <strong className={darkMode ? 'text-yellow-400' : 'text-yellow-600'}>Bybit API:</strong> Secondary source for enhanced signal analysis on supported tokens. 
                 Provides hourly candlestick data for more granular technical analysis, plus perpetual futures 
-                funding rates for sentiment analysis. Falls back to CoinGecko data for tokens not listed on Binance.
+                funding rates for sentiment analysis.
+              </p>
+              <p>
+                <strong className={darkMode ? 'text-blue-400' : 'text-blue-600'}>OKX API:</strong> Tertiary source used as fallback when Bybit data is unavailable. 
+                Provides similar candlestick and funding rate data for tokens listed on OKX perpetual futures.
+                Falls back to CoinGecko data for tokens not listed on either exchange.
               </p>
             </div>
           </div>
@@ -536,34 +542,7 @@ export const MethodologyPage = ({ onBack, darkMode, setDarkMode }) => (
         </div>
       </div>
 
-      <footer
-        className={`text-center py-8 border-t ${
-          darkMode ? 'border-white/10' : 'border-gray-200'
-        }`}
-      >
-        <p className="text-gray-500 text-sm">
-          Nothing on this site is financial advice. For educational purposes only.
-        </p>
-        <div className="flex items-center justify-center gap-6 text-sm mt-4">
-          <a
-            href="#/terms"
-            className={`${
-              darkMode ? 'text-gray-400 hover:text-white' : 'text-gray-500 hover:text-gray-900'
-            } transition-colors`}
-          >
-            Terms of Service
-          </a>
-          <span className={darkMode ? 'text-gray-700' : 'text-gray-300'}>|</span>
-          <a
-            href="#/privacy"
-            className={`${
-              darkMode ? 'text-gray-400 hover:text-white' : 'text-gray-500 hover:text-gray-900'
-            } transition-colors`}
-          >
-            Privacy Policy
-          </a>
-        </div>
-      </footer>
+      <Footer darkMode={darkMode} />
     </div>
   </div>
 );

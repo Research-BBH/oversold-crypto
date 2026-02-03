@@ -5,6 +5,7 @@
 import { useState, useMemo } from 'react';
 import { formatPrice, getRsiStyle } from '../utils';
 import { ThemeToggle } from '../components/ThemeToggle';
+import { Footer } from '../components/Footer';
 
 export const WatchlistPage = ({ tokens, watchlist, onRemove, onBack, user, darkMode, setDarkMode }) => {
   const [sortBy, setSortBy] = useState('rank_asc');
@@ -340,15 +341,7 @@ export const WatchlistPage = ({ tokens, watchlist, onRemove, onBack, user, darkM
             </div>
           </div>
         )}
-        <footer
-          className={`text-center py-8 mt-8 border-t ${
-            darkMode ? 'border-white/10' : 'border-gray-200'
-          }`}
-        >
-          <p className={`text-xs ${darkMode ? 'text-gray-600' : 'text-gray-400'}`}>
-            Your watchlist is saved to your account and syncs across devices
-          </p>
-        </footer>
+        <Footer darkMode={darkMode} />
       </div>
     </div>
   );

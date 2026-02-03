@@ -3,6 +3,7 @@
 // ==================================================
 
 import { ThemeToggle } from '../components/ThemeToggle';
+import { Footer } from '../components/Footer';
 
 export const PrivacyPage = ({ onBack, darkMode, setDarkMode }) => (
   <div
@@ -188,13 +189,7 @@ export const PrivacyPage = ({ onBack, darkMode, setDarkMode }) => (
         </section>
       </div>
 
-      <footer
-        className={`text-center py-8 border-t ${
-          darkMode ? 'border-white/10' : 'border-gray-200'
-        }`}
-      >
-        <p className="text-gray-500 text-sm">© 2025 Oversold.crypto. Your privacy matters to us.</p>
-      </footer>
+      <Footer darkMode={darkMode} />
     </div>
   </div>
 );

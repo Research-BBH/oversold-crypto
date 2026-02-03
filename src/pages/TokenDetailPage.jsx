@@ -4,6 +4,7 @@
 
 import { formatPrice, formatNumber, getRsiStyle } from '../utils';
 import { ThemeToggle } from '../components/ThemeToggle';
+import { Footer } from '../components/Footer';
 import { RSIMeter, FullPageChart } from '../components/Charts';
 import { FullSignalAnalysis } from '../components/SignalAnalysis';
 import { analyzeToken } from '../utils/signals';
@@ -285,7 +286,7 @@ export const TokenDetailPage = ({ token, onBack, darkMode, setDarkMode }) => {
           {loadingSignals ? (
             <div className={`${darkMode ? 'bg-white/5 border-white/10' : 'bg-white border-gray-200'} border rounded-xl p-12 text-center`}>
               <div className="w-12 h-12 border-4 border-orange-500 border-t-transparent rounded-full animate-spin mx-auto mb-4" />
-              <p className="text-gray-500">Fetching enhanced signal data from Binance...</p>
+              <p className="text-gray-500">Fetching enhanced signal data...</p>
             </div>
           ) : (
             <FullSignalAnalysis analysis={signalAnalysis} darkMode={darkMode} />
@@ -379,43 +380,7 @@ export const TokenDetailPage = ({ token, onBack, darkMode, setDarkMode }) => {
           </a>
         </div>
 
-        <footer
-          className={`text-center py-8 mt-8 border-t ${
-            darkMode ? 'border-white/10' : 'border-gray-200'
-          }`}
-        >
-          <p className="text-gray-500 text-sm mb-4">
-            Nothing on this site is financial advice. For educational purposes only.
-          </p>
-          <div className="flex items-center justify-center gap-6 text-sm">
-            <a
-              href="#/terms"
-              className={`${
-                darkMode ? 'text-gray-400 hover:text-white' : 'text-gray-500 hover:text-gray-900'
-              } transition-colors`}
-            >
-              Terms of Service
-            </a>
-            <span className={darkMode ? 'text-gray-700' : 'text-gray-300'}>|</span>
-            <a
-              href="#/privacy"
-              className={`${
-                darkMode ? 'text-gray-400 hover:text-white' : 'text-gray-500 hover:text-gray-900'
-              } transition-colors`}
-            >
-              Privacy Policy
-            </a>
-            <span className={darkMode ? 'text-gray-700' : 'text-gray-300'}>|</span>
-            <a
-              href="#/methodology"
-              className={`${
-                darkMode ? 'text-gray-400 hover:text-white' : 'text-gray-500 hover:text-gray-900'
-              } transition-colors`}
-            >
-              Methodology
-            </a>
-          </div>
-        </footer>
+        <Footer darkMode={darkMode} />
       </div>
     </div>
   );
