@@ -17,7 +17,7 @@ import { ThemeToggle } from './components/ThemeToggle';
 import { LoginModal } from './components/LoginModal';
 import { UserMenu } from './components/UserMenu';
 import { Footer } from './components/Footer';
-import { Spark, RSIMeter, DetailChart } from './components/Charts';
+import { Spark } from './components/Charts';
 import { TermsPage } from './pages/TermsPage';
 import { PrivacyPage } from './pages/PrivacyPage';
 import { MethodologyPage } from './pages/MethodologyPage';
@@ -32,7 +32,6 @@ export default function App() {
   const [search, setSearch] = useState('');
   const [cat, setCat] = useState('all');
   const [sortBy, setSortBy] = useState('rsi_asc');
-  const [sel, setSel] = useState(null);
   const [watchlist, setWatchlist] = useState(new Set());
   const [showWL, setShowWL] = useState(false);
   const [preset, setPreset] = useState(null);
@@ -955,7 +954,7 @@ if (signalFilters.size > 0) {
                   return (
                     <div
                       key={t.id}
-                      onClick={() => setSel(t)}
+                      onClick={() => window.location.hash = `#/token/${t.id}`}
                       className={`grid grid-cols-8 lg:grid-cols-12 gap-3 px-5 py-3.5 border-b ${
                         darkMode
                           ? 'border-white/5 hover:bg-white/[0.04]'
@@ -1071,159 +1070,6 @@ if (signalFilters.size > 0) {
                 {filtered.length} tokens • {stats.withRSI} with RSI
               </span>
               <span>Data: CoinGecko • RSI (14) • Auto-refresh 1min</span>
-            </div>
-          </div>
-        )}
-
-        {/* Token Detail Modal */}
-        {sel && (
-          <div
-            className={`fixed inset-0 ${
-              darkMode ? 'bg-black/90' : 'bg-black/50'
-            } backdrop-blur-sm z-50 flex items-center justify-center p-4`}
-            onClick={() => setSel(null)}
-          >
-            <div
-              className={`${
-                darkMode ? 'bg-[#12121a] border-white/10 text-white' : 'bg-white border-gray-200 text-gray-900'
-              } border rounded-2xl p-6 max-w-lg w-full max-h-[90vh] overflow-y-auto shadow-2xl`}
-              onClick={(e) => e.stopPropagation()}
-            >
-              <div className="flex items-center gap-4 mb-5">
-                <img
-                  src={sel.image}
-                  alt={sel.symbol}
-                  className="w-16 h-16 rounded-2xl bg-gray-800"
-                />
-                <div className="flex-1">
-                  <div className="flex items-center gap-2">
-                    <h2 className="text-2xl font-bold">{sel.name}</h2>
-                    <button
-                      onClick={(e) => toggleWatch(sel.id, e)}
-                      className={`text-xl ${
-                        watchlist.has(sel.id) ? 'text-yellow-400' : 'text-gray-400'
-                      }`}
-                    >
-                      {watchlist.has(sel.id) ? '★' : '☆'}
-                    </button>
-                  </div>
-                  <p className={darkMode ? 'text-gray-400' : 'text-gray-500'}>
-                    {sel.symbol} • Rank #{sel.rank}
-                  </p>
-                </div>
-              </div>
-              <div className={`${darkMode ? 'bg-white/5' : 'bg-gray-100'} rounded-xl p-4 mb-5`}>
-                <div className="flex justify-between items-center mb-3">
-                  <span className={darkMode ? 'text-gray-400' : 'text-gray-500'}>RSI (14)</span>
-                  <div className="flex items-center gap-2">
-                    <span className={`w-2 h-2 rounded-full ${getRsiStyle(sel.rsi).dot}`} />
-                    <span className={`text-2xl font-bold ${getRsiStyle(sel.rsi).text}`}>
-                      {sel.rsi !== null ? sel.rsi.toFixed(1) : 'N/A'}
-                    </span>
-                    <span className={`text-sm ${getRsiStyle(sel.rsi).text} opacity-70`}>
-                      {getRsiStyle(sel.rsi).label}
-                    </span>
-                  </div>
-                </div>
-                <RSIMeter value={sel.rsi} />
-              </div>
-              <div className="grid grid-cols-2 gap-3 mb-5">
-                {[
-                  { icon: '💰', label: 'Price', value: formatPrice(sel.price) },
-                  { icon: '📊', label: 'Market Cap', value: '$' + formatNumber(sel.mcap) },
-                  { icon: '📈', label: '24h Volume', value: '$' + formatNumber(sel.volume) },
-                  { icon: '🔄', label: 'Vol/MCap', value: sel.volMcap?.toFixed(2) + '%' },
-                  { icon: '💎', label: 'Circulating', value: formatNumber(sel.supply) },
-                  { icon: '🏆', label: 'Dominance', value: (sel.dominance || 0).toFixed(2) + '%' },
-                ].map((x) => (
-                  <div
-                    key={x.label}
-                    className={`${darkMode ? 'bg-white/5' : 'bg-gray-100'} rounded-xl p-3`}
-                  >
-                    <p className="text-xs text-gray-500 mb-1">
-                      {x.icon} {x.label}
-                    </p>
-                    <p className="text-lg font-bold">{x.value}</p>
-                  </div>
-                ))}
-              </div>
-              <div className="grid grid-cols-4 gap-2 mb-5">
-                {[
-                  { l: '1H', v: sel.change1h },
-                  { l: '24H', v: sel.change24h },
-                  { l: '7D', v: sel.change7d },
-                  { l: '30D', v: sel.change30d },
-                ].map((x) => (
-                  <div
-                    key={x.l}
-                    className={`${
-                      darkMode ? 'bg-white/5' : 'bg-gray-100'
-                    } rounded-xl p-3 text-center`}
-                  >
-                    <p className="text-[10px] text-gray-500 mb-1">{x.l}</p>
-                    <p
-                      className={`font-bold ${
-                        (x.v || 0) >= 0 ? 'text-green-500' : 'text-red-500'
-                      }`}
-                    >
-                      {x.v != null ? `${x.v >= 0 ? '+' : ''}${x.v.toFixed(1)}%` : '--'}
-                    </p>
-                  </div>
-                ))}
-              </div>
-              {sel.sparkline && sel.sparkline.length > 1 && (
-                <div className={`${darkMode ? 'bg-white/5' : 'bg-gray-100'} rounded-xl p-4 mb-5`}>
-                  <div className="flex justify-between items-center mb-3">
-                    <p
-                      className={`text-sm font-medium ${
-                        darkMode ? 'text-gray-400' : 'text-gray-600'
-                      }`}
-                    >
-                      7-Day Chart
-                    </p>
-                    <span
-                      className={`text-xs px-2 py-0.5 rounded ${
-                        sel.change7d >= 0
-                          ? 'bg-green-500/20 text-green-500'
-                          : 'bg-red-500/20 text-red-500'
-                      }`}
-                    >
-                      {sel.change7d >= 0 ? '+' : ''}
-                      {sel.change7d?.toFixed(2)}%
-                    </span>
-                  </div>
-                  <DetailChart
-                    data={sel.sparkline}
-                    basePrice={sel.price}
-                    change7d={sel.change7d}
-                  />
-                </div>
-              )}
-              <a
-                href={`https://www.coingecko.com/en/coins/${sel.id}`}
-                target="_blank"
-                rel="noreferrer"
-                className="block w-full py-3 bg-green-500/20 hover:bg-green-500/30 rounded-xl text-center text-green-500 font-medium transition-colors"
-              >
-                View on CoinGecko ↗
-              </a>
-              <button
-                onClick={(e) => {
-                  openTokenPage(sel.id, e);
-                  setSel(null);
-                }}
-                className="w-full mt-3 py-3 bg-orange-500/20 hover:bg-orange-500/30 rounded-xl text-orange-500 font-medium transition-colors"
-              >
-                View Detailed Analysis
-              </button>
-              <button
-                onClick={() => setSel(null)}
-                className={`w-full mt-2 py-3 ${
-                  darkMode ? 'bg-white/10 hover:bg-white/15' : 'bg-gray-100 hover:bg-gray-200'
-                } rounded-xl font-medium transition-colors`}
-              >
-                Close
-              </button>
             </div>
           </div>
         )}
