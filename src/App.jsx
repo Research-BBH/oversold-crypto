@@ -153,7 +153,7 @@ export default function App() {
       setError(e.message);
       setLoading(false);
     }
-  }, []);
+  }, [useEnhancedAPI]);
 
   useEffect(() => {
     fetchData();
@@ -266,7 +266,7 @@ if (signalFilters.size > 0) {
       return dir === 'asc' ? va - vb : vb - va;
     });
     return r;
-  }, [tokens, search, cat, sortBy, showWL, watchlist, preset, rsiFilter, rsiSortDir]);
+  }, [tokens, search, cat, sortBy, showWL, watchlist, preset, rsiFilter, rsiSortDir, signalFilters]);
 
   const stats = useMemo(() => {
     const withRSI = tokens.filter((t) => t.rsi !== null);
@@ -1265,4 +1265,3 @@ if (signalFilters.size > 0) {
     </div>
   );
 }
-
