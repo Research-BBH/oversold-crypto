@@ -11,6 +11,7 @@ import {
   PRESETS,
   REFRESH_INTERVAL,
   API_URL,
+  API_URL_ENHANCED,
 } from './utils';
 import { ThemeToggle } from './components/ThemeToggle';
 import { LoginModal } from './components/LoginModal';
@@ -42,6 +43,8 @@ export default function App() {
   const [user, setUser] = useState(null);
   const [pageTokenId, setPageTokenId] = useState(null);
   const [currentPage, setCurrentPage] = useState('home');
+  const [signalFilters, setSignalFilters] = useState(new Set());
+  const [useEnhancedAPI, setUseEnhancedAPI] = useState(true);
   const [darkMode, setDarkMode] = useState(() => {
     const saved = localStorage.getItem('oversold_darkMode');
     return saved !== null ? JSON.parse(saved) : true;
@@ -130,9 +133,11 @@ export default function App() {
 
   // Fetch crypto data
   const fetchData = useCallback(async () => {
-    try {
-      setError(null);
-      const res = await fetch(API_URL);
+  try {
+    setError(null);
+    // Use enhanced API if enabled
+    const apiUrl = useEnhancedAPI ? API_URL_ENHANCED : API_URL;
+    const res = await fetch(apiUrl);
       if (!res.ok) throw new Error(`API Error: ${res.status}`);
       const data = await res.json();
       if (data.error) throw new Error(data.error);
@@ -165,7 +170,23 @@ export default function App() {
     setRsiFilter(null);
     setRsiSortDir('desc');
     setSortBy('rsi_asc');
+    setSignalFilters(new Set());
   };
+
+  const toggleSignalFilter = useCallback((signalType) => {
+  setSignalFilters((prev) => {
+    const newFilters = new Set(prev);
+    if (newFilters.has(signalType)) {
+      newFilters.delete(signalType);
+    } else {
+      newFilters.add(signalType);
+    }
+    return newFilters;
+  });
+  // Clear other filters when using signal filters
+  setPreset(null);
+  setRsiFilter(null);
+}, []);
 
   const toggleWatch = useCallback(
     (id, e) => {
@@ -201,7 +222,39 @@ export default function App() {
     else if (rsiFilter === 'neutral')
       r = r.filter((t) => t.rsi !== null && t.rsi >= 30 && t.rsi < 70);
     else if (rsiFilter === 'overbought') r = r.filter((t) => t.rsi !== null && t.rsi >= 70);
-
+if (signalFilters.size > 0) {
+    r = r.filter((token) => {
+      // Must match ALL selected filters (AND logic)
+      for (const signalType of signalFilters) {
+        if (!token.signals) return false; // Skip tokens without signal data
+        
+        switch (signalType) {
+          case 'rsi_oversold':
+            if (!token.signals.rsiOversold) return false;
+            break;
+          case 'rsi_extreme':
+            if (!token.signals.rsiExtreme) return false;
+            break;
+          case 'above_sma50':
+            if (token.signals.aboveSMA50 !== true) return false;
+            break;
+          case 'below_bb':
+            if (token.signals.belowBB !== true) return false;
+            break;
+          case 'volume_spike':
+            if (token.signals.volumeSpike !== true) return false;
+            break;
+          case 'has_funding':
+            if (token.signals.hasFunding !== true) return false;
+            break;
+          case 'negative_funding':
+            if (token.signals.negativeFunding !== true) return false;
+            break;
+        }
+      }
+      return true;
+    });
+  }
     let activeSort = preset ? PRESETS.find((x) => x.id === preset)?.sort || sortBy : sortBy;
     if (rsiFilter) activeSort = `rsi_${rsiSortDir}`;
     const [field, dir] = activeSort.split('_');
@@ -518,6 +571,121 @@ export default function App() {
           ))}
         </div>
 
+        {/* Signal Filters - NEW SECTION */}
+<div className="mb-4">
+  <div className="flex items-center gap-3 mb-3">
+    <span className={`text-sm font-semibold ${darkMode ? 'text-gray-300' : 'text-gray-700'}`}>
+      🎯 Filter by Trading Signals
+    </span>
+    {signalFilters.size > 0 && (
+      <button
+        onClick={() => setSignalFilters(new Set())}
+        className={`text-xs px-3 py-1.5 rounded-lg font-medium transition-colors ${
+          darkMode 
+            ? 'bg-red-500/20 text-red-400 hover:bg-red-500/30 border border-red-500/30' 
+            : 'bg-red-50 text-red-600 hover:bg-red-100 border border-red-200'
+        }`}
+      >
+        Clear All ({signalFilters.size})
+      </button>
+    )}
+    {!useEnhancedAPI && (
+      <button
+        onClick={() => setUseEnhancedAPI(true)}
+        className={`text-xs px-3 py-1.5 rounded-lg font-medium transition-colors ${
+          darkMode 
+            ? 'bg-blue-500/20 text-blue-400 hover:bg-blue-500/30 border border-blue-500/30' 
+            : 'bg-blue-50 text-blue-600 hover:bg-blue-100 border border-blue-200'
+        }`}
+      >
+        Enable Enhanced Data
+      </button>
+    )}
+  </div>
+  
+  <div className="flex gap-2 flex-wrap">
+    {[
+      { 
+        id: 'rsi_oversold', 
+        label: '📉 RSI Oversold', 
+        desc: 'RSI below 30',
+        available: 'All tokens'
+      },
+      { 
+        id: 'rsi_extreme', 
+        label: '🚨 RSI Extreme', 
+        desc: 'RSI below 25',
+        available: 'All tokens'
+      },
+      { 
+        id: 'above_sma50', 
+        label: '📈 Above SMA50', 
+        desc: 'Price > 50-day SMA',
+        available: 'Top 250 tokens'
+      },
+      { 
+        id: 'below_bb', 
+        label: '⚠️ Below BB', 
+        desc: 'Price below lower Bollinger Band',
+        available: 'Top 250 tokens'
+      },
+      { 
+        id: 'volume_spike', 
+        label: '🔥 Volume Spike', 
+        desc: 'Volume > 1.5x average',
+        available: 'Top 250 tokens'
+      },
+      { 
+        id: 'has_funding', 
+        label: '💰 Has Futures', 
+        desc: 'Funding rate available',
+        available: 'Top 250 tokens'
+      },
+      { 
+        id: 'negative_funding', 
+        label: '💵 Negative Funding', 
+        desc: 'Shorts paying longs',
+        available: 'Top 250 tokens'
+      },
+    ].map((signal) => (
+      <button
+        key={signal.id}
+        onClick={() => toggleSignalFilter(signal.id)}
+        disabled={!useEnhancedAPI && !['rsi_oversold', 'rsi_extreme'].includes(signal.id)}
+        className={`px-3 py-2 rounded-xl text-xs whitespace-nowrap transition-all font-medium group relative disabled:opacity-50 disabled:cursor-not-allowed ${
+          signalFilters.has(signal.id)
+            ? 'bg-gradient-to-r from-blue-500 to-purple-500 text-white shadow-lg shadow-blue-500/20'
+            : darkMode
+            ? 'bg-white/5 text-gray-400 hover:bg-white/10 border border-white/5'
+            : 'bg-white text-gray-600 hover:bg-gray-50 border border-gray-200'
+        }`}
+      >
+        {signal.label}
+        {/* Tooltip */}
+        <span className={`absolute bottom-full left-1/2 -translate-x-1/2 mb-2 px-3 py-2 text-xs rounded-lg opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap pointer-events-none z-10 ${
+          darkMode ? 'bg-gray-800 text-white' : 'bg-gray-900 text-white'
+        }`}>
+          <div className="font-semibold">{signal.desc}</div>
+          <div className="text-[10px] opacity-75 mt-1">{signal.available}</div>
+        </span>
+      </button>
+    ))}
+  </div>
+  
+  {/* Info message */}
+  <div className={`mt-3 px-4 py-2.5 rounded-xl text-xs flex items-start gap-2 ${
+    darkMode 
+      ? 'bg-blue-500/10 text-blue-400 border border-blue-500/20' 
+      : 'bg-blue-50 text-blue-700 border border-blue-200'
+  }`}>
+    <span className="text-sm">ℹ️</span>
+    <div>
+      <span className="font-semibold">Enhanced filtering:</span> Top 250 tokens have complete signal data. 
+      {!useEnhancedAPI && <span className="font-semibold text-orange-400"> Enhanced API is disabled - enable it to use advanced filters.</span>}
+    </div>
+  </div>
+</div>
+        
         {/* Search and Filters */}
         <div className="flex flex-col lg:flex-row gap-3 mb-5">
           <div className="relative flex-1">
@@ -1097,3 +1265,4 @@ export default function App() {
     </div>
   );
 }
+
