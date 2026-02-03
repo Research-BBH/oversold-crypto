@@ -76,7 +76,7 @@ export const SignalScoreCircle = ({ score }) => {
 // Signal descriptions for education
 const SIGNAL_DESCRIPTIONS = {
   'RSI Oversold': 'RSI below 30 indicates the asset may be undervalued. Historically, prices tend to bounce from oversold levels. Bonus: +5pts if RSI drops below 25 (extreme).',
-  'RSI Extreme': 'RSI below 25 is extremely oversold. This often precedes strong reversals, but can also indicate serious fundamental issues.',
+  'RSI Oversold (Extreme)': 'RSI below 25 is extremely oversold. This often precedes strong reversals, but can also indicate serious fundamental issues. +5 bonus points for extreme conditions.',
   'Above 50 SMA': 'Price is above the 50-period Simple Moving Average, indicating an uptrend. This is the most critical filter - buying dips in uptrends has higher success rates.',
   'Below BB Lower': 'Price is below the lower Bollinger Band (2 standard deviations below 20-period SMA). This is statistically rare and often precedes mean reversion.',
   'Volume Spike': 'Trading volume is significantly higher than the 20-period average. High volume on dips can indicate capitulation or accumulation.',
