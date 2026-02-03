@@ -426,8 +426,8 @@ export default async function handler(req) {
     const remainingTokens = baseTokens.slice(250).map(token => ({
       ...token,
       signals: {
-        rsiOversold: token.rsi !== null && token.rsi < 30,
-        rsiExtreme: token.rsi !== null && token.rsi < 25,
+        rsiOversold: token.rsi !== null && token.rsi >= 20 && token.rsi < 30,
+        rsiExtreme: token.rsi !== null && token.rsi < 20,
         aboveSMA50: null,
         belowBB: null,
         volumeSpike: null,
