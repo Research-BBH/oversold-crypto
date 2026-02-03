@@ -226,35 +226,22 @@ if (signalFilters.size > 0) {
     r = r.filter((token) => {
       // Must match ALL selected filters (AND logic)
       for (const signalType of signalFilters) {
+        if (!token.signals) return false; // Skip tokens without signal data
+        
         switch (signalType) {
-          case 'rsi_oversold':
-            // Use direct RSI check as fallback if signals not available
-            if (token.signals?.rsiOversold === true) break;
-            if (token.rsi !== null && token.rsi >= 20 && token.rsi < 30) break;
-            return false;
-          case 'rsi_extreme':
-            // Use direct RSI check as fallback if signals not available
-            if (token.signals?.rsiExtreme === true) break;
-            if (token.rsi !== null && token.rsi < 20) break;
-            return false;
           case 'above_sma50':
-            if (!token.signals) return false;
             if (token.signals.aboveSMA50 !== true) return false;
             break;
           case 'below_bb':
-            if (!token.signals) return false;
             if (token.signals.belowBB !== true) return false;
             break;
           case 'volume_spike':
-            if (!token.signals) return false;
             if (token.signals.volumeSpike !== true) return false;
             break;
           case 'has_funding':
-            if (!token.signals) return false;
             if (token.signals.hasFunding !== true) return false;
             break;
           case 'negative_funding':
-            if (!token.signals) return false;
             if (token.signals.negativeFunding !== true) return false;
             break;
         }
@@ -613,18 +600,6 @@ if (signalFilters.size > 0) {
   <div className="flex gap-2 flex-wrap">
     {[
       { 
-        id: 'rsi_oversold', 
-        label: '🔴 Oversold <30', 
-        desc: 'RSI between 20-30',
-        available: 'All tokens'
-      },
-      { 
-        id: 'rsi_extreme', 
-        label: '🚨 Extreme <20', 
-        desc: 'RSI below 20',
-        available: 'All tokens'
-      },
-      { 
         id: 'above_sma50', 
         label: '📈 Above SMA50', 
         desc: 'Price > 50-day SMA',
@@ -658,7 +633,7 @@ if (signalFilters.size > 0) {
       <button
         key={signal.id}
         onClick={() => toggleSignalFilter(signal.id)}
-        disabled={!useEnhancedAPI && !['rsi_oversold', 'rsi_extreme'].includes(signal.id)}
+        disabled={!useEnhancedAPI}
         className={`px-3 py-2 rounded-xl text-xs whitespace-nowrap transition-all font-medium group relative disabled:opacity-50 disabled:cursor-not-allowed ${
           signalFilters.has(signal.id)
             ? 'bg-gradient-to-r from-blue-500 to-purple-500 text-white shadow-lg shadow-blue-500/20'
