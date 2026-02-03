@@ -158,16 +158,22 @@ export const calculateSignalScore = (data) => {
   const signals = [];
   let availableSignals = 0; // Track how many signals have data
   
-  // 1. RSI Signal (25 points base, +5 for extreme)
+  // 1. RSI Signal (25 points base, +5 bonus for extreme = 30 total)
   if (data.rsi !== null && data.rsi !== undefined) {
     availableSignals++;
     if (data.rsi < 30) {
-      score += 25;
-      signals.push({ name: 'RSI Oversold', weight: 25, active: true });
-      if (data.rsi < 25) {
-        score += 5;
-        signals.push({ name: 'RSI Extreme', weight: 5, active: true });
-      }
+      const basePoints = 25;
+      const bonusPoints = data.rsi < 25 ? 5 : 0;
+      const totalPoints = basePoints + bonusPoints;
+      score += totalPoints;
+      
+      const label = data.rsi < 25 ? 'RSI Oversold (Extreme)' : 'RSI Oversold';
+      signals.push({ 
+        name: label, 
+        weight: totalPoints, 
+        active: true,
+        isExtreme: data.rsi < 25
+      });
     } else {
       signals.push({ name: 'RSI Oversold', weight: 25, active: false });
     }
