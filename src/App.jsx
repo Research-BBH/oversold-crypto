@@ -842,7 +842,7 @@ if (signalFilters.size > 0) {
           >
             {/* Table Header */}
             <div
-              className={`hidden lg:grid grid-cols-12 gap-3 px-5 py-3 border-b ${
+              className={`hidden lg:grid grid-cols-13 gap-3 px-5 py-3 border-b ${
                 darkMode ? 'border-white/10' : 'border-gray-100'
               } text-xs text-gray-500 font-semibold uppercase tracking-wider`}
             >
@@ -886,6 +886,27 @@ if (signalFilters.size > 0) {
                   }`}
                 >
                   {sortBy === 'price_asc' ? '↑' : '↓'}
+                </span>
+              </div>
+              <div
+                className={`col-span-2 text-right flex items-center justify-end gap-1 cursor-pointer ${
+                  darkMode ? 'hover:text-white' : 'hover:text-gray-900'
+                } transition-colors group`}
+                onClick={() => {
+                  setSortBy(sortBy === 'volume_desc' ? 'volume_asc' : 'volume_desc');
+                  setPreset(null);
+                  setRsiFilter(null);
+                }}
+              >
+                <span>Volume</span>
+                <span
+                  className={`transition-opacity ${
+                    sortBy.startsWith('volume')
+                      ? 'opacity-100 text-orange-500'
+                      : 'opacity-0 group-hover:opacity-50'
+                  }`}
+                >
+                  {sortBy === 'volume_asc' ? '↑' : '↓'}
                 </span>
               </div>
               <div
@@ -951,7 +972,7 @@ if (signalFilters.size > 0) {
                   {sortBy === 'rsi_asc' ? '↑' : '↓'}
                 </span>
               </div>
-              <div className="col-span-2 text-right">Chart</div>
+              <div className="col-span-1 text-right">Chart</div>
               <div className="col-span-1 text-center">Actions</div>
             </div>
 
@@ -978,7 +999,7 @@ if (signalFilters.size > 0) {
                     <div
                       key={t.id}
                       onClick={() => window.location.hash = `#/token/${t.id}`}
-                      className={`grid grid-cols-8 lg:grid-cols-12 gap-3 px-5 py-3.5 border-b ${
+                      className={`grid grid-cols-8 lg:grid-cols-13 gap-3 px-5 py-3.5 border-b ${
                         darkMode
                           ? 'border-white/5 hover:bg-white/[0.04]'
                           : 'border-gray-100 hover:bg-gray-50'
@@ -1011,6 +1032,11 @@ if (signalFilters.size > 0) {
                       <div className="col-span-2 text-right self-center font-mono text-sm">
                         {formatPrice(t.price)}
                       </div>
+                      <div className="col-span-2 text-right self-center text-sm hidden lg:block">
+                        <span className={darkMode ? 'text-gray-300' : 'text-gray-600'}>
+                          {formatNumber(t.volume)}
+                        </span>
+                      </div>
                       <div className="col-span-1 text-right self-center text-sm hidden lg:block">
                         <span className={t.change24h >= 0 ? 'text-green-500' : 'text-red-500'}>
                           {t.change24h >= 0 ? '+' : ''}
@@ -1036,7 +1062,7 @@ if (signalFilters.size > 0) {
                           </span>
                         </div>
                       </div>
-                      <div className="col-span-2 self-center hidden lg:flex justify-end">
+                      <div className="col-span-1 self-center hidden lg:flex justify-end">
                         <Spark data={t.sparkline} color={sparkColor} h={24} />
                       </div>
                       <div className="col-span-1 self-center flex justify-center gap-2">
