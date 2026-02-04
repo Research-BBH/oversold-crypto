@@ -11,7 +11,215 @@ import { analyzeToken } from '../utils/signals';
 import { getBybitTokenData, calculateHistoricalRSI as calculateBybitRSI } from '../utils/bybit';
 import { getOKXTokenData, calculateHistoricalRSI as calculateOKXRSI } from '../utils/okx';
 import { getComprehensiveTokenData } from '../utils/coingecko-enhanced';
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useMemo } from 'react';
+
+// RSI Threshold Analysis Component
+const RSIThresholdAnalysis = ({ rsi, darkMode }) => {
+  const [mode, setMode] = useState('oversold'); // 'oversold' or 'overbought'
+  const [threshold, setThreshold] = useState(30);
+  
+  // Get message based on RSI vs threshold
+  const getMessage = () => {
+    if (rsi === null) return { text: 'RSI data unavailable.', color: 'gray' };
+    
+    if (mode === 'oversold') {
+      if (rsi < 20) {
+        return { text: 'Extremely oversold. High probability of bounce.', color: 'red' };
+      } else if (rsi < threshold) {
+        return { text: 'Oversold territory. Potential buying opportunity.', color: 'orange' };
+      } else if (rsi < 50) {
+        return { text: 'Approaching fair value. Less predictive power.', color: 'yellow' };
+      } else {
+        return { text: 'Above fair value. Not in oversold territory.', color: 'gray' };
+      }
+    } else {
+      if (rsi > 80) {
+        return { text: 'Extremely overbought. High probability of pullback.', color: 'green' };
+      } else if (rsi > threshold) {
+        return { text: 'Overbought territory. Consider taking profits.', color: 'emerald' };
+      } else if (rsi > 50) {
+        return { text: 'Approaching fair value. Less predictive power.', color: 'yellow' };
+      } else {
+        return { text: 'Below fair value. Not in overbought territory.', color: 'gray' };
+      }
+    }
+  };
+
+  const message = getMessage();
+  
+  // Check if RSI meets threshold condition
+  const meetsCondition = rsi !== null && (
+    mode === 'oversold' ? rsi < threshold : rsi > threshold
+  );
+
+  return (
+    <div className={`${darkMode ? 'bg-white/5 border-white/10' : 'bg-white border-gray-200'} rounded-2xl p-6 border`}>
+      {/* Mode Toggle */}
+      <div className="flex justify-center mb-6">
+        <div className={`inline-flex rounded-xl p-1 ${darkMode ? 'bg-white/5' : 'bg-gray-100'}`}>
+          <button
+            onClick={() => { setMode('oversold'); setThreshold(30); }}
+            className={`px-5 py-2 rounded-lg text-sm font-medium transition-all ${
+              mode === 'oversold'
+                ? 'bg-gradient-to-r from-orange-500 to-red-500 text-white shadow-lg'
+                : darkMode ? 'text-gray-400 hover:text-white' : 'text-gray-600 hover:text-gray-900'
+            }`}
+          >
+            Oversold
+          </button>
+          <button
+            onClick={() => { setMode('overbought'); setThreshold(70); }}
+            className={`px-5 py-2 rounded-lg text-sm font-medium transition-all ${
+              mode === 'overbought'
+                ? 'bg-gradient-to-r from-emerald-500 to-green-500 text-white shadow-lg'
+                : darkMode ? 'text-gray-400 hover:text-white' : 'text-gray-600 hover:text-gray-900'
+            }`}
+          >
+            Overbought
+          </button>
+        </div>
+      </div>
+
+      {/* Threshold Label */}
+      <div className="flex items-center justify-between mb-3">
+        <span className={`text-sm font-medium uppercase tracking-wide ${darkMode ? 'text-gray-400' : 'text-gray-600'}`}>
+          RSI Threshold
+        </span>
+        <div className={`flex items-center gap-2 px-3 py-1 rounded-lg ${
+          mode === 'oversold' 
+            ? 'bg-orange-500/20 text-orange-400' 
+            : 'bg-green-500/20 text-green-400'
+        }`}>
+          <span className="text-lg font-bold tabular-nums">{threshold}</span>
+        </div>
+      </div>
+
+      {/* Slider */}
+      <div className="relative mb-4">
+        {/* Track background with gradient */}
+        <div className="h-3 rounded-full overflow-hidden bg-gray-700">
+          <div 
+            className={`h-full transition-all duration-300 ${
+              mode === 'oversold'
+                ? 'bg-gradient-to-r from-red-500 via-orange-500 via-yellow-500 to-gray-500'
+                : 'bg-gradient-to-r from-gray-500 via-yellow-500 via-emerald-500 to-green-500'
+            }`}
+          />
+        </div>
+        
+        {/* Slider input */}
+        <input
+          type="range"
+          min={mode === 'oversold' ? 10 : 50}
+          max={mode === 'oversold' ? 50 : 90}
+          value={threshold}
+          onChange={(e) => setThreshold(Number(e.target.value))}
+          className="absolute inset-0 w-full h-3 opacity-0 cursor-pointer"
+        />
+        
+        {/* Thumb indicator */}
+        <div 
+          className="absolute top-1/2 -translate-y-1/2 w-5 h-5 bg-white rounded-full shadow-lg border-2 border-gray-300 pointer-events-none transition-all duration-150"
+          style={{ 
+            left: `calc(${((threshold - (mode === 'oversold' ? 10 : 50)) / 40) * 100}% - 10px)` 
+          }}
+        />
+      </div>
+
+      {/* Message */}
+      <p className={`text-sm ${darkMode ? 'text-gray-400' : 'text-gray-600'} mb-4`}>
+        {message.text}
+      </p>
+
+      {/* Current RSI vs Threshold */}
+      {rsi !== null && (
+        <div className={`flex items-center justify-between p-4 rounded-xl ${
+          meetsCondition
+            ? mode === 'oversold' 
+              ? 'bg-orange-500/10 border border-orange-500/30' 
+              : 'bg-green-500/10 border border-green-500/30'
+            : darkMode ? 'bg-white/5' : 'bg-gray-100'
+        }`}>
+          <div>
+            <p className={`text-xs ${darkMode ? 'text-gray-500' : 'text-gray-600'} mb-1`}>Current RSI</p>
+            <p className={`text-2xl font-bold ${
+              rsi < 30 ? 'text-orange-400' : rsi > 70 ? 'text-green-400' : darkMode ? 'text-white' : 'text-gray-900'
+            }`}>
+              {rsi.toFixed(1)}
+            </p>
+          </div>
+          <div className="text-right">
+            <p className={`text-xs ${darkMode ? 'text-gray-500' : 'text-gray-600'} mb-1`}>
+              {mode === 'oversold' ? 'Below' : 'Above'} Threshold?
+            </p>
+            <p className={`text-lg font-bold ${meetsCondition ? 'text-green-400' : 'text-gray-500'}`}>
+              {meetsCondition ? '✓ Yes' : '✗ No'}
+            </p>
+          </div>
+        </div>
+      )}
+    </div>
+  );
+};
+
+// Chart Timeframe Component
+const ChartWithTimeframe = ({ token, darkMode }) => {
+  const [timeframe, setTimeframe] = useState('7d');
+  
+  // For 24h, we'll use the last portion of sparkline data
+  const chartData = useMemo(() => {
+    if (!token.sparkline || token.sparkline.length === 0) return null;
+    
+    if (timeframe === '24h') {
+      // Sparkline is 7 days, so 24h is roughly 1/7 of the data
+      const dataPoints = Math.floor(token.sparkline.length / 7);
+      return token.sparkline.slice(-dataPoints);
+    }
+    return token.sparkline;
+  }, [token.sparkline, timeframe]);
+  
+  const changeValue = timeframe === '24h' ? token.change24h : token.change7d;
+
+  return (
+    <div className={`${darkMode ? 'bg-white/5 border-white/10' : 'bg-white border-gray-200'} rounded-2xl p-6 border`}>
+      <div className="flex justify-between items-center mb-6">
+        <h2 className="text-xl font-semibold">Price Chart</h2>
+        <div className="flex items-center gap-3">
+          {/* Timeframe Toggle */}
+          <div className={`inline-flex rounded-lg p-1 ${darkMode ? 'bg-white/5' : 'bg-gray-100'}`}>
+            {['24h', '7d'].map((tf) => (
+              <button
+                key={tf}
+                onClick={() => setTimeframe(tf)}
+                className={`px-3 py-1.5 rounded-md text-xs font-medium transition-all ${
+                  timeframe === tf
+                    ? 'bg-orange-500 text-white shadow'
+                    : darkMode ? 'text-gray-400 hover:text-white' : 'text-gray-600 hover:text-gray-900'
+                }`}
+              >
+                {tf.toUpperCase()}
+              </button>
+            ))}
+          </div>
+          
+          {/* Change Badge */}
+          <span className={`px-3 py-1 rounded-lg text-sm font-medium ${
+            changeValue >= 0
+              ? 'bg-green-500/20 text-green-400'
+              : 'bg-red-500/20 text-red-400'
+          }`}>
+            {changeValue >= 0 ? '+' : ''}{changeValue?.toFixed(2)}%
+          </span>
+        </div>
+      </div>
+      <FullPageChart 
+        data={chartData} 
+        basePrice={token.price} 
+        change7d={changeValue}
+      />
+    </div>
+  );
+};
 
 export const TokenDetailPage = ({ token, onBack, darkMode, setDarkMode }) => {
   // All hooks must be called before any early returns (React rules of hooks)
@@ -140,6 +348,7 @@ export const TokenDetailPage = ({ token, onBack, darkMode, setDarkMode }) => {
       }`}
     >
       <div className="max-w-6xl mx-auto px-6 py-8">
+        {/* Header */}
         <div className="flex items-center justify-between mb-8">
           <div className="flex items-center gap-4">
             <button
@@ -194,29 +403,16 @@ export const TokenDetailPage = ({ token, onBack, darkMode, setDarkMode }) => {
           <ThemeToggle darkMode={darkMode} setDarkMode={setDarkMode} />
         </div>
 
+        {/* Main Grid - Chart and RSI */}
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-          <div
-            className={`lg:col-span-2 ${
-              darkMode ? 'bg-white/5 border-white/10' : 'bg-white border-gray-200'
-            } rounded-2xl p-6 border`}
-          >
-            <div className="flex justify-between items-center mb-6">
-              <h2 className="text-xl font-semibold">7-Day Price Chart</h2>
-              <span
-                className={`px-3 py-1 rounded-lg text-sm font-medium ${
-                  token.change7d >= 0
-                    ? 'bg-green-500/20 text-green-400'
-                    : 'bg-red-500/20 text-red-400'
-                }`}
-              >
-                {token.change7d >= 0 ? '+' : ''}
-                {token.change7d?.toFixed(2)}%
-              </span>
-            </div>
-            <FullPageChart data={token.sparkline} basePrice={token.price} change7d={token.change7d} />
+          {/* Chart with Timeframe Toggle */}
+          <div className="lg:col-span-2">
+            <ChartWithTimeframe token={token} darkMode={darkMode} />
           </div>
 
+          {/* RSI Section */}
           <div className="space-y-6">
+            {/* Basic RSI Display */}
             <div
               className={`${
                 darkMode ? 'bg-white/5 border-white/10' : 'bg-white border-gray-200'
@@ -244,6 +440,7 @@ export const TokenDetailPage = ({ token, onBack, darkMode, setDarkMode }) => {
               </div>
             </div>
 
+            {/* Price Changes */}
             <div
               className={`${
                 darkMode ? 'bg-white/5 border-white/10' : 'bg-white border-gray-200'
@@ -280,6 +477,12 @@ export const TokenDetailPage = ({ token, onBack, darkMode, setDarkMode }) => {
           </div>
         </div>
 
+        {/* RSI Threshold Analysis - Full Width */}
+        <div className="mt-6">
+          <h2 className="text-2xl font-bold mb-4">🎯 RSI Threshold Analysis</h2>
+          <RSIThresholdAnalysis rsi={token.rsi} darkMode={darkMode} />
+        </div>
+
         {/* Signal Analysis Section */}
         <div className="mt-6">
           <h2 className="text-2xl font-bold mb-4">📊 Trading Signal Analysis</h2>
@@ -293,6 +496,7 @@ export const TokenDetailPage = ({ token, onBack, darkMode, setDarkMode }) => {
           )}
         </div>
 
+        {/* Market Data */}
         <div
           className={`mt-6 ${
             darkMode ? 'bg-white/5 border-white/10' : 'bg-white border-gray-200'
@@ -325,6 +529,7 @@ export const TokenDetailPage = ({ token, onBack, darkMode, setDarkMode }) => {
           </div>
         </div>
 
+        {/* ATH/ATL */}
         {token.ath && (
           <div
             className={`mt-6 ${
@@ -369,6 +574,7 @@ export const TokenDetailPage = ({ token, onBack, darkMode, setDarkMode }) => {
           </div>
         )}
 
+        {/* CoinGecko Link */}
         <div className="mt-6">
           <a
             href={`https://coingecko.com/en/coins/${token.id}`}
