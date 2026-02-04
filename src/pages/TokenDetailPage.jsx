@@ -5,19 +5,61 @@
 import { formatPrice, formatNumber, getRsiStyle } from '../utils';
 import { ThemeToggle } from '../components/ThemeToggle';
 import { Footer } from '../components/Footer';
-import { RSIMeter, FullPageChart } from '../components/Charts';
+import { 
+  RSIMeter, 
+  PriceChart, 
+  TimeRangeSelector, 
+  ChartTypeToggle,
+  TIME_RANGES,
+  CHART_TYPES 
+} from '../components/Charts';
 import { FullSignalAnalysis } from '../components/SignalAnalysis';
 import { analyzeToken } from '../utils/signals';
 import { getBybitTokenData, calculateHistoricalRSI as calculateBybitRSI } from '../utils/bybit';
 import { getOKXTokenData, calculateHistoricalRSI as calculateOKXRSI } from '../utils/okx';
-import { getComprehensiveTokenData } from '../utils/coingecko-enhanced';
+import { getComprehensiveTokenData, fetchChartDataForRange } from '../utils/coingecko-enhanced';
 import { useState, useEffect } from 'react';
 
 export const TokenDetailPage = ({ token, onBack, darkMode, setDarkMode }) => {
-  // All hooks must be called before any early returns (React rules of hooks)
+  // Signal analysis state
   const [signalAnalysis, setSignalAnalysis] = useState(null);
   const [loadingSignals, setLoadingSignals] = useState(true);
+  
+  // Chart state
+  const [timeRange, setTimeRange] = useState('7d');
+  const [chartType, setChartType] = useState(CHART_TYPES.LINE);
+  const [chartData, setChartData] = useState(null);
+  const [loadingChart, setLoadingChart] = useState(false);
 
+  // Fetch chart data when time range changes
+  useEffect(() => {
+    if (!token?.id) return;
+    
+    const fetchChart = async () => {
+      setLoadingChart(true);
+      try {
+        console.log(`Fetching chart data for ${token.id} with range ${timeRange}...`);
+        const data = await fetchChartDataForRange(token.id, timeRange);
+        
+        if (data) {
+          console.log(`Chart data received: ${data.prices?.length} prices, ${data.ohlc?.length || 0} OHLC candles`);
+          setChartData(data);
+        } else {
+          console.warn('No chart data returned');
+          setChartData(null);
+        }
+      } catch (error) {
+        console.error('Error fetching chart data:', error);
+        setChartData(null);
+      } finally {
+        setLoadingChart(false);
+      }
+    };
+    
+    fetchChart();
+  }, [token?.id, timeRange]);
+
+  // Fetch signal analysis data
   useEffect(() => {
     if (!token) return;
     
@@ -132,6 +174,22 @@ export const TokenDetailPage = ({ token, onBack, darkMode, setDarkMode }) => {
   if (!token) return null;
 
   const rs = getRsiStyle(token.rsi);
+  
+  // Get the change percentage for the selected time range
+  const getChangeForRange = () => {
+    if (chartData?.change !== undefined) {
+      return chartData.change;
+    }
+    // Fallback to token data
+    switch (timeRange) {
+      case '24h': return token.change24h;
+      case '7d': return token.change7d;
+      case '1m': return token.change30d;
+      default: return token.change7d;
+    }
+  };
+  
+  const currentChange = getChangeForRange();
 
   return (
     <div
@@ -140,6 +198,7 @@ export const TokenDetailPage = ({ token, onBack, darkMode, setDarkMode }) => {
       }`}
     >
       <div className="max-w-6xl mx-auto px-6 py-8">
+        {/* Header */}
         <div className="flex items-center justify-between mb-8">
           <div className="flex items-center gap-4">
             <button
@@ -194,29 +253,61 @@ export const TokenDetailPage = ({ token, onBack, darkMode, setDarkMode }) => {
           <ThemeToggle darkMode={darkMode} setDarkMode={setDarkMode} />
         </div>
 
+        {/* Main content grid */}
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+          {/* Chart Section */}
           <div
             className={`lg:col-span-2 ${
               darkMode ? 'bg-white/5 border-white/10' : 'bg-white border-gray-200'
             } rounded-2xl p-6 border`}
           >
-            <div className="flex justify-between items-center mb-6">
-              <h2 className="text-xl font-semibold">7-Day Price Chart</h2>
-              <span
-                className={`px-3 py-1 rounded-lg text-sm font-medium ${
-                  token.change7d >= 0
-                    ? 'bg-green-500/20 text-green-400'
-                    : 'bg-red-500/20 text-red-400'
-                }`}
-              >
-                {token.change7d >= 0 ? '+' : ''}
-                {token.change7d?.toFixed(2)}%
-              </span>
+            {/* Chart Header with Controls */}
+            <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-6">
+              <div className="flex items-center gap-3">
+                <h2 className="text-xl font-semibold">Price Chart</h2>
+                <span
+                  className={`px-3 py-1 rounded-lg text-sm font-medium ${
+                    (currentChange || 0) >= 0
+                      ? 'bg-green-500/20 text-green-400'
+                      : 'bg-red-500/20 text-red-400'
+                  }`}
+                >
+                  {(currentChange || 0) >= 0 ? '+' : ''}
+                  {(currentChange || 0).toFixed(2)}%
+                </span>
+              </div>
+              
+              {/* Chart Controls */}
+              <div className="flex items-center gap-3">
+                <ChartTypeToggle
+                  selected={chartType}
+                  onChange={setChartType}
+                  darkMode={darkMode}
+                  disabled={loadingChart}
+                />
+                <TimeRangeSelector
+                  selected={timeRange}
+                  onChange={setTimeRange}
+                  darkMode={darkMode}
+                  disabled={loadingChart}
+                />
+              </div>
             </div>
-            <FullPageChart data={token.sparkline} basePrice={token.price} change7d={token.change7d} />
+            
+            {/* Chart */}
+            <PriceChart
+              prices={chartData?.prices}
+              ohlcData={chartData?.ohlc}
+              timeRange={timeRange}
+              chartType={chartType}
+              darkMode={darkMode}
+              loading={loadingChart}
+            />
           </div>
 
+          {/* Right sidebar */}
           <div className="space-y-6">
+            {/* RSI Section */}
             <div
               className={`${
                 darkMode ? 'bg-white/5 border-white/10' : 'bg-white border-gray-200'
@@ -244,6 +335,7 @@ export const TokenDetailPage = ({ token, onBack, darkMode, setDarkMode }) => {
               </div>
             </div>
 
+            {/* Price Changes Section */}
             <div
               className={`${
                 darkMode ? 'bg-white/5 border-white/10' : 'bg-white border-gray-200'
@@ -293,6 +385,7 @@ export const TokenDetailPage = ({ token, onBack, darkMode, setDarkMode }) => {
           )}
         </div>
 
+        {/* Market Data Section */}
         <div
           className={`mt-6 ${
             darkMode ? 'bg-white/5 border-white/10' : 'bg-white border-gray-200'
@@ -325,6 +418,7 @@ export const TokenDetailPage = ({ token, onBack, darkMode, setDarkMode }) => {
           </div>
         </div>
 
+        {/* ATH/ATL Section */}
         {token.ath && (
           <div
             className={`mt-6 ${
@@ -369,6 +463,7 @@ export const TokenDetailPage = ({ token, onBack, darkMode, setDarkMode }) => {
           </div>
         )}
 
+        {/* CoinGecko Link */}
         <div className="mt-6">
           <a
             href={`https://coingecko.com/en/coins/${token.id}`}
