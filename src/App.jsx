@@ -739,6 +739,23 @@ if (signalFilters.size > 0) {
             ))}
           </div>
           <div className="flex gap-2">
+            {!showWL && (
+              <button
+                onClick={() => setShowLowVolume((v) => !v)}
+                className={`px-4 py-2.5 rounded-xl text-sm font-medium transition-all whitespace-nowrap ${
+                  !showLowVolume
+                    ? darkMode
+                      ? 'bg-blue-500/20 text-blue-400 border border-blue-500/40'
+                      : 'bg-blue-100 text-blue-600 border border-blue-300'
+                    : darkMode
+                    ? 'bg-white/5 text-gray-400 hover:bg-white/10 border border-white/5'
+                    : 'bg-white text-gray-600 hover:bg-gray-50 border border-gray-200'
+                }`}
+                title={!showLowVolume ? 'Volume filter active: Only showing >$200K' : 'Volume filter off: Showing all tokens'}
+              >
+                💧 {!showLowVolume ? '>$200K' : 'All'}
+              </button>
+            )}
             <select
               value={sortBy}
               onChange={(e) => {
@@ -786,23 +803,6 @@ if (signalFilters.size > 0) {
             >
               ⭐ {user ? watchlist.size : ''}
             </button>
-            {!showWL && (
-              <button
-                onClick={() => setShowLowVolume((v) => !v)}
-                className={`px-4 py-2.5 rounded-xl text-sm font-medium transition-all whitespace-nowrap ${
-                  showLowVolume
-                    ? darkMode
-                      ? 'bg-orange-500/20 text-orange-400 border border-orange-500/40'
-                      : 'bg-orange-100 text-orange-600 border border-orange-300'
-                    : darkMode
-                    ? 'bg-white/5 text-gray-400 hover:bg-white/10 border border-white/5'
-                    : 'bg-white text-gray-600 hover:bg-gray-50 border border-gray-200'
-                }`}
-                title={showLowVolume ? 'Showing all tokens' : 'Showing only tokens with >$200K volume'}
-              >
-                {showLowVolume ? '💧 All Volume' : '💧 >$200K'}
-              </button>
-            )}
             <button
               onClick={exportCSV}
               className={`px-4 py-2.5 rounded-xl text-sm ${
