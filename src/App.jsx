@@ -842,7 +842,7 @@ if (signalFilters.size > 0) {
           >
             {/* Table Header */}
             <div
-              className={`hidden lg:grid grid-cols-12 gap-3 px-5 py-3 border-b ${
+              className={`hidden lg:grid grid-cols-12 gap-2 px-5 py-3 border-b ${
                 darkMode ? 'border-white/10' : 'border-gray-100'
               } text-xs text-gray-500 font-semibold uppercase tracking-wider`}
             >
@@ -1020,7 +1020,7 @@ if (signalFilters.size > 0) {
                     <div
                       key={t.id}
                       onClick={() => window.location.hash = `#/token/${t.id}`}
-                      className={`grid grid-cols-8 lg:grid-cols-12 gap-3 px-5 py-3.5 border-b ${
+                      className={`grid grid-cols-8 lg:grid-cols-12 gap-2 px-5 py-3.5 border-b ${
                         darkMode
                           ? 'border-white/5 hover:bg-white/[0.04]'
                           : 'border-gray-100 hover:bg-gray-50'
