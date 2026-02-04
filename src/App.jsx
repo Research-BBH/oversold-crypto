@@ -844,12 +844,12 @@ if (signalFilters.size > 0) {
           >
             {/* Table Header */}
             <div
-              className={`hidden lg:grid grid-cols-12 gap-1 px-5 py-3 border-b ${
+              className={`hidden lg:grid grid-cols-12 gap-4 px-5 py-3 border-b ${
                 darkMode ? 'border-white/10' : 'border-gray-100'
-              } text-xs text-gray-500 font-semibold uppercase tracking-wider`}
+              } text-[11px] text-gray-500 font-semibold uppercase tracking-wider`}
             >
               <div
-                className={`col-span-4 flex items-center gap-1 cursor-pointer ${
+                className={`col-span-3 flex items-center gap-1 cursor-pointer ${
                   darkMode ? 'hover:text-white' : 'hover:text-gray-900'
                 } transition-colors group`}
                 onClick={() => {
@@ -870,7 +870,7 @@ if (signalFilters.size > 0) {
                 </span>
               </div>
               <div
-                className={`col-span-1 text-right flex items-center justify-end gap-1 cursor-pointer ${
+                className={`col-span-1 flex items-center justify-end gap-1 cursor-pointer ${
                   darkMode ? 'hover:text-white' : 'hover:text-gray-900'
                 } transition-colors group`}
                 onClick={() => {
@@ -891,7 +891,7 @@ if (signalFilters.size > 0) {
                 </span>
               </div>
               <div
-                className={`col-span-1 text-right flex items-center justify-end gap-1 cursor-pointer ${
+                className={`col-span-1 flex items-center justify-end gap-1 cursor-pointer ${
                   darkMode ? 'hover:text-white' : 'hover:text-gray-900'
                 } transition-colors group`}
                 onClick={() => {
@@ -900,7 +900,7 @@ if (signalFilters.size > 0) {
                   setRsiFilter(null);
                 }}
               >
-                <span>24h Volume</span>
+                <span>Volume</span>
                 <span
                   className={`transition-opacity ${
                     sortBy.startsWith('volume')
@@ -912,7 +912,7 @@ if (signalFilters.size > 0) {
                 </span>
               </div>
               <div
-                className={`col-span-1 text-right flex items-center justify-end gap-1 cursor-pointer ${
+                className={`col-span-1 flex items-center justify-end gap-1 cursor-pointer ${
                   darkMode ? 'hover:text-white' : 'hover:text-gray-900'
                 } transition-colors group`}
                 onClick={() => {
@@ -933,7 +933,7 @@ if (signalFilters.size > 0) {
                 </span>
               </div>
               <div
-                className={`col-span-1 text-right flex items-center justify-end gap-1 cursor-pointer ${
+                className={`col-span-1 flex items-center justify-end gap-1 cursor-pointer ${
                   darkMode ? 'hover:text-white' : 'hover:text-gray-900'
                 } transition-colors group`}
                 onClick={() => {
@@ -954,7 +954,7 @@ if (signalFilters.size > 0) {
                 </span>
               </div>
               <div
-                className={`col-span-1 text-right flex items-center justify-end gap-1 cursor-pointer ${
+                className={`col-span-1 flex items-center justify-end gap-1 cursor-pointer ${
                   darkMode ? 'hover:text-white' : 'hover:text-gray-900'
                 } transition-colors group`}
                 onClick={() => {
@@ -975,7 +975,7 @@ if (signalFilters.size > 0) {
                 </span>
               </div>
               <div
-                className={`col-span-1 text-right flex items-center justify-end gap-1 cursor-pointer ${
+                className={`col-span-1 flex items-center justify-end gap-1 cursor-pointer ${
                   darkMode ? 'hover:text-white' : 'hover:text-gray-900'
                 } transition-colors group`}
                 onClick={() => {
@@ -995,8 +995,8 @@ if (signalFilters.size > 0) {
                   {sortBy === 'rsi_asc' ? '↑' : '↓'}
                 </span>
               </div>
-              <div className="col-span-1 text-right">Chart</div>
-              <div className="col-span-1 text-right">Actions</div>
+              <div className="col-span-2 flex items-center justify-center">Chart</div>
+              <div className="col-span-1 flex items-center justify-center">Actions</div>
             </div>
 
             {/* Table Body */}
@@ -1022,17 +1022,18 @@ if (signalFilters.size > 0) {
                     <div
                       key={t.id}
                       onClick={() => window.location.hash = `#/token/${t.id}`}
-                      className={`grid grid-cols-8 lg:grid-cols-12 gap-1 px-5 py-3.5 border-b ${
+                      className={`grid grid-cols-8 lg:grid-cols-12 gap-4 px-5 py-3 border-b ${
                         darkMode
-                          ? 'border-white/5 hover:bg-white/[0.04]'
+                          ? 'border-white/5 hover:bg-white/[0.03]'
                           : 'border-gray-100 hover:bg-gray-50'
                       } cursor-pointer transition-colors ${
                         watched ? (darkMode ? 'bg-yellow-500/[0.04]' : 'bg-yellow-50') : ''
                       }`}
                     >
-                      <div className="col-span-4 flex items-center gap-3">
+                      {/* Token - col-span-3 */}
+                      <div className="col-span-4 lg:col-span-3 flex items-center gap-3">
                         <span
-                          className={`text-xs w-5 text-right ${
+                          className={`text-xs w-6 text-right tabular-nums ${
                             darkMode ? 'text-gray-600' : 'text-gray-400'
                           }`}
                         >
@@ -1041,59 +1042,65 @@ if (signalFilters.size > 0) {
                         <img
                           src={t.image}
                           alt={t.symbol}
-                          className="w-9 h-9 rounded-full shrink-0 bg-gray-800"
+                          className="w-8 h-8 rounded-full shrink-0 bg-gray-800"
                         />
                         <div className="min-w-0">
                           <div className="flex items-center gap-1.5">
-                            <span className="font-semibold">{t.symbol}</span>
+                            <span className="font-semibold text-sm">{t.symbol}</span>
                             {t.rsi !== null && t.rsi < 25 && <span className="text-xs">🔴</span>}
                             {t.rsi !== null && t.rsi > 75 && <span className="text-xs">🟢</span>}
                           </div>
-                          <p className="text-xs text-gray-500 truncate">{t.name}</p>
+                          <p className="text-xs text-gray-500 truncate max-w-[120px]">{t.name}</p>
                         </div>
                       </div>
-                      <div className="col-span-1 text-right self-center font-mono text-sm">
+                      {/* Price - col-span-1 */}
+                      <div className="col-span-2 lg:col-span-1 flex items-center justify-end font-mono text-sm tabular-nums">
                         {formatPrice(t.price)}
                       </div>
-                      <div className="col-span-1 text-right self-center text-sm hidden lg:block">
-                        <span className={darkMode ? 'text-gray-300' : 'text-gray-600'}>
+                      {/* Volume - col-span-1 */}
+                      <div className="col-span-1 hidden lg:flex items-center justify-end text-sm tabular-nums">
+                        <span className={darkMode ? 'text-gray-400' : 'text-gray-600'}>
                           {formatNumber(t.volume)}
                         </span>
                       </div>
-                      <div className="col-span-1 text-right self-center text-sm hidden lg:block">
-                        <span className={darkMode ? 'text-gray-300' : 'text-gray-600'}>
+                      {/* MCap - col-span-1 */}
+                      <div className="col-span-1 hidden lg:flex items-center justify-end text-sm tabular-nums">
+                        <span className={darkMode ? 'text-gray-400' : 'text-gray-600'}>
                           {formatNumber(t.mcap)}
                         </span>
                       </div>
-                      <div className="col-span-1 text-right self-center text-sm hidden lg:block">
+                      {/* 24H Change - col-span-1 */}
+                      <div className="col-span-1 hidden lg:flex items-center justify-end text-sm tabular-nums">
                         <span className={t.change24h >= 0 ? 'text-green-500' : 'text-red-500'}>
                           {t.change24h >= 0 ? '+' : ''}
                           {t.change24h?.toFixed(1)}%
                         </span>
                       </div>
-                      <div className="col-span-1 text-right self-center text-sm">
+                      {/* 7D Change - col-span-1 */}
+                      <div className="col-span-1 flex items-center justify-end text-sm tabular-nums">
                         <span className={t.change7d >= 0 ? 'text-green-500' : 'text-red-500'}>
                           {t.change7d >= 0 ? '+' : ''}
                           {t.change7d?.toFixed(1)}%
                         </span>
                       </div>
-                      <div className="col-span-1 text-right self-center flex justify-end">
+                      {/* RSI - col-span-1 */}
+                      <div className="col-span-1 flex items-center justify-end">
                         <div
-                          className={`inline-flex items-center gap-1 px-2 py-1 rounded-lg border ${rs.bg} ${rs.text}`}
+                          className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-md text-xs font-semibold tabular-nums ${rs.bg} ${rs.text}`}
                         >
                           <span className={`w-1.5 h-1.5 rounded-full ${rs.dot}`} />
-                          <span className="font-bold text-xs">
-                            {t.rsi !== null ? t.rsi.toFixed(0) : '--'}
-                          </span>
+                          {t.rsi !== null ? t.rsi.toFixed(0) : '--'}
                         </div>
                       </div>
-                      <div className="col-span-1 self-center hidden lg:flex justify-end">
+                      {/* Chart - col-span-2 */}
+                      <div className="col-span-2 hidden lg:flex items-center justify-center">
                         <Spark data={t.sparkline} color={sparkColor} h={24} />
                       </div>
-                      <div className="col-span-1 self-center flex justify-end gap-2">
+                      {/* Actions - col-span-1 */}
+                      <div className="col-span-1 flex items-center justify-center gap-1">
                         <button
                           onClick={(e) => openTokenPage(t.id, e)}
-                          className={`p-1.5 rounded-lg ${
+                          className={`p-1.5 rounded-md ${
                             darkMode
                               ? 'hover:bg-white/10 text-gray-500 hover:text-white'
                               : 'hover:bg-gray-100 text-gray-400 hover:text-gray-600'
@@ -1116,7 +1123,7 @@ if (signalFilters.size > 0) {
                         </button>
                         <button
                           onClick={(e) => toggleWatch(t.id, e)}
-                          className={`text-lg hover:scale-110 transition-transform ${
+                          className={`p-1 text-base hover:scale-110 transition-transform ${
                             watched
                               ? 'text-yellow-400'
                               : darkMode
