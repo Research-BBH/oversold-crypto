@@ -868,7 +868,7 @@ if (signalFilters.size > 0) {
                 </span>
               </div>
               <div
-                className={`col-span-1 text-center flex items-center justify-center gap-1 cursor-pointer ${
+                className={`col-span-1 text-center flex items-center justify-center gap-1 cursor-pointer ml-4 ${
                   darkMode ? 'hover:text-white' : 'hover:text-gray-900'
                 } transition-colors group`}
                 onClick={() => {
@@ -931,7 +931,7 @@ if (signalFilters.size > 0) {
                 </span>
               </div>
               <div
-                className={`col-span-1 text-right flex items-center justify-end gap-1 cursor-pointer ${
+                className={`col-span-1 text-center flex items-center justify-center gap-1 cursor-pointer ${
                   darkMode ? 'hover:text-white' : 'hover:text-gray-900'
                 } transition-colors group`}
                 onClick={() => {
@@ -952,7 +952,7 @@ if (signalFilters.size > 0) {
                 </span>
               </div>
               <div
-                className={`col-span-1 text-right flex items-center justify-end gap-1 cursor-pointer ${
+                className={`col-span-1 text-center flex items-center justify-center gap-1 cursor-pointer ${
                   darkMode ? 'hover:text-white' : 'hover:text-gray-900'
                 } transition-colors group`}
                 onClick={() => {
@@ -993,7 +993,7 @@ if (signalFilters.size > 0) {
                   {sortBy === 'rsi_asc' ? '↑' : '↓'}
                 </span>
               </div>
-              <div className="col-span-2 text-right">Chart</div>
+              <div className="col-span-2 text-right -ml-2">Chart</div>
               <div className="col-span-2 text-center">Actions</div>
             </div>
 
@@ -1050,7 +1050,7 @@ if (signalFilters.size > 0) {
                           <p className="text-xs text-gray-500 truncate">{t.name}</p>
                         </div>
                       </div>
-                      <div className="col-span-1 text-center self-center font-mono text-sm">
+                      <div className="col-span-1 text-center self-center font-mono text-sm ml-4">
                         {formatPrice(t.price)}
                       </div>
                       <div className="col-span-1 text-center self-center text-sm hidden lg:block">
@@ -1063,13 +1063,13 @@ if (signalFilters.size > 0) {
                           {formatNumber(t.mcap)}
                         </span>
                       </div>
-                      <div className="col-span-1 text-right self-center text-sm hidden lg:block">
+                      <div className="col-span-1 text-center self-center text-sm hidden lg:block">
                         <span className={t.change24h >= 0 ? 'text-green-500' : 'text-red-500'}>
                           {t.change24h >= 0 ? '+' : ''}
                           {t.change24h?.toFixed(1)}%
                         </span>
                       </div>
-                      <div className="col-span-1 text-right self-center text-sm">
+                      <div className="col-span-1 text-center self-center text-sm">
                         <span className={t.change7d >= 0 ? 'text-green-500' : 'text-red-500'}>
                           {t.change7d >= 0 ? '+' : ''}
                           {t.change7d?.toFixed(1)}%
@@ -1085,7 +1085,7 @@ if (signalFilters.size > 0) {
                           </span>
                         </div>
                       </div>
-                      <div className="col-span-2 self-center hidden lg:flex justify-end">
+                      <div className="col-span-2 self-center hidden lg:flex justify-end -ml-2">
                         <Spark data={t.sparkline} color={sparkColor} h={24} />
                       </div>
                       <div className="col-span-2 self-center flex justify-center gap-2">
