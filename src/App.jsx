@@ -868,7 +868,7 @@ if (signalFilters.size > 0) {
                 </span>
               </div>
               <div
-                className={`col-span-1 text-center flex items-center justify-center gap-1 cursor-pointer ${
+                className={`col-span-1 text-right flex items-center justify-end gap-1 cursor-pointer ${
                   darkMode ? 'hover:text-white' : 'hover:text-gray-900'
                 } transition-colors group`}
                 onClick={() => {
@@ -889,7 +889,7 @@ if (signalFilters.size > 0) {
                 </span>
               </div>
               <div
-                className={`col-span-1 text-center flex items-center justify-center gap-1 cursor-pointer ${
+                className={`col-span-1 text-right flex items-center justify-end gap-1 cursor-pointer ${
                   darkMode ? 'hover:text-white' : 'hover:text-gray-900'
                 } transition-colors group`}
                 onClick={() => {
@@ -910,7 +910,7 @@ if (signalFilters.size > 0) {
                 </span>
               </div>
               <div
-                className={`col-span-1 text-center flex items-center justify-center gap-1 cursor-pointer ${
+                className={`col-span-1 text-right flex items-center justify-end gap-1 cursor-pointer ${
                   darkMode ? 'hover:text-white' : 'hover:text-gray-900'
                 } transition-colors group`}
                 onClick={() => {
@@ -931,7 +931,7 @@ if (signalFilters.size > 0) {
                 </span>
               </div>
               <div
-                className={`col-span-1 text-center flex items-center justify-center gap-1 cursor-pointer ${
+                className={`col-span-1 text-right flex items-center justify-end gap-1 cursor-pointer ${
                   darkMode ? 'hover:text-white' : 'hover:text-gray-900'
                 } transition-colors group`}
                 onClick={() => {
@@ -952,7 +952,7 @@ if (signalFilters.size > 0) {
                 </span>
               </div>
               <div
-                className={`col-span-1 text-center flex items-center justify-center gap-1 cursor-pointer ${
+                className={`col-span-1 text-right flex items-center justify-end gap-1 cursor-pointer ${
                   darkMode ? 'hover:text-white' : 'hover:text-gray-900'
                 } transition-colors group`}
                 onClick={() => {
@@ -1050,26 +1050,26 @@ if (signalFilters.size > 0) {
                           <p className="text-xs text-gray-500 truncate">{t.name}</p>
                         </div>
                       </div>
-                      <div className="col-span-1 text-center self-center font-mono text-sm">
+                      <div className="col-span-1 text-right self-center font-mono text-sm">
                         {formatPrice(t.price)}
                       </div>
-                      <div className="col-span-1 text-center self-center text-sm hidden lg:block">
+                      <div className="col-span-1 text-right self-center text-sm hidden lg:block">
                         <span className={darkMode ? 'text-gray-300' : 'text-gray-600'}>
                           {formatNumber(t.volume)}
                         </span>
                       </div>
-                      <div className="col-span-1 text-center self-center text-sm hidden lg:block">
+                      <div className="col-span-1 text-right self-center text-sm hidden lg:block">
                         <span className={darkMode ? 'text-gray-300' : 'text-gray-600'}>
                           {formatNumber(t.mcap)}
                         </span>
                       </div>
-                      <div className="col-span-1 text-center self-center text-sm hidden lg:block">
+                      <div className="col-span-1 text-right self-center text-sm hidden lg:block">
                         <span className={t.change24h >= 0 ? 'text-green-500' : 'text-red-500'}>
                           {t.change24h >= 0 ? '+' : ''}
                           {t.change24h?.toFixed(1)}%
                         </span>
                       </div>
-                      <div className="col-span-1 text-center self-center text-sm">
+                      <div className="col-span-1 text-right self-center text-sm">
                         <span className={t.change7d >= 0 ? 'text-green-500' : 'text-red-500'}>
                           {t.change7d >= 0 ? '+' : ''}
                           {t.change7d?.toFixed(1)}%
