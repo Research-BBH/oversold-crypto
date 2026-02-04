@@ -584,99 +584,21 @@ if (signalFilters.size > 0) {
             )}
           </div>
           
-          <div className="flex gap-2 flex-wrap">
+          {/* Row 1: RSI + Price Action */}
+          <div className="flex gap-2 mb-2">
             {[
-              // RSI Filters
-              { 
-                id: 'rsi_oversold', 
-                label: '🔴 Oversold <30', 
-                desc: 'RSI below 30',
-                type: 'signal'
-              },
-              { 
-                id: 'rsi_extreme', 
-                label: '🚨 Extreme <20', 
-                desc: 'RSI below 20',
-                type: 'signal'
-              },
-              { 
-                id: 'rsi_neutral', 
-                label: '⚪ Neutral 30-70', 
-                desc: 'RSI between 30-70',
-                type: 'signal'
-              },
-              { 
-                id: 'rsi_overbought', 
-                label: '🟢 Overbought >70', 
-                desc: 'RSI above 70',
-                type: 'signal'
-              },
-              // Sort-based Filters
-              { 
-                id: 'losers24h', 
-                label: '📉 24h Losers', 
-                desc: 'Biggest 24h drops',
-                type: 'preset'
-              },
-              { 
-                id: 'losers7d', 
-                label: '📉 7d Losers', 
-                desc: 'Biggest 7d drops',
-                type: 'preset'
-              },
-              { 
-                id: 'gainers', 
-                label: '📈 24h Gainers', 
-                desc: 'Biggest 24h gains',
-                type: 'preset'
-              },
-              { 
-                id: 'gainers7d', 
-                label: '📈 7d Gainers', 
-                desc: 'Biggest 7d gains',
-                type: 'preset'
-              },
-              // Technical Signal Filters
-              { 
-                id: 'above_sma50', 
-                label: '📈 Above SMA50', 
-                desc: 'Price > 50-day SMA',
-                type: 'signal',
-                enhanced: true
-              },
-              { 
-                id: 'below_bb', 
-                label: '⚠️ Below BB', 
-                desc: 'Below Bollinger Band',
-                type: 'signal',
-                enhanced: true
-              },
-              { 
-                id: 'volume_spike', 
-                label: '🔥 Volume Spike', 
-                desc: 'Volume > 1.5x average',
-                type: 'signal',
-                enhanced: true
-              },
-              { 
-                id: 'has_funding', 
-                label: '💰 Has Futures', 
-                desc: 'Funding rate available',
-                type: 'signal',
-                enhanced: true
-              },
-              { 
-                id: 'negative_funding', 
-                label: '💵 Negative Funding', 
-                desc: 'Shorts paying longs',
-                type: 'signal',
-                enhanced: true
-              },
+              { id: 'rsi_extreme', label: '🚨 Extreme', desc: 'RSI below 20', type: 'signal' },
+              { id: 'rsi_oversold', label: '🔴 Oversold', desc: 'RSI below 30', type: 'signal' },
+              { id: 'rsi_neutral', label: '⚪ Neutral', desc: 'RSI between 30-70', type: 'signal' },
+              { id: 'rsi_overbought', label: '🟢 Overbought', desc: 'RSI above 70', type: 'signal' },
+              { id: 'losers24h', label: '📉 24h Losers', desc: 'Biggest 24h drops', type: 'preset' },
+              { id: 'losers7d', label: '📉 7d Losers', desc: 'Biggest 7d drops', type: 'preset' },
+              { id: 'gainers', label: '📈 24h Gainers', desc: 'Biggest 24h gains', type: 'preset' },
+              { id: 'gainers7d', label: '📈 7d Gainers', desc: 'Biggest 7d gains', type: 'preset' },
             ].map((filter) => {
               const isActive = filter.type === 'preset' 
                 ? preset === filter.id 
                 : signalFilters.has(filter.id);
-              const isDisabled = filter.enhanced && !useEnhancedAPI;
               
               return (
                 <button
@@ -689,8 +611,7 @@ if (signalFilters.size > 0) {
                       toggleSignalFilter(filter.id);
                     }
                   }}
-                  disabled={isDisabled}
-                  className={`px-3 py-2 rounded-xl text-xs whitespace-nowrap transition-all font-medium group relative disabled:opacity-40 disabled:cursor-not-allowed ${
+                  className={`flex-1 px-3 py-2 rounded-xl text-xs whitespace-nowrap transition-all font-medium group relative ${
                     isActive
                       ? 'bg-gradient-to-r from-orange-500 to-red-500 text-white shadow-lg shadow-orange-500/20'
                       : darkMode
@@ -699,7 +620,42 @@ if (signalFilters.size > 0) {
                   }`}
                 >
                   {filter.label}
-                  {/* Tooltip */}
+                  <span className={`absolute bottom-full left-1/2 -translate-x-1/2 mb-2 px-3 py-2 text-xs rounded-lg opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap pointer-events-none z-10 ${
+                    darkMode ? 'bg-gray-800 text-white' : 'bg-gray-900 text-white'
+                  }`}>
+                    {filter.desc}
+                  </span>
+                </button>
+              );
+            })}
+          </div>
+          
+          {/* Row 2: Technical Signals */}
+          <div className="flex gap-2">
+            {[
+              { id: 'below_bb', label: '⚠️ Below BB', desc: 'Below Bollinger Band', type: 'signal', enhanced: true },
+              { id: 'above_sma50', label: '📈 Above SMA50', desc: 'Price > 50-day SMA', type: 'signal', enhanced: true },
+              { id: 'volume_spike', label: '🔥 Volume Spike', desc: 'Volume > 1.5x average', type: 'signal', enhanced: true },
+              { id: 'has_funding', label: '💰 Has Futures', desc: 'Funding rate available', type: 'signal', enhanced: true },
+              { id: 'negative_funding', label: '💵 Negative Funding', desc: 'Shorts paying longs', type: 'signal', enhanced: true },
+            ].map((filter) => {
+              const isActive = signalFilters.has(filter.id);
+              const isDisabled = filter.enhanced && !useEnhancedAPI;
+              
+              return (
+                <button
+                  key={filter.id}
+                  onClick={() => toggleSignalFilter(filter.id)}
+                  disabled={isDisabled}
+                  className={`flex-1 px-3 py-2 rounded-xl text-xs whitespace-nowrap transition-all font-medium group relative disabled:opacity-40 disabled:cursor-not-allowed ${
+                    isActive
+                      ? 'bg-gradient-to-r from-orange-500 to-red-500 text-white shadow-lg shadow-orange-500/20'
+                      : darkMode
+                      ? 'bg-white/5 text-gray-400 hover:bg-white/10 border border-white/5'
+                      : 'bg-white text-gray-600 hover:bg-gray-50 border border-gray-200'
+                  }`}
+                >
+                  {filter.label}
                   <span className={`absolute bottom-full left-1/2 -translate-x-1/2 mb-2 px-3 py-2 text-xs rounded-lg opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap pointer-events-none z-10 ${
                     darkMode ? 'bg-gray-800 text-white' : 'bg-gray-900 text-white'
                   }`}>
