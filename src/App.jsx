@@ -763,14 +763,16 @@ if (signalFilters.size > 0) {
               <option value="rank_desc">Rank ↓</option>
               <option value="price_desc">Price ↓</option>
               <option value="price_asc">Price ↑</option>
+              <option value="volume_desc">Volume ↓</option>
+              <option value="volume_asc">Volume ↑</option>
+              <option value="mcap_desc">MCap ↓</option>
+              <option value="mcap_asc">MCap ↑</option>
               <option value="rsi_asc">RSI ↑ (Oversold)</option>
               <option value="rsi_desc">RSI ↓ (Overbought)</option>
               <option value="change24h_asc">24h % ↑</option>
               <option value="change24h_desc">24h % ↓</option>
               <option value="change7d_asc">7d % ↑</option>
               <option value="change7d_desc">7d % ↓</option>
-              <option value="mcap_desc">MCap ↓</option>
-              <option value="volume_desc">Volume ↓</option>
             </select>
             <button
               onClick={() => (user ? setShowWL((w) => !w) : setShowLoginModal(true))}
