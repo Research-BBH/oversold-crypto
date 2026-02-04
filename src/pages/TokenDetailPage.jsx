@@ -25,11 +25,25 @@ export const TokenDetailPage = ({ token, onBack, darkMode, setDarkMode }) => {
   const [signalAnalysis, setSignalAnalysis] = useState(null);
   const [loadingSignals, setLoadingSignals] = useState(true);
   
-  // Chart state
+  // Chart state - initialize with sparkline data if available
   const [timeRange, setTimeRange] = useState('7d');
   const [chartType, setChartType] = useState(CHART_TYPES.LINE);
-  const [chartData, setChartData] = useState(null);
-  const [loadingChart, setLoadingChart] = useState(false);
+  const [chartData, setChartData] = useState(() => {
+    // Initialize with sparkline data if available
+    if (token?.sparklineRaw && token.sparklineRaw.length > 0) {
+      const prices = token.sparklineRaw;
+      const change = ((prices[prices.length - 1] - prices[0]) / prices[0]) * 100;
+      return {
+        prices,
+        ohlc: null,
+        change,
+        timeRange: '7d',
+        source: 'initial-sparkline'
+      };
+    }
+    return null;
+  });
+  const [loadingChart, setLoadingChart] = useState(true);
 
   // Fetch chart data when time range changes
   useEffect(() => {
@@ -37,27 +51,65 @@ export const TokenDetailPage = ({ token, onBack, darkMode, setDarkMode }) => {
     
     const fetchChart = async () => {
       setLoadingChart(true);
+      
+      // Prepare fallback prices from sparkline
+      let fallbackPrices = null;
+      if (token.sparklineRaw && token.sparklineRaw.length > 0) {
+        fallbackPrices = token.sparklineRaw;
+        console.log(`Fallback available: ${fallbackPrices.length} sparklineRaw points`);
+      } else if (token.sparkline && token.sparkline.length > 0 && token.price) {
+        // Convert normalized sparkline back to prices
+        const startPrice = token.price / (1 + (token.change7d || 0) / 100);
+        fallbackPrices = token.sparkline.map(v => startPrice * (v / 100));
+        console.log(`Fallback available: ${fallbackPrices.length} converted sparkline points`);
+      }
+      
       try {
         console.log(`Fetching chart data for ${token.id} with range ${timeRange}...`);
-        const data = await fetchChartDataForRange(token.id, timeRange);
         
-        if (data) {
-          console.log(`Chart data received: ${data.prices?.length} prices, ${data.ohlc?.length || 0} OHLC candles`);
+        const data = await fetchChartDataForRange(token.id, timeRange, fallbackPrices);
+        
+        if (data && data.prices && data.prices.length > 0) {
+          console.log(`Chart data received: ${data.prices.length} prices, source: ${data.source}`);
           setChartData(data);
+        } else if (fallbackPrices && fallbackPrices.length > 0) {
+          // API returned nothing, use fallback
+          console.log(`API returned no data, using fallback for ${token.id}`);
+          const change = ((fallbackPrices[fallbackPrices.length - 1] - fallbackPrices[0]) / fallbackPrices[0]) * 100;
+          setChartData({
+            prices: fallbackPrices,
+            ohlc: null,
+            change,
+            timeRange,
+            source: 'sparkline-fallback'
+          });
         } else {
-          console.warn('No chart data returned');
+          console.warn('No chart data available and no fallback');
           setChartData(null);
         }
       } catch (error) {
         console.error('Error fetching chart data:', error);
-        setChartData(null);
+        // Use fallback on error
+        if (fallbackPrices && fallbackPrices.length > 0) {
+          console.log(`Error occurred, using fallback for ${token.id}`);
+          const change = ((fallbackPrices[fallbackPrices.length - 1] - fallbackPrices[0]) / fallbackPrices[0]) * 100;
+          setChartData({
+            prices: fallbackPrices,
+            ohlc: null,
+            change,
+            timeRange,
+            source: 'error-fallback'
+          });
+        } else {
+          setChartData(null);
+        }
       } finally {
         setLoadingChart(false);
       }
     };
     
     fetchChart();
-  }, [token?.id, timeRange]);
+  }, [token?.id, token?.sparklineRaw, token?.sparkline, token?.price, token?.change7d, timeRange]);
 
   // Fetch signal analysis data
   useEffect(() => {
