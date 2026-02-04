@@ -761,12 +761,12 @@ if (signalFilters.size > 0) {
             >
               <option value="rank_asc">Rank ↑</option>
               <option value="rank_desc">Rank ↓</option>
-              <option value="price_desc">Price ↓</option>
               <option value="price_asc">Price ↑</option>
-              <option value="volume_desc">Volume ↓</option>
+              <option value="price_desc">Price ↓</option>
               <option value="volume_asc">Volume ↑</option>
-              <option value="mcap_desc">MCap ↓</option>
+              <option value="volume_desc">Volume ↓</option>
               <option value="mcap_asc">MCap ↑</option>
+              <option value="mcap_desc">MCap ↓</option>
               <option value="rsi_asc">RSI ↑ (Oversold)</option>
               <option value="rsi_desc">RSI ↓ (Overbought)</option>
               <option value="change24h_asc">24h % ↑</option>
