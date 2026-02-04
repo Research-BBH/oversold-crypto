@@ -96,7 +96,7 @@ export const PRESETS = [
   { id: 'losers24h', name: '📉 24h Losers', filter: () => true, sort: 'change24h_asc' },
   { id: 'losers7d', name: '📉 7d Losers', filter: () => true, sort: 'change7d_asc' },
   { id: 'gainers', name: '📈 24h Gainers', filter: () => true, sort: 'change24h_desc' },
-  { id: 'volume', name: '🔥 High Volume', filter: () => true, sort: 'volMcap_desc' },
+  { id: 'gainers7d', name: '📈 7d Gainers', filter: () => true, sort: 'change7d_desc' },
 ];
 
 // Application constants
