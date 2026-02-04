@@ -842,7 +842,7 @@ if (signalFilters.size > 0) {
           >
             {/* Table Header */}
             <div
-              className={`hidden lg:grid grid-cols-12 gap-2 px-5 py-3 border-b ${
+              className={`hidden lg:grid grid-cols-12 gap-1 px-5 py-3 border-b ${
                 darkMode ? 'border-white/10' : 'border-gray-100'
               } text-xs text-gray-500 font-semibold uppercase tracking-wider`}
             >
@@ -868,7 +868,7 @@ if (signalFilters.size > 0) {
                 </span>
               </div>
               <div
-                className={`col-span-1 text-center flex items-center justify-center gap-1 cursor-pointer ml-4 ${
+                className={`col-span-1 text-center flex items-center justify-center gap-1 cursor-pointer ${
                   darkMode ? 'hover:text-white' : 'hover:text-gray-900'
                 } transition-colors group`}
                 onClick={() => {
@@ -993,7 +993,7 @@ if (signalFilters.size > 0) {
                   {sortBy === 'rsi_asc' ? '↑' : '↓'}
                 </span>
               </div>
-              <div className="col-span-2 text-right -ml-2">Chart</div>
+              <div className="col-span-2 text-right -ml-6">Chart</div>
               <div className="col-span-2 text-center">Actions</div>
             </div>
 
@@ -1020,7 +1020,7 @@ if (signalFilters.size > 0) {
                     <div
                       key={t.id}
                       onClick={() => window.location.hash = `#/token/${t.id}`}
-                      className={`grid grid-cols-8 lg:grid-cols-12 gap-2 px-5 py-3.5 border-b ${
+                      className={`grid grid-cols-8 lg:grid-cols-12 gap-1 px-5 py-3.5 border-b ${
                         darkMode
                           ? 'border-white/5 hover:bg-white/[0.04]'
                           : 'border-gray-100 hover:bg-gray-50'
@@ -1050,7 +1050,7 @@ if (signalFilters.size > 0) {
                           <p className="text-xs text-gray-500 truncate">{t.name}</p>
                         </div>
                       </div>
-                      <div className="col-span-1 text-center self-center font-mono text-sm ml-4">
+                      <div className="col-span-1 text-center self-center font-mono text-sm">
                         {formatPrice(t.price)}
                       </div>
                       <div className="col-span-1 text-center self-center text-sm hidden lg:block">
@@ -1085,7 +1085,7 @@ if (signalFilters.size > 0) {
                           </span>
                         </div>
                       </div>
-                      <div className="col-span-2 self-center hidden lg:flex justify-end -ml-2">
+                      <div className="col-span-2 self-center hidden lg:flex justify-end -ml-6">
                         <Spark data={t.sparkline} color={sparkColor} h={24} />
                       </div>
                       <div className="col-span-2 self-center flex justify-center gap-2">
