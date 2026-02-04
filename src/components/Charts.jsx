@@ -6,19 +6,20 @@ import { formatPrice } from '../utils';
 
 export const Spark = ({ data, color, h = 24 }) => {
   if (!data?.length || data.length < 2) {
-    return <div className="w-20 h-6 bg-gray-800/30 rounded animate-pulse" />;
+    return <div className="w-24 h-6 bg-gray-800/30 rounded animate-pulse" />;
   }
 
+  const w = 100;
   const min = Math.min(...data);
   const max = Math.max(...data);
   const range = max - min || 1;
   const pts = data
-    .map((v, i) => `${(i / (data.length - 1)) * 80},${h - ((v - min) / range) * h}`)
+    .map((v, i) => `${(i / (data.length - 1)) * w},${h - ((v - min) / range) * h}`)
     .join(' ');
 
   return (
-    <svg width={80} height={h}>
-      <polyline fill="none" stroke={color} strokeWidth="1.5" points={pts} />
+    <svg width={w} height={h} className="overflow-visible">
+      <polyline fill="none" stroke={color} strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" points={pts} />
     </svg>
   );
 };
