@@ -868,7 +868,7 @@ if (signalFilters.size > 0) {
                 </span>
               </div>
               <div
-                className={`col-span-2 text-right flex items-center justify-end gap-1 cursor-pointer ${
+                className={`col-span-1 text-right flex items-center justify-end gap-1 cursor-pointer ${
                   darkMode ? 'hover:text-white' : 'hover:text-gray-900'
                 } transition-colors group`}
                 onClick={() => {
@@ -907,6 +907,27 @@ if (signalFilters.size > 0) {
                   }`}
                 >
                   {sortBy === 'volume_asc' ? '↑' : '↓'}
+                </span>
+              </div>
+              <div
+                className={`col-span-2 text-right flex items-center justify-end gap-1 cursor-pointer ${
+                  darkMode ? 'hover:text-white' : 'hover:text-gray-900'
+                } transition-colors group`}
+                onClick={() => {
+                  setSortBy(sortBy === 'mcap_desc' ? 'mcap_asc' : 'mcap_desc');
+                  setPreset(null);
+                  setRsiFilter(null);
+                }}
+              >
+                <span>MCap</span>
+                <span
+                  className={`transition-opacity ${
+                    sortBy.startsWith('mcap')
+                      ? 'opacity-100 text-orange-500'
+                      : 'opacity-0 group-hover:opacity-50'
+                  }`}
+                >
+                  {sortBy === 'mcap_asc' ? '↑' : '↓'}
                 </span>
               </div>
               <div
@@ -952,7 +973,7 @@ if (signalFilters.size > 0) {
                 </span>
               </div>
               <div
-                className={`col-span-2 text-center flex items-center justify-center gap-1 cursor-pointer ${
+                className={`col-span-1 text-center flex items-center justify-center gap-1 cursor-pointer ${
                   darkMode ? 'hover:text-white' : 'hover:text-gray-900'
                 } transition-colors group`}
                 onClick={() => {
@@ -961,7 +982,7 @@ if (signalFilters.size > 0) {
                   setRsiFilter(null);
                 }}
               >
-                <span>RSI (14)</span>
+                <span>RSI</span>
                 <span
                   className={`transition-opacity ${
                     sortBy.startsWith('rsi')
@@ -1029,12 +1050,17 @@ if (signalFilters.size > 0) {
                           <p className="text-xs text-gray-500 truncate">{t.name}</p>
                         </div>
                       </div>
-                      <div className="col-span-2 text-right self-center font-mono text-sm">
+                      <div className="col-span-1 text-right self-center font-mono text-sm">
                         {formatPrice(t.price)}
                       </div>
                       <div className="col-span-2 text-right self-center text-sm hidden lg:block">
                         <span className={darkMode ? 'text-gray-300' : 'text-gray-600'}>
                           {formatNumber(t.volume)}
+                        </span>
+                      </div>
+                      <div className="col-span-2 text-right self-center text-sm hidden lg:block">
+                        <span className={darkMode ? 'text-gray-300' : 'text-gray-600'}>
+                          {formatNumber(t.mcap)}
                         </span>
                       </div>
                       <div className="col-span-1 text-right self-center text-sm hidden lg:block">
@@ -1049,16 +1075,13 @@ if (signalFilters.size > 0) {
                           {t.change7d?.toFixed(1)}%
                         </span>
                       </div>
-                      <div className="col-span-2 self-center flex justify-center">
+                      <div className="col-span-1 self-center flex justify-center">
                         <div
-                          className={`inline-flex items-center gap-2 px-3 py-1.5 rounded-lg border ${rs.bg} ${rs.text}`}
+                          className={`inline-flex items-center gap-1 px-2 py-1 rounded-lg border ${rs.bg} ${rs.text}`}
                         >
                           <span className={`w-1.5 h-1.5 rounded-full ${rs.dot}`} />
-                          <span className="font-bold text-sm">
+                          <span className="font-bold text-xs">
                             {t.rsi !== null ? t.rsi.toFixed(0) : '--'}
-                          </span>
-                          <span className="text-[10px] opacity-70 hidden sm:inline">
-                            {rs.label}
                           </span>
                         </div>
                       </div>
