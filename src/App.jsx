@@ -842,12 +842,12 @@ if (signalFilters.size > 0) {
           >
             {/* Table Header */}
             <div
-              className={`hidden lg:grid grid-cols-13 gap-3 px-5 py-3 border-b ${
+              className={`hidden lg:grid grid-cols-12 gap-3 px-5 py-3 border-b ${
                 darkMode ? 'border-white/10' : 'border-gray-100'
               } text-xs text-gray-500 font-semibold uppercase tracking-wider`}
             >
               <div
-                className={`col-span-3 flex items-center gap-1 cursor-pointer ${
+                className={`col-span-2 flex items-center gap-1 cursor-pointer ${
                   darkMode ? 'hover:text-white' : 'hover:text-gray-900'
                 } transition-colors group`}
                 onClick={() => {
@@ -999,7 +999,7 @@ if (signalFilters.size > 0) {
                     <div
                       key={t.id}
                       onClick={() => window.location.hash = `#/token/${t.id}`}
-                      className={`grid grid-cols-8 lg:grid-cols-13 gap-3 px-5 py-3.5 border-b ${
+                      className={`grid grid-cols-8 lg:grid-cols-12 gap-3 px-5 py-3.5 border-b ${
                         darkMode
                           ? 'border-white/5 hover:bg-white/[0.04]'
                           : 'border-gray-100 hover:bg-gray-50'
@@ -1007,7 +1007,7 @@ if (signalFilters.size > 0) {
                         watched ? (darkMode ? 'bg-yellow-500/[0.04]' : 'bg-yellow-50') : ''
                       }`}
                     >
-                      <div className="col-span-3 flex items-center gap-3">
+                      <div className="col-span-2 flex items-center gap-3">
                         <span
                           className={`text-xs w-5 text-right ${
                             darkMode ? 'text-gray-600' : 'text-gray-400'
