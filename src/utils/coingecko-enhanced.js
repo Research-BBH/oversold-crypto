@@ -57,7 +57,21 @@ export const fetchExtendedMarketData = async (tokenId, days = 90) => {
  */
 export const fetchOHLCData = async (tokenId, days = 90) => {
   try {
-    const daysParam = days === 'max' ? 'max' : days;
+    // CoinGecko free API only supports specific day values for OHLC: 1, 7, 14, 30, 90, 180, 365, max
+    const validDays = [1, 7, 14, 30, 90, 180, 365, 'max'];
+    let daysParam = days === 'max' ? 'max' : days;
+    
+    // Map to closest valid value
+    if (typeof daysParam === 'number' && !validDays.includes(daysParam)) {
+      if (daysParam <= 1) daysParam = 1;
+      else if (daysParam <= 7) daysParam = 7;
+      else if (daysParam <= 14) daysParam = 14;
+      else if (daysParam <= 30) daysParam = 30;
+      else if (daysParam <= 90) daysParam = 90;
+      else if (daysParam <= 180) daysParam = 180;
+      else daysParam = 365;
+    }
+    
     const url = `https://api.coingecko.com/api/v3/coins/${tokenId}/ohlc?vs_currency=usd&days=${daysParam}`;
     
     const response = await fetch(url);
@@ -94,12 +108,13 @@ export const fetchOHLCData = async (tokenId, days = 90) => {
 };
 
 /**
- * Fetch chart data for a specific time range
+ * Fetch chart data for a specific time range with fallback support
  * Returns both line chart data (prices) and candlestick data (OHLC)
  * @param {string} tokenId - CoinGecko token ID
  * @param {string} timeRange - Time range ID ('24h', '7d', '1m', '3m', '1y', 'max')
+ * @param {Array} fallbackPrices - Fallback price data (e.g., from sparkline)
  */
-export const fetchChartDataForRange = async (tokenId, timeRange = '7d') => {
+export const fetchChartDataForRange = async (tokenId, timeRange = '7d', fallbackPrices = null) => {
   // Map time range to days
   const rangeToDays = {
     '24h': 1,
@@ -115,32 +130,67 @@ export const fetchChartDataForRange = async (tokenId, timeRange = '7d') => {
   try {
     // Fetch both market chart (for line) and OHLC (for candlestick) in parallel
     const [marketData, ohlcData] = await Promise.all([
-      fetchMarketChartData(tokenId, days),
-      fetchOHLCData(tokenId, days)
+      fetchMarketChartData(tokenId, days).catch(() => null),
+      fetchOHLCData(tokenId, days).catch(() => null)
     ]);
     
-    if (!marketData && !ohlcData) {
-      console.warn(`No chart data available for ${tokenId} at range ${timeRange}`);
-      return null;
+    // Use whatever data we got
+    const prices = marketData?.prices || ohlcData?.prices || null;
+    const ohlc = ohlcData?.ohlc || null;
+    
+    // If we have prices, calculate change
+    if (prices && prices.length >= 2) {
+      const change = ((prices[prices.length - 1] - prices[0]) / prices[0]) * 100;
+      
+      return {
+        prices,
+        ohlc,
+        timestamps: marketData?.timestamps || ohlcData?.timestamps || [],
+        volumes: marketData?.volumes || [],
+        change,
+        timeRange,
+        days,
+        source: 'api'
+      };
     }
     
-    // Calculate price change percentage
-    const prices = marketData?.prices || ohlcData?.prices || [];
-    const change = prices.length >= 2
-      ? ((prices[prices.length - 1] - prices[0]) / prices[0]) * 100
-      : 0;
+    // If API returned no data but we have fallback, use it
+    if (fallbackPrices && fallbackPrices.length >= 2) {
+      console.log(`Using fallback data for ${tokenId} (${timeRange})`);
+      const change = ((fallbackPrices[fallbackPrices.length - 1] - fallbackPrices[0]) / fallbackPrices[0]) * 100;
+      
+      return {
+        prices: fallbackPrices,
+        ohlc: null,
+        timestamps: [],
+        volumes: [],
+        change,
+        timeRange,
+        days,
+        source: 'fallback'
+      };
+    }
     
-    return {
-      prices: marketData?.prices || ohlcData?.prices || [],
-      ohlc: ohlcData?.ohlc || null,
-      timestamps: marketData?.timestamps || ohlcData?.timestamps || [],
-      volumes: marketData?.volumes || [],
-      change,
-      timeRange,
-      days
-    };
+    console.warn(`No chart data available for ${tokenId} at range ${timeRange}`);
+    return null;
   } catch (error) {
     console.error(`Error fetching chart data for ${tokenId}:`, error);
+    
+    // Return fallback data if available
+    if (fallbackPrices && fallbackPrices.length >= 2) {
+      const change = ((fallbackPrices[fallbackPrices.length - 1] - fallbackPrices[0]) / fallbackPrices[0]) * 100;
+      return {
+        prices: fallbackPrices,
+        ohlc: null,
+        timestamps: [],
+        volumes: [],
+        change,
+        timeRange,
+        days,
+        source: 'fallback'
+      };
+    }
+    
     return null;
   }
 };
