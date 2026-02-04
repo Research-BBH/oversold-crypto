@@ -4,12 +4,16 @@
 // ==================================================
 
 /**
- * Fetch extended market chart data from CoinGecko (365 days)
- * This gives us enough data for proper SMA50 and other indicators
+ * Fetch market chart data from CoinGecko for a specific time range
+ * @param {string} tokenId - CoinGecko token ID
+ * @param {number|string} days - Number of days or 'max'
  */
-export const fetchExtendedMarketData = async (tokenId, days = 90) => {
+export const fetchMarketChartData = async (tokenId, days = 7) => {
   try {
-    const url = `https://api.coingecko.com/api/v3/coins/${tokenId}/market_chart?vs_currency=usd&days=${days}&interval=daily`;
+    const daysParam = days === 'max' ? 'max' : days;
+    // For shorter periods, don't use interval to get more data points
+    const interval = days === 'max' || days > 90 ? '&interval=daily' : '';
+    const url = `https://api.coingecko.com/api/v3/coins/${tokenId}/market_chart?vs_currency=usd&days=${daysParam}${interval}`;
     
     const response = await fetch(url);
     
@@ -32,18 +36,29 @@ export const fetchExtendedMarketData = async (tokenId, days = 90) => {
       source: 'coingecko'
     };
   } catch (error) {
-    console.error(`Error fetching CoinGecko extended data for ${tokenId}:`, error);
+    console.error(`Error fetching CoinGecko chart data for ${tokenId}:`, error);
     return null;
   }
 };
 
 /**
- * Get OHLC data from CoinGecko (better for technical analysis)
+ * Fetch extended market chart data from CoinGecko (365 days)
+ * This gives us enough data for proper SMA50 and other indicators
+ */
+export const fetchExtendedMarketData = async (tokenId, days = 90) => {
+  return fetchMarketChartData(tokenId, days);
+};
+
+/**
+ * Get OHLC data from CoinGecko (better for technical analysis and candlestick charts)
  * Available for: 1, 7, 14, 30, 90, 180, 365, max days
+ * @param {string} tokenId - CoinGecko token ID
+ * @param {number|string} days - Number of days or 'max'
  */
 export const fetchOHLCData = async (tokenId, days = 90) => {
   try {
-    const url = `https://api.coingecko.com/api/v3/coins/${tokenId}/ohlc?vs_currency=usd&days=${days}`;
+    const daysParam = days === 'max' ? 'max' : days;
+    const url = `https://api.coingecko.com/api/v3/coins/${tokenId}/ohlc?vs_currency=usd&days=${daysParam}`;
     
     const response = await fetch(url);
     
@@ -53,6 +68,10 @@ export const fetchOHLCData = async (tokenId, days = 90) => {
     }
     
     const data = await response.json();
+    
+    if (!data || !Array.isArray(data) || data.length === 0) {
+      return null;
+    }
     
     // OHLC format: [timestamp, open, high, low, close]
     const prices = data.map(candle => candle[4]); // Close prices
@@ -70,6 +89,58 @@ export const fetchOHLCData = async (tokenId, days = 90) => {
     };
   } catch (error) {
     console.error(`Error fetching CoinGecko OHLC for ${tokenId}:`, error);
+    return null;
+  }
+};
+
+/**
+ * Fetch chart data for a specific time range
+ * Returns both line chart data (prices) and candlestick data (OHLC)
+ * @param {string} tokenId - CoinGecko token ID
+ * @param {string} timeRange - Time range ID ('24h', '7d', '1m', '3m', '1y', 'max')
+ */
+export const fetchChartDataForRange = async (tokenId, timeRange = '7d') => {
+  // Map time range to days
+  const rangeToDays = {
+    '24h': 1,
+    '7d': 7,
+    '1m': 30,
+    '3m': 90,
+    '1y': 365,
+    'max': 'max'
+  };
+  
+  const days = rangeToDays[timeRange] || 7;
+  
+  try {
+    // Fetch both market chart (for line) and OHLC (for candlestick) in parallel
+    const [marketData, ohlcData] = await Promise.all([
+      fetchMarketChartData(tokenId, days),
+      fetchOHLCData(tokenId, days)
+    ]);
+    
+    if (!marketData && !ohlcData) {
+      console.warn(`No chart data available for ${tokenId} at range ${timeRange}`);
+      return null;
+    }
+    
+    // Calculate price change percentage
+    const prices = marketData?.prices || ohlcData?.prices || [];
+    const change = prices.length >= 2
+      ? ((prices[prices.length - 1] - prices[0]) / prices[0]) * 100
+      : 0;
+    
+    return {
+      prices: marketData?.prices || ohlcData?.prices || [],
+      ohlc: ohlcData?.ohlc || null,
+      timestamps: marketData?.timestamps || ohlcData?.timestamps || [],
+      volumes: marketData?.volumes || [],
+      change,
+      timeRange,
+      days
+    };
+  } catch (error) {
+    console.error(`Error fetching chart data for ${tokenId}:`, error);
     return null;
   }
 };
