@@ -849,7 +849,7 @@ if (signalFilters.size > 0) {
               } text-[11px] text-gray-500 font-semibold uppercase tracking-wider`}
             >
               <div
-                className={`col-span-3 flex items-center gap-1 cursor-pointer ${
+                className={`col-span-3 relative flex items-center cursor-pointer ${
                   darkMode ? 'hover:text-white' : 'hover:text-gray-900'
                 } transition-colors group`}
                 onClick={() => {
@@ -860,7 +860,7 @@ if (signalFilters.size > 0) {
               >
                 <span>Token</span>
                 <span
-                  className={`transition-opacity ${
+                  className={`ml-1 transition-opacity ${
                     sortBy.startsWith('rank')
                       ? 'opacity-100 text-orange-500'
                       : 'opacity-0 group-hover:opacity-50'
@@ -870,7 +870,7 @@ if (signalFilters.size > 0) {
                 </span>
               </div>
               <div
-                className={`col-span-1 flex items-center justify-end gap-1 cursor-pointer ${
+                className={`col-span-1 relative flex items-center justify-end cursor-pointer ${
                   darkMode ? 'hover:text-white' : 'hover:text-gray-900'
                 } transition-colors group`}
                 onClick={() => {
@@ -881,7 +881,7 @@ if (signalFilters.size > 0) {
               >
                 <span>Price</span>
                 <span
-                  className={`transition-opacity ${
+                  className={`absolute -right-2.5 transition-opacity ${
                     sortBy.startsWith('price')
                       ? 'opacity-100 text-orange-500'
                       : 'opacity-0 group-hover:opacity-50'
@@ -891,7 +891,7 @@ if (signalFilters.size > 0) {
                 </span>
               </div>
               <div
-                className={`col-span-1 flex items-center justify-end gap-1 cursor-pointer ${
+                className={`col-span-1 relative flex items-center justify-end cursor-pointer ${
                   darkMode ? 'hover:text-white' : 'hover:text-gray-900'
                 } transition-colors group`}
                 onClick={() => {
@@ -902,7 +902,7 @@ if (signalFilters.size > 0) {
               >
                 <span>Volume</span>
                 <span
-                  className={`transition-opacity ${
+                  className={`absolute -right-2.5 transition-opacity ${
                     sortBy.startsWith('volume')
                       ? 'opacity-100 text-orange-500'
                       : 'opacity-0 group-hover:opacity-50'
@@ -912,7 +912,7 @@ if (signalFilters.size > 0) {
                 </span>
               </div>
               <div
-                className={`col-span-1 flex items-center justify-end gap-1 cursor-pointer ${
+                className={`col-span-1 relative flex items-center justify-end cursor-pointer ${
                   darkMode ? 'hover:text-white' : 'hover:text-gray-900'
                 } transition-colors group`}
                 onClick={() => {
@@ -923,7 +923,7 @@ if (signalFilters.size > 0) {
               >
                 <span>MCap</span>
                 <span
-                  className={`transition-opacity ${
+                  className={`absolute -right-2.5 transition-opacity ${
                     sortBy.startsWith('mcap')
                       ? 'opacity-100 text-orange-500'
                       : 'opacity-0 group-hover:opacity-50'
@@ -933,7 +933,7 @@ if (signalFilters.size > 0) {
                 </span>
               </div>
               <div
-                className={`col-span-1 flex items-center justify-end gap-1 cursor-pointer ${
+                className={`col-span-1 relative flex items-center justify-end cursor-pointer ${
                   darkMode ? 'hover:text-white' : 'hover:text-gray-900'
                 } transition-colors group`}
                 onClick={() => {
@@ -944,7 +944,7 @@ if (signalFilters.size > 0) {
               >
                 <span>24H</span>
                 <span
-                  className={`transition-opacity ${
+                  className={`absolute -right-2.5 transition-opacity ${
                     sortBy.startsWith('change24h')
                       ? 'opacity-100 text-orange-500'
                       : 'opacity-0 group-hover:opacity-50'
@@ -954,7 +954,7 @@ if (signalFilters.size > 0) {
                 </span>
               </div>
               <div
-                className={`col-span-1 flex items-center justify-end gap-1 cursor-pointer ${
+                className={`col-span-1 relative flex items-center justify-end cursor-pointer ${
                   darkMode ? 'hover:text-white' : 'hover:text-gray-900'
                 } transition-colors group`}
                 onClick={() => {
@@ -965,7 +965,7 @@ if (signalFilters.size > 0) {
               >
                 <span>7D</span>
                 <span
-                  className={`transition-opacity ${
+                  className={`absolute -right-2.5 transition-opacity ${
                     sortBy.startsWith('change7d')
                       ? 'opacity-100 text-orange-500'
                       : 'opacity-0 group-hover:opacity-50'
@@ -975,7 +975,7 @@ if (signalFilters.size > 0) {
                 </span>
               </div>
               <div
-                className={`col-span-1 flex items-center justify-end gap-1 cursor-pointer ${
+                className={`col-span-1 relative flex items-center justify-end cursor-pointer ${
                   darkMode ? 'hover:text-white' : 'hover:text-gray-900'
                 } transition-colors group`}
                 onClick={() => {
@@ -986,7 +986,7 @@ if (signalFilters.size > 0) {
               >
                 <span>RSI</span>
                 <span
-                  className={`transition-opacity ${
+                  className={`absolute -right-2.5 transition-opacity ${
                     sortBy.startsWith('rsi')
                       ? 'opacity-100 text-orange-500'
                       : 'opacity-0 group-hover:opacity-50'
