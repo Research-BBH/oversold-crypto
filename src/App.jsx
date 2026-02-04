@@ -900,7 +900,7 @@ if (signalFilters.size > 0) {
                   setRsiFilter(null);
                 }}
               >
-                <span>Volume</span>
+                <span>24h Volume</span>
                 <span
                   className={`transition-opacity ${
                     sortBy.startsWith('volume')
