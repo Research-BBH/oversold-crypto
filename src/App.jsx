@@ -240,6 +240,9 @@ if (signalFilters.size > 0) {
           case 'rsi_extreme':
             if (token.rsi === null || token.rsi >= 20) return false;
             break;
+          case 'rsi_neutral':
+            if (token.rsi === null || token.rsi < 30 || token.rsi >= 70) return false;
+            break;
           case 'rsi_overbought':
             if (token.rsi === null || token.rsi < 70) return false;
             break;
@@ -597,6 +600,12 @@ if (signalFilters.size > 0) {
                 type: 'signal'
               },
               { 
+                id: 'rsi_neutral', 
+                label: '⚪ Neutral 30-70', 
+                desc: 'RSI between 30-70',
+                type: 'signal'
+              },
+              { 
                 id: 'rsi_overbought', 
                 label: '🟢 Overbought >70', 
                 desc: 'RSI above 70',
@@ -622,9 +631,9 @@ if (signalFilters.size > 0) {
                 type: 'preset'
               },
               { 
-                id: 'volume', 
-                label: '🔥 High Volume', 
-                desc: 'High volume/mcap ratio',
+                id: 'gainers7d', 
+                label: '📈 7d Gainers', 
+                desc: 'Biggest 7d gains',
                 type: 'preset'
               },
               // Technical Signal Filters
