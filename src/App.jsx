@@ -45,6 +45,7 @@ export default function App() {
   const [currentPage, setCurrentPage] = useState('home');
   const [signalFilters, setSignalFilters] = useState(new Set());
   const [useEnhancedAPI, setUseEnhancedAPI] = useState(true);
+  const [showLowVolume, setShowLowVolume] = useState(false);
   const [darkMode, setDarkMode] = useState(() => {
     const saved = localStorage.getItem('oversold_darkMode');
     return saved !== null ? JSON.parse(saved) : true;
@@ -173,6 +174,7 @@ export default function App() {
     setRsiSortDir('desc');
     setSortBy('rsi_asc');
     setSignalFilters(new Set());
+    setShowLowVolume(false);
   };
 
   const toggleSignalFilter = useCallback((signalType) => {
@@ -212,6 +214,10 @@ export default function App() {
     }
     if (cat !== 'all') r = r.filter((t) => t.category === cat);
     if (showWL) r = r.filter((t) => watchlist.has(t.id));
+    // Volume filter: only apply when NOT showing watchlist
+    if (!showWL && !showLowVolume) {
+      r = r.filter((t) => t.volume >= 200000);
+    }
     if (preset) {
       const p = PRESETS.find((x) => x.id === preset);
       if (p) r = r.filter(p.filter);
@@ -269,7 +275,7 @@ if (signalFilters.size > 0) {
       return dir === 'asc' ? va - vb : vb - va;
     });
     return r;
-  }, [tokens, search, cat, sortBy, showWL, watchlist, preset, rsiFilter, rsiSortDir, signalFilters]);
+  }, [tokens, search, cat, sortBy, showWL, watchlist, preset, rsiFilter, rsiSortDir, signalFilters, showLowVolume]);
 
   const stats = useMemo(() => {
     const withRSI = tokens.filter((t) => t.rsi !== null);
@@ -778,6 +784,23 @@ if (signalFilters.size > 0) {
             >
               ⭐ {user ? watchlist.size : ''}
             </button>
+            {!showWL && (
+              <button
+                onClick={() => setShowLowVolume((v) => !v)}
+                className={`px-4 py-2.5 rounded-xl text-sm font-medium transition-all whitespace-nowrap ${
+                  showLowVolume
+                    ? darkMode
+                      ? 'bg-orange-500/20 text-orange-400 border border-orange-500/40'
+                      : 'bg-orange-100 text-orange-600 border border-orange-300'
+                    : darkMode
+                    ? 'bg-white/5 text-gray-400 hover:bg-white/10 border border-white/5'
+                    : 'bg-white text-gray-600 hover:bg-gray-50 border border-gray-200'
+                }`}
+                title={showLowVolume ? 'Showing all tokens' : 'Showing only tokens with >$200K volume'}
+              >
+                {showLowVolume ? '💧 All Volume' : '💧 >$200K'}
+              </button>
+            )}
             <button
               onClick={exportCSV}
               className={`px-4 py-2.5 rounded-xl text-sm ${
@@ -1068,6 +1091,9 @@ if (signalFilters.size > 0) {
             >
               <span>
                 {filtered.length} tokens • {stats.withRSI} with RSI
+                {!showWL && !showLowVolume && (
+                  <span className="ml-1 text-orange-500">• Filtered by volume &gt;$200K</span>
+                )}
               </span>
               <span>Data: CoinGecko • RSI (14) • Auto-refresh 1min</span>
             </div>
