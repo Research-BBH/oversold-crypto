@@ -816,7 +816,7 @@ if (signalFilters.size > 0) {
               } text-[11px] text-gray-500 font-semibold uppercase tracking-wider`}
             >
               <div
-                className={`col-span-3 relative flex items-center cursor-pointer ${
+                className={`col-span-2 relative flex items-center cursor-pointer ${
                   darkMode ? 'hover:text-white' : 'hover:text-gray-900'
                 } transition-colors group`}
                 onClick={() => {
@@ -963,7 +963,7 @@ if (signalFilters.size > 0) {
                 </span>
               </div>
               <div
-                className={`col-span-1 relative hidden lg:flex items-center justify-end cursor-pointer whitespace-nowrap ${
+                className={`col-span-2 relative hidden lg:flex items-center justify-end cursor-pointer whitespace-nowrap ${
                   darkMode ? 'hover:text-white' : 'hover:text-gray-900'
                 } transition-colors group`}
                 onClick={() => {
@@ -971,9 +971,8 @@ if (signalFilters.size > 0) {
                   setPreset(null);
                   setRsiFilter(null);
                 }}
-                title="Signal Score"
               >
-                <span>Score</span>
+                <span>Signal Score</span>
                 <span
                   className={`ml-1 transition-opacity ${
                     sortBy.startsWith('signalScore')
@@ -1019,8 +1018,8 @@ if (signalFilters.size > 0) {
                         watched ? (darkMode ? 'bg-yellow-500/[0.04]' : 'bg-yellow-50') : ''
                       }`}
                     >
-                      {/* Token - col-span-3 */}
-                      <div className="col-span-4 lg:col-span-3 flex items-center gap-3">
+                      {/* Token - col-span-2 */}
+                      <div className="col-span-4 lg:col-span-2 flex items-center gap-3">
                         <span
                           className={`text-xs w-6 text-right tabular-nums ${
                             darkMode ? 'text-gray-600' : 'text-gray-400'
@@ -1081,8 +1080,8 @@ if (signalFilters.size > 0) {
                           {t.rsi !== null ? t.rsi.toFixed(0) : '--'}
                         </div>
                       </div>
-                      {/* Signal Score - col-span-1 */}
-                      <div className="col-span-1 hidden lg:flex items-center justify-end">
+                      {/* Signal Score - col-span-2 */}
+                      <div className="col-span-2 hidden lg:flex items-center justify-end">
                         {t.signalScore !== undefined && t.signalScore !== null ? (
                           <div
                             className={`inline-flex items-center gap-1 px-2 py-1 rounded-md text-xs font-semibold tabular-nums ${
