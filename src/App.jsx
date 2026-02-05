@@ -942,7 +942,7 @@ if (signalFilters.size > 0) {
                 </span>
               </div>
               <div
-                className={`col-span-1 relative flex items-center justify-center cursor-pointer ${
+                className={`col-span-1 relative flex items-center justify-end cursor-pointer ${
                   darkMode ? 'hover:text-white' : 'hover:text-gray-900'
                 } transition-colors group`}
                 onClick={() => {
@@ -963,7 +963,7 @@ if (signalFilters.size > 0) {
                 </span>
               </div>
               <div
-                className={`col-span-2 relative hidden lg:flex items-center justify-center cursor-pointer whitespace-nowrap ${
+                className={`col-span-2 relative hidden lg:flex items-center justify-end cursor-pointer whitespace-nowrap ${
                   darkMode ? 'hover:text-white' : 'hover:text-gray-900'
                 } transition-colors group`}
                 onClick={() => {
@@ -1072,7 +1072,7 @@ if (signalFilters.size > 0) {
                         </span>
                       </div>
                       {/* RSI - col-span-1 */}
-                      <div className="col-span-1 flex items-center justify-center">
+                      <div className="col-span-1 flex items-center justify-end">
                         <div
                           className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-md text-xs font-semibold tabular-nums ${rs.bg} ${rs.text}`}
                         >
@@ -1081,7 +1081,7 @@ if (signalFilters.size > 0) {
                         </div>
                       </div>
                       {/* Signal Score - col-span-2 */}
-                      <div className="col-span-2 hidden lg:flex items-center justify-center">
+                      <div className="col-span-2 hidden lg:flex items-center justify-end">
                         {t.signalScore !== undefined && t.signalScore !== null ? (
                           <div
                             className={`inline-flex items-center gap-1 px-2 py-1 rounded-md text-xs font-semibold tabular-nums ${
