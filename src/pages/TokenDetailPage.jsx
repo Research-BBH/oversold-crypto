@@ -94,7 +94,7 @@ const ChartWithTimeframe = ({ token, darkMode }) => {
         return;
       }
 
-      // For longer timeframes, fetch from CoinGecko
+      // For longer timeframes, fetch from CoinGecko via our API proxy
       setLoading(true);
       setError(null);
       
@@ -102,7 +102,8 @@ const ChartWithTimeframe = ({ token, darkMode }) => {
         const tf = TIMEFRAMES.find(t => t.id === timeframe);
         const days = tf?.days || 30;
         
-        const url = `https://api.coingecko.com/api/v3/coins/${token.id}/market_chart?vs_currency=usd&days=${days}`;
+        // Use our proxy API to avoid CORS issues
+        const url = `/api/chart?id=${token.id}&days=${days}`;
         const response = await fetch(url);
         
         if (!response.ok) {
