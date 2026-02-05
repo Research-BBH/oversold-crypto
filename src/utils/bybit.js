@@ -159,8 +159,16 @@ export const fetchBybitFundingHistory = async (symbol, limit = 100) => {
  */
 export const getBybitTokenData = async (symbol, hours = 168) => {
   try {
-    // Fetch hourly klines (interval = 60 minutes)
-    const klinesPromise = fetchBybitKlines(symbol, '60', Math.min(hours, 200));
+    let klinesPromise;
+    
+    // For longer timeframes (> 200 hours), use daily candles
+    if (hours > 200) {
+      const days = Math.min(Math.ceil(hours / 24), 200); // Max 200 daily candles
+      klinesPromise = fetchBybitKlines(symbol, 'D', days);
+    } else {
+      // Use hourly candles for shorter timeframes
+      klinesPromise = fetchBybitKlines(symbol, '60', Math.min(hours, 200));
+    }
     
     // Fetch current funding rate
     const fundingPromise = fetchBybitFundingRate(symbol);
