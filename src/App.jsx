@@ -751,6 +751,8 @@ if (signalFilters.size > 0) {
               <option value="mcap_desc">MCap ↓</option>
               <option value="rsi_asc">RSI ↑ (Oversold)</option>
               <option value="rsi_desc">RSI ↓ (Overbought)</option>
+              <option value="signalScore_desc">Signal Score ↓</option>
+              <option value="signalScore_asc">Signal Score ↑</option>
               <option value="change24h_asc">24h % ↑</option>
               <option value="change24h_desc">24h % ↓</option>
               <option value="change7d_asc">7d % ↑</option>
@@ -960,7 +962,28 @@ if (signalFilters.size > 0) {
                   {sortBy === 'rsi_asc' ? '↑' : '↓'}
                 </span>
               </div>
-              <div className="col-span-2 flex items-center justify-center">Chart</div>
+              <div
+                className={`col-span-1 relative hidden lg:flex items-center justify-end cursor-pointer ${
+                  darkMode ? 'hover:text-white' : 'hover:text-gray-900'
+                } transition-colors group`}
+                onClick={() => {
+                  setSortBy(sortBy === 'signalScore_desc' ? 'signalScore_asc' : 'signalScore_desc');
+                  setPreset(null);
+                  setRsiFilter(null);
+                }}
+              >
+                <span>Signal</span>
+                <span
+                  className={`absolute -right-2.5 transition-opacity ${
+                    sortBy.startsWith('signalScore')
+                      ? 'opacity-100 text-orange-500'
+                      : 'opacity-0 group-hover:opacity-50'
+                  }`}
+                >
+                  {sortBy === 'signalScore_asc' ? '↑' : '↓'}
+                </span>
+              </div>
+              <div className="col-span-1 hidden lg:flex items-center justify-center">Chart</div>
               <div className="col-span-1 flex items-center justify-center">Actions</div>
             </div>
 
@@ -1057,8 +1080,38 @@ if (signalFilters.size > 0) {
                           {t.rsi !== null ? t.rsi.toFixed(0) : '--'}
                         </div>
                       </div>
-                      {/* Chart - col-span-2 */}
-                      <div className="col-span-2 hidden lg:flex items-center justify-center">
+                      {/* Signal Score - col-span-1 */}
+                      <div className="col-span-1 hidden lg:flex items-center justify-end">
+                        {t.signalScore !== undefined && t.signalScore !== null ? (
+                          <div
+                            className={`inline-flex items-center gap-1 px-2 py-1 rounded-md text-xs font-semibold tabular-nums ${
+                              t.signalScore >= 60
+                                ? 'bg-green-500/20 text-green-400'
+                                : t.signalScore >= 45
+                                ? 'bg-blue-500/20 text-blue-400'
+                                : t.signalScore >= 25
+                                ? 'bg-yellow-500/20 text-yellow-400'
+                                : 'bg-gray-500/20 text-gray-400'
+                            }`}
+                            title={`${t.signalScoreDetails?.activeCount || 0}/${t.signalScoreDetails?.availableCount || 0} signals active`}
+                          >
+                            <span className={`w-1.5 h-1.5 rounded-full ${
+                              t.signalScore >= 60
+                                ? 'bg-green-500'
+                                : t.signalScore >= 45
+                                ? 'bg-blue-500'
+                                : t.signalScore >= 25
+                                ? 'bg-yellow-500'
+                                : 'bg-gray-500'
+                            }`} />
+                            {t.signalScore}
+                          </div>
+                        ) : (
+                          <span className="text-gray-600 text-xs">--</span>
+                        )}
+                      </div>
+                      {/* Chart - col-span-1 */}
+                      <div className="col-span-1 hidden lg:flex items-center justify-center">
                         <Spark data={t.sparkline} color={sparkColor} h={24} />
                       </div>
                       {/* Actions - col-span-1 */}

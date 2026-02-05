@@ -87,6 +87,71 @@ const calculateVolumeRatio = (volumes, period = 20) => {
   return currentVolume / avgVolume;
 };
 
+// Calculate signal score (0-100) based on available signals
+const calculateSignalScore = (token, signals, fundingRate) => {
+  let score = 0;
+  let activeCount = 0;
+  let availableCount = 0;
+  
+  // 1. RSI Signal (25 points base, +5 bonus for extreme = 30 total)
+  if (token.rsi !== null && token.rsi !== undefined) {
+    availableCount++;
+    if (token.rsi < 30) {
+      const basePoints = 25;
+      const bonusPoints = token.rsi < 25 ? 5 : 0;
+      score += basePoints + bonusPoints;
+      activeCount++;
+    }
+  }
+  
+  // 2. Trend Filter - Above 50 SMA (30 points - CRITICAL)
+  if (signals.aboveSMA50 !== null) {
+    availableCount++;
+    if (signals.aboveSMA50 === true) {
+      score += 30;
+      activeCount++;
+    }
+  }
+  
+  // 3. Bollinger Bands - Below Lower (15 points)
+  if (signals.belowBB !== null) {
+    availableCount++;
+    if (signals.belowBB === true) {
+      score += 15;
+      activeCount++;
+    }
+  }
+  
+  // 4. Volume Spike (15 points)
+  if (signals.volumeSpike !== null) {
+    availableCount++;
+    if (signals.volumeSpike === true) {
+      score += 15;
+      activeCount++;
+    }
+  }
+  
+  // 5. Negative Funding Rate (15 points)
+  if (fundingRate !== null && fundingRate !== undefined) {
+    availableCount++;
+    if (fundingRate < 0) {
+      score += 15;
+      activeCount++;
+    }
+  }
+  
+  // Note: Bullish Divergence (10 points) requires more historical analysis
+  // and is calculated on the detail page, so we skip it here for performance
+  
+  return {
+    score: Math.min(score, 100),
+    activeCount,
+    availableCount,
+    // Max possible is 100 (25+5+30+15+15+10), but without divergence it's 90
+    maxPossible: 90
+  };
+};
+
 // Helper to get Bybit symbol
 const getBybitSymbol = (symbol) => {
   const normalized = symbol?.toUpperCase().trim()
@@ -190,18 +255,23 @@ const enhanceToken = async (token) => {
       ? calculateVolumeRatio(exchangeData.volumes, 20) 
       : null;
     
+    const signals = {
+      rsiOversold: token.rsi !== null && token.rsi < 30,
+      rsiExtreme: token.rsi !== null && token.rsi < 25,
+      aboveSMA50: sma50 ? token.price > sma50 : null,
+      belowBB: bb ? token.price < bb.lower : null,
+      volumeSpike: volumeRatio ? volumeRatio > 1.5 : null,
+      hasFunding: exchangeData.fundingRate !== null && exchangeData.fundingRate !== undefined,
+      negativeFunding: exchangeData.fundingRate !== null && exchangeData.fundingRate < 0,
+    };
+    
+    const signalScoreData = calculateSignalScore(token, signals, exchangeData.fundingRate);
+    
     return {
       ...token,
-      // Signal flags for filtering
-      signals: {
-        rsiOversold: token.rsi !== null && token.rsi < 30,
-        rsiExtreme: token.rsi !== null && token.rsi < 25,
-        aboveSMA50: sma50 ? token.price > sma50 : null,
-        belowBB: bb ? token.price < bb.lower : null,
-        volumeSpike: volumeRatio ? volumeRatio > 1.5 : null,
-        hasFunding: exchangeData.fundingRate !== null && exchangeData.fundingRate !== undefined,
-        negativeFunding: exchangeData.fundingRate !== null && exchangeData.fundingRate < 0,
-      },
+      signals,
+      signalScore: signalScoreData.score,
+      signalScoreDetails: signalScoreData,
       // Raw values for detail view
       sma50,
       bollingerBands: bb,
@@ -213,17 +283,23 @@ const enhanceToken = async (token) => {
   }
   
   // Return basic token with signal flags based on available data
+  const signals = {
+    rsiOversold: token.rsi !== null && token.rsi < 30,
+    rsiExtreme: token.rsi !== null && token.rsi < 25,
+    aboveSMA50: null,
+    belowBB: null,
+    volumeSpike: null,
+    hasFunding: null,
+    negativeFunding: null,
+  };
+  
+  const signalScoreData = calculateSignalScore(token, signals, null);
+  
   return {
     ...token,
-    signals: {
-      rsiOversold: token.rsi !== null && token.rsi < 30,
-      rsiExtreme: token.rsi !== null && token.rsi < 25,
-      aboveSMA50: null,
-      belowBB: null,
-      volumeSpike: null,
-      hasFunding: null,
-      negativeFunding: null,
-    },
+    signals,
+    signalScore: signalScoreData.score,
+    signalScoreDetails: signalScoreData,
     enhanced: false,
   };
 };
@@ -423,9 +499,8 @@ export default async function handler(req) {
     }
     
     // Remaining tokens without enhancement
-    const remainingTokens = baseTokens.slice(250).map(token => ({
-      ...token,
-      signals: {
+    const remainingTokens = baseTokens.slice(250).map(token => {
+      const signals = {
         rsiOversold: token.rsi !== null && token.rsi < 30,
         rsiExtreme: token.rsi !== null && token.rsi < 25,
         aboveSMA50: null,
@@ -433,9 +508,18 @@ export default async function handler(req) {
         volumeSpike: null,
         hasFunding: null,
         negativeFunding: null,
-      },
-      enhanced: false,
-    }));
+      };
+      
+      const signalScoreData = calculateSignalScore(token, signals, null);
+      
+      return {
+        ...token,
+        signals,
+        signalScore: signalScoreData.score,
+        signalScoreDetails: signalScoreData,
+        enhanced: false,
+      };
+    });
     
     const allTokens = [...enhancedTokens, ...remainingTokens];
     const enhancedCount = enhancedTokens.filter(t => t.enhanced).length;
