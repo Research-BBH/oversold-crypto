@@ -163,11 +163,17 @@ export const fetchOKXFundingHistory = async (symbol, limit = 100) => {
  */
 export const getOKXTokenData = async (symbol, hours = 168) => {
   try {
-    // OKX allows max 300 candles per request
-    const limit = Math.min(hours, 300);
+    let candlesPromise;
     
-    // Fetch hourly candles
-    const candlesPromise = fetchOKXCandles(symbol, '1H', limit);
+    // For longer timeframes (> 300 hours), use daily candles
+    if (hours > 300) {
+      const days = Math.min(Math.ceil(hours / 24), 200); // Max 200 daily candles
+      candlesPromise = fetchOKXCandles(symbol, '1D', days);
+    } else {
+      // Use hourly candles for shorter timeframes
+      const limit = Math.min(hours, 300);
+      candlesPromise = fetchOKXCandles(symbol, '1H', limit);
+    }
     
     // Fetch current funding rate
     const fundingPromise = fetchOKXFundingRate(symbol);
