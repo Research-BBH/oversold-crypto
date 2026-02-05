@@ -942,7 +942,7 @@ if (signalFilters.size > 0) {
                 </span>
               </div>
               <div
-                className={`col-span-1 relative flex items-center justify-end cursor-pointer ${
+                className={`col-span-1 relative flex items-center justify-center cursor-pointer ${
                   darkMode ? 'hover:text-white' : 'hover:text-gray-900'
                 } transition-colors group`}
                 onClick={() => {
@@ -963,7 +963,7 @@ if (signalFilters.size > 0) {
                 </span>
               </div>
               <div
-                className={`col-span-2 relative hidden lg:flex items-center justify-end cursor-pointer whitespace-nowrap ${
+                className={`col-span-1 relative hidden lg:flex items-center justify-center cursor-pointer ${
                   darkMode ? 'hover:text-white' : 'hover:text-gray-900'
                 } transition-colors group`}
                 onClick={() => {
@@ -972,7 +972,10 @@ if (signalFilters.size > 0) {
                   setRsiFilter(null);
                 }}
               >
-                <span>Signal Score</span>
+                <div className="flex flex-col items-center leading-tight">
+                  <span>SIGNAL</span>
+                  <span>SCORE</span>
+                </div>
                 <span
                   className={`ml-1 transition-opacity ${
                     sortBy.startsWith('signalScore')
@@ -983,7 +986,7 @@ if (signalFilters.size > 0) {
                   {sortBy === 'signalScore_asc' ? '↑' : '↓'}
                 </span>
               </div>
-              <div className="col-span-1 hidden lg:flex items-center justify-center">Chart</div>
+              <div className="col-span-2 hidden lg:flex items-center justify-center">Chart</div>
               <div className="col-span-1 flex items-center justify-center">Actions</div>
             </div>
 
@@ -1072,7 +1075,7 @@ if (signalFilters.size > 0) {
                         </span>
                       </div>
                       {/* RSI - col-span-1 */}
-                      <div className="col-span-1 flex items-center justify-end">
+                      <div className="col-span-1 flex items-center justify-center">
                         <div
                           className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-md text-xs font-semibold tabular-nums ${rs.bg} ${rs.text}`}
                         >
@@ -1080,8 +1083,8 @@ if (signalFilters.size > 0) {
                           {t.rsi !== null ? t.rsi.toFixed(0) : '--'}
                         </div>
                       </div>
-                      {/* Signal Score - col-span-2 */}
-                      <div className="col-span-2 hidden lg:flex items-center justify-end">
+                      {/* Signal Score - col-span-1 */}
+                      <div className="col-span-1 hidden lg:flex items-center justify-center">
                         {t.signalScore !== undefined && t.signalScore !== null ? (
                           <div
                             className={`inline-flex items-center gap-1 px-2 py-1 rounded-md text-xs font-semibold tabular-nums ${
@@ -1110,8 +1113,8 @@ if (signalFilters.size > 0) {
                           <span className="text-gray-600 text-xs">--</span>
                         )}
                       </div>
-                      {/* Chart - col-span-1 */}
-                      <div className="col-span-1 hidden lg:flex items-center justify-center">
+                      {/* Chart - col-span-2 */}
+                      <div className="col-span-2 hidden lg:flex items-center justify-center">
                         <Spark data={t.sparkline} color={sparkColor} h={24} />
                       </div>
                       {/* Actions - col-span-1 */}
