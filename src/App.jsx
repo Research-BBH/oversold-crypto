@@ -942,7 +942,7 @@ if (signalFilters.size > 0) {
                 </span>
               </div>
               <div
-                className={`col-span-1 relative flex items-center justify-end cursor-pointer ${
+                className={`col-span-1 relative flex items-center justify-center cursor-pointer ${
                   darkMode ? 'hover:text-white' : 'hover:text-gray-900'
                 } transition-colors group`}
                 onClick={() => {
@@ -963,9 +963,9 @@ if (signalFilters.size > 0) {
                 </span>
               </div>
               <div
-                className={`col-span-1 relative hidden lg:flex items-center justify-start cursor-pointer ${
+                className={`col-span-1 relative hidden lg:flex items-center justify-center cursor-pointer ${
                   darkMode ? 'hover:text-white' : 'hover:text-gray-900'
-                } transition-colors group pl-3`}
+                } transition-colors group`}
                 onClick={() => {
                   setSortBy(sortBy === 'signalScore_desc' ? 'signalScore_asc' : 'signalScore_desc');
                   setPreset(null);
@@ -1075,7 +1075,7 @@ if (signalFilters.size > 0) {
                         </span>
                       </div>
                       {/* RSI - col-span-1 */}
-                      <div className="col-span-1 flex items-center justify-end">
+                      <div className="col-span-1 flex items-center justify-center">
                         <div
                           className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-md text-xs font-semibold tabular-nums ${rs.bg} ${rs.text}`}
                         >
@@ -1084,7 +1084,7 @@ if (signalFilters.size > 0) {
                         </div>
                       </div>
                       {/* Signal Score - col-span-1 */}
-                      <div className="col-span-1 hidden lg:flex items-center justify-start pl-3">
+                      <div className="col-span-1 hidden lg:flex items-center justify-center">
                         {t.signalScore !== undefined && t.signalScore !== null ? (
                           <div
                             className={`inline-flex items-center gap-1 px-2 py-1 rounded-md text-xs font-semibold tabular-nums ${
