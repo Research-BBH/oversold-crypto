@@ -986,7 +986,7 @@ if (signalFilters.size > 0) {
                   {sortBy === 'signalScore_asc' ? '↑' : '↓'}
                 </span>
               </div>
-              <div className="col-span-2 hidden lg:flex items-center justify-center">Chart</div>
+              <div className="col-span-2 hidden lg:flex items-center justify-center">7D Chart</div>
               <div className="col-span-1 flex items-center justify-center">Actions</div>
             </div>
 
