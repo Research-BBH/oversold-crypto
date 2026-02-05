@@ -34,6 +34,7 @@ export const RSIThresholdAnalysis = ({ rsi, priceHistory, darkMode }) => {
   
   // Zoom state: start and end indices as percentage (0-1)
   const [zoomRange, setZoomRange] = useState({ start: 0, end: 1 });
+  const [activePreset, setActivePreset] = useState('6m'); // Track which button is active
   const [isDragging, setIsDragging] = useState(false);
   const [dragType, setDragType] = useState(null); // 'left', 'right', 'middle'
   const [dragStartX, setDragStartX] = useState(0);
@@ -254,7 +255,9 @@ export const RSIThresholdAnalysis = ({ rsi, priceHistory, darkMode }) => {
       newEnd = newStart + rangeSize;
     }
     
+    // Clear preset indicator when manually dragging
     setZoomRange({ start: newStart, end: newEnd });
+    setActivePreset(null);
   }, [isDragging, dragType, dragStartX, initialRange]);
 
   const handleMouseUp = useCallback(() => {
@@ -309,6 +312,7 @@ export const RSIThresholdAnalysis = ({ rsi, priceHistory, darkMode }) => {
 
   // Zoom presets
   const setZoomPreset = (preset) => {
+    setActivePreset(preset);
     switch(preset) {
       case '1m':
         setZoomRange({ start: Math.max(0, 1 - 30/allDailyData.length), end: 1 });
@@ -316,10 +320,16 @@ export const RSIThresholdAnalysis = ({ rsi, priceHistory, darkMode }) => {
       case '3m':
         setZoomRange({ start: Math.max(0, 1 - 90/allDailyData.length), end: 1 });
         break;
-      case 'all':
+      case '6m':
         setZoomRange({ start: 0, end: 1 });
         break;
     }
+  };
+  
+  // Clear active preset when user manually drags (since it's no longer matching a preset)
+  const handleManualZoom = (newRange) => {
+    setZoomRange(newRange);
+    setActivePreset(null);
   };
 
   const getMessage = () => {
@@ -466,13 +476,19 @@ export const RSIThresholdAnalysis = ({ rsi, priceHistory, darkMode }) => {
               {[
                 { id: '1m', label: '1M' },
                 { id: '3m', label: '3M' },
-                { id: 'all', label: 'All' }
+                { id: '6m', label: '6M' }
               ].map((tf) => (
                 <button
                   key={tf.id}
                   onClick={() => setZoomPreset(tf.id)}
                   className={`px-3 py-1 rounded-md text-xs font-medium transition-all ${
-                    darkMode ? 'text-gray-400 hover:text-white hover:bg-white/10' : 'text-gray-600 hover:text-gray-900 hover:bg-gray-200'
+                    activePreset === tf.id
+                      ? mode === 'oversold'
+                        ? 'bg-orange-500 text-white shadow'
+                        : 'bg-green-500 text-white shadow'
+                      : darkMode 
+                        ? 'text-gray-400 hover:text-white hover:bg-white/10' 
+                        : 'text-gray-600 hover:text-gray-900 hover:bg-gray-200'
                   }`}
                 >
                   {tf.label}
