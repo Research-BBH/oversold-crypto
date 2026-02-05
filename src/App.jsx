@@ -963,7 +963,7 @@ if (signalFilters.size > 0) {
                 </span>
               </div>
               <div
-                className={`col-span-1 relative hidden lg:flex items-center justify-end cursor-pointer ${
+                className={`col-span-1 relative hidden lg:flex items-center justify-center cursor-pointer ${
                   darkMode ? 'hover:text-white' : 'hover:text-gray-900'
                 } transition-colors group`}
                 onClick={() => {
@@ -972,9 +972,9 @@ if (signalFilters.size > 0) {
                   setRsiFilter(null);
                 }}
               >
-                <span>Signal</span>
+                <span>Signal Score</span>
                 <span
-                  className={`absolute -right-2.5 transition-opacity ${
+                  className={`ml-1 transition-opacity ${
                     sortBy.startsWith('signalScore')
                       ? 'opacity-100 text-orange-500'
                       : 'opacity-0 group-hover:opacity-50'
@@ -1081,7 +1081,7 @@ if (signalFilters.size > 0) {
                         </div>
                       </div>
                       {/* Signal Score - col-span-1 */}
-                      <div className="col-span-1 hidden lg:flex items-center justify-end">
+                      <div className="col-span-1 hidden lg:flex items-center justify-center">
                         {t.signalScore !== undefined && t.signalScore !== null ? (
                           <div
                             className={`inline-flex items-center gap-1 px-2 py-1 rounded-md text-xs font-semibold tabular-nums ${
