@@ -36,20 +36,110 @@ const calculateRSI = (prices, period = 14) => {
 };
 
 // Chart Timeframe Component
-const ChartWithTimeframe = ({ token, darkMode }) => {
+const ChartWithTimeframe = ({ token, darkMode, historicalPrices }) => {
   const [timeframe, setTimeframe] = useState('7d');
+  const [extendedData, setExtendedData] = useState(null);
+  const [loading, setLoading] = useState(false);
+  
+  // Fetch extended data when needed
+  useEffect(() => {
+    const fetchExtendedData = async () => {
+      if (!['1m', '3m', '1y', 'max'].includes(timeframe)) return;
+      if (extendedData) return; // Already have it
+      
+      setLoading(true);
+      try {
+        // Try CoinGecko for extended history
+        const days = timeframe === '1m' ? 30 : timeframe === '3m' ? 90 : timeframe === '1y' ? 365 : 'max';
+        const url = `https://api.coingecko.com/api/v3/coins/${token.id}/market_chart?vs_currency=usd&days=${days}&interval=daily`;
+        
+        const response = await fetch(url);
+        if (response.ok) {
+          const data = await response.json();
+          const prices = data.prices?.map(p => p[1]) || [];
+          setExtendedData(prices);
+        }
+      } catch (error) {
+        console.error('Error fetching extended price data:', error);
+      }
+      setLoading(false);
+    };
+    
+    fetchExtendedData();
+  }, [timeframe, token.id, extendedData]);
   
   const chartData = useMemo(() => {
-    if (!token.sparkline || token.sparkline.length === 0) return null;
-    
+    // For 24h - slice from sparkline
     if (timeframe === '24h') {
+      if (!token.sparkline || token.sparkline.length === 0) return null;
       const dataPoints = Math.floor(token.sparkline.length / 7);
       return token.sparkline.slice(-dataPoints);
     }
-    return token.sparkline;
-  }, [token.sparkline, timeframe]);
+    
+    // For 7d - use sparkline directly
+    if (timeframe === '7d') {
+      return token.sparkline || null;
+    }
+    
+    // For 1m/3m - try historicalPrices first (from RSI data), then extendedData
+    if (timeframe === '1m') {
+      if (historicalPrices && historicalPrices.length > 0) {
+        // historicalPrices is hourly/daily, take last 30 days worth
+        const daysWorth = Math.min(30, Math.floor(historicalPrices.length / (historicalPrices.length > 200 ? 1 : 24)));
+        return historicalPrices.slice(-daysWorth * (historicalPrices.length > 200 ? 1 : 24));
+      }
+      if (extendedData) return extendedData.slice(-30);
+      return token.sparkline || null;
+    }
+    
+    if (timeframe === '3m') {
+      if (historicalPrices && historicalPrices.length > 0) {
+        const daysWorth = Math.min(90, Math.floor(historicalPrices.length / (historicalPrices.length > 200 ? 1 : 24)));
+        return historicalPrices.slice(-daysWorth * (historicalPrices.length > 200 ? 1 : 24));
+      }
+      if (extendedData) return extendedData.slice(-90);
+      return token.sparkline || null;
+    }
+    
+    // For 1y/max - need extended data
+    if (timeframe === '1y') {
+      if (extendedData) return extendedData.slice(-365);
+      if (historicalPrices && historicalPrices.length > 0) return historicalPrices;
+      return token.sparkline || null;
+    }
+    
+    if (timeframe === 'max') {
+      if (extendedData) return extendedData;
+      if (historicalPrices && historicalPrices.length > 0) return historicalPrices;
+      return token.sparkline || null;
+    }
+    
+    return token.sparkline || null;
+  }, [token.sparkline, historicalPrices, extendedData, timeframe]);
   
-  const changeValue = timeframe === '24h' ? token.change24h : token.change7d;
+  // Calculate change value based on timeframe
+  const changeValue = useMemo(() => {
+    if (timeframe === '24h') return token.change24h;
+    if (timeframe === '7d') return token.change7d;
+    if (timeframe === '1m') return token.change30d;
+    
+    // For longer timeframes, calculate from data
+    if (chartData && chartData.length >= 2) {
+      const firstPrice = chartData[0];
+      const lastPrice = chartData[chartData.length - 1];
+      return ((lastPrice - firstPrice) / firstPrice) * 100;
+    }
+    return token.change7d;
+  }, [timeframe, token, chartData]);
+
+  const timeframes = [
+    { id: '24h', label: '24H' },
+    { id: '7d', label: '7D' },
+    { id: '1m', label: '1M' },
+    { id: '3m', label: '3M' },
+    { id: '1y', label: '1Y' },
+    { id: 'max', label: 'Max' },
+  ];
 
   return (
     <div className={`${darkMode ? 'bg-white/5 border-white/10' : 'bg-white border-gray-200'} rounded-2xl p-6 border`}>
@@ -57,17 +147,17 @@ const ChartWithTimeframe = ({ token, darkMode }) => {
         <h2 className="text-xl font-semibold">Price Chart</h2>
         <div className="flex items-center gap-3">
           <div className={`inline-flex rounded-lg p-1 ${darkMode ? 'bg-white/5' : 'bg-gray-100'}`}>
-            {['24h', '7d'].map((tf) => (
+            {timeframes.map((tf) => (
               <button
-                key={tf}
-                onClick={() => setTimeframe(tf)}
-                className={`px-3 py-1.5 rounded-md text-xs font-medium transition-all ${
-                  timeframe === tf
+                key={tf.id}
+                onClick={() => setTimeframe(tf.id)}
+                className={`px-2.5 py-1.5 rounded-md text-xs font-medium transition-all ${
+                  timeframe === tf.id
                     ? 'bg-orange-500 text-white shadow'
                     : darkMode ? 'text-gray-400 hover:text-white' : 'text-gray-600 hover:text-gray-900'
                 }`}
               >
-                {tf.toUpperCase()}
+                {tf.label}
               </button>
             ))}
           </div>
@@ -78,7 +168,13 @@ const ChartWithTimeframe = ({ token, darkMode }) => {
           </span>
         </div>
       </div>
-      <FullPageChart data={chartData} basePrice={token.price} change7d={changeValue} />
+      {loading ? (
+        <div className="h-64 flex items-center justify-center">
+          <div className="w-8 h-8 border-2 border-orange-500 border-t-transparent rounded-full animate-spin" />
+        </div>
+      ) : (
+        <FullPageChart data={chartData} basePrice={token.price} change7d={changeValue} />
+      )}
     </div>
   );
 };
@@ -242,7 +338,7 @@ export const TokenDetailPage = ({ token, onBack, darkMode, setDarkMode }) => {
         {/* Main Grid */}
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
           <div className="lg:col-span-2">
-            <ChartWithTimeframe token={token} darkMode={darkMode} />
+            <ChartWithTimeframe token={token} darkMode={darkMode} historicalPrices={historicalPrices} />
           </div>
 
           <div className="space-y-6">
