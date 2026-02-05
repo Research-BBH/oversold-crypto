@@ -199,7 +199,7 @@ export const DetailChart = ({ data, basePrice, change7d }) => {
   );
 };
 
-export const FullPageChart = ({ data, basePrice, change7d }) => {
+export const FullPageChart = ({ data, basePrice, change7d, timeLabels: customTimeLabels }) => {
   if (!data?.length || data.length < 2) {
     return (
       <div className="w-full h-80 bg-gray-800/30 rounded-xl animate-pulse flex items-center justify-center text-gray-500">
@@ -226,7 +226,7 @@ export const FullPageChart = ({ data, basePrice, change7d }) => {
   const paddedRange = paddedMax - paddedMin;
 
   const priceLevels = [0, 0.2, 0.4, 0.6, 0.8, 1].map((t) => paddedMax - paddedRange * t);
-  const timeLabels = ['7d ago', '6d', '5d', '4d', '3d', '2d', '1d', 'Now'];
+  const timeLabels = customTimeLabels || ['7d ago', '6d', '5d', '4d', '3d', '2d', '1d', 'Now'];
 
   const pts = data.map((v, i) => {
     const x = PAD.left + (i / (data.length - 1)) * chartW;

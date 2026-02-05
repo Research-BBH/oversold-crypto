@@ -35,21 +35,110 @@ const calculateRSI = (prices, period = 14) => {
   return 100 - (100 / (1 + rs));
 };
 
+// Timeframe configuration
+const TIMEFRAMES = [
+  { id: '24h', label: '24H', days: 1 },
+  { id: '7d', label: '7D', days: 7 },
+  { id: '1m', label: '1M', days: 30 },
+  { id: '3m', label: '3M', days: 90 },
+  { id: '1y', label: '1Y', days: 365 },
+  { id: 'max', label: 'Max', days: 'max' },
+];
+
+// Generate time labels based on timeframe
+const getTimeLabels = (timeframe) => {
+  switch (timeframe) {
+    case '24h':
+      return ['24h ago', '18h', '12h', '6h', 'Now'];
+    case '7d':
+      return ['7d ago', '6d', '5d', '4d', '3d', '2d', '1d', 'Now'];
+    case '1m':
+      return ['30d ago', '25d', '20d', '15d', '10d', '5d', 'Now'];
+    case '3m':
+      return ['3m ago', '2.5m', '2m', '1.5m', '1m', '2w', 'Now'];
+    case '1y':
+      return ['1y ago', '10m', '8m', '6m', '4m', '2m', 'Now'];
+    case 'max':
+      return ['Start', '', '', '', '', '', 'Now'];
+    default:
+      return ['Start', '', '', '', '', '', 'Now'];
+  }
+};
+
 // Chart Timeframe Component
 const ChartWithTimeframe = ({ token, darkMode }) => {
   const [timeframe, setTimeframe] = useState('7d');
-  
-  const chartData = useMemo(() => {
-    if (!token.sparkline || token.sparkline.length === 0) return null;
-    
-    if (timeframe === '24h') {
-      const dataPoints = Math.floor(token.sparkline.length / 7);
-      return token.sparkline.slice(-dataPoints);
-    }
-    return token.sparkline;
-  }, [token.sparkline, timeframe]);
-  
-  const changeValue = timeframe === '24h' ? token.change24h : token.change7d;
+  const [chartData, setChartData] = useState(null);
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState(null);
+  const [priceChange, setPriceChange] = useState(null);
+
+  // Fetch data when timeframe changes
+  useEffect(() => {
+    const fetchChartData = async () => {
+      // For 24h and 7d, use existing sparkline data
+      if (timeframe === '24h') {
+        if (token.sparkline && token.sparkline.length > 0) {
+          const dataPoints = Math.floor(token.sparkline.length / 7);
+          setChartData(token.sparkline.slice(-dataPoints));
+          setPriceChange(token.change24h);
+        }
+        return;
+      }
+      
+      if (timeframe === '7d') {
+        if (token.sparkline && token.sparkline.length > 0) {
+          setChartData(token.sparkline);
+          setPriceChange(token.change7d);
+        }
+        return;
+      }
+
+      // For longer timeframes, fetch from CoinGecko
+      setLoading(true);
+      setError(null);
+      
+      try {
+        const tf = TIMEFRAMES.find(t => t.id === timeframe);
+        const days = tf?.days || 30;
+        
+        const url = `https://api.coingecko.com/api/v3/coins/${token.id}/market_chart?vs_currency=usd&days=${days}`;
+        const response = await fetch(url);
+        
+        if (!response.ok) {
+          throw new Error(`Failed to fetch data: ${response.status}`);
+        }
+        
+        const data = await response.json();
+        
+        if (data.prices && data.prices.length > 0) {
+          const prices = data.prices.map(p => p[1]);
+          
+          // Normalize to percentage (like sparkline)
+          const startPrice = prices[0];
+          const normalizedPrices = prices.map(p => (p / startPrice) * 100);
+          
+          // Calculate price change
+          const endPrice = prices[prices.length - 1];
+          const change = ((endPrice - startPrice) / startPrice) * 100;
+          
+          setChartData(normalizedPrices);
+          setPriceChange(change);
+        } else {
+          setError('No data available');
+        }
+      } catch (err) {
+        console.error('Error fetching chart data:', err);
+        setError(err.message);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchChartData();
+  }, [timeframe, token.id, token.sparkline, token.change24h, token.change7d]);
+
+  const timeLabels = getTimeLabels(timeframe);
 
   return (
     <div className={`${darkMode ? 'bg-white/5 border-white/10' : 'bg-white border-gray-200'} rounded-2xl p-6 border`}>
@@ -57,28 +146,54 @@ const ChartWithTimeframe = ({ token, darkMode }) => {
         <h2 className="text-xl font-semibold">Price Chart</h2>
         <div className="flex items-center gap-3">
           <div className={`inline-flex rounded-lg p-1 ${darkMode ? 'bg-white/5' : 'bg-gray-100'}`}>
-            {['24h', '7d'].map((tf) => (
+            {TIMEFRAMES.map((tf) => (
               <button
-                key={tf}
-                onClick={() => setTimeframe(tf)}
+                key={tf.id}
+                onClick={() => setTimeframe(tf.id)}
                 className={`px-3 py-1.5 rounded-md text-xs font-medium transition-all ${
-                  timeframe === tf
+                  timeframe === tf.id
                     ? 'bg-orange-500 text-white shadow'
                     : darkMode ? 'text-gray-400 hover:text-white' : 'text-gray-600 hover:text-gray-900'
                 }`}
               >
-                {tf.toUpperCase()}
+                {tf.label}
               </button>
             ))}
           </div>
-          <span className={`px-3 py-1 rounded-lg text-sm font-medium ${
-            changeValue >= 0 ? 'bg-green-500/20 text-green-400' : 'bg-red-500/20 text-red-400'
-          }`}>
-            {changeValue >= 0 ? '+' : ''}{changeValue?.toFixed(2)}%
-          </span>
+          {priceChange !== null && (
+            <span className={`px-3 py-1 rounded-lg text-sm font-medium ${
+              priceChange >= 0 ? 'bg-green-500/20 text-green-400' : 'bg-red-500/20 text-red-400'
+            }`}>
+              {priceChange >= 0 ? '+' : ''}{priceChange?.toFixed(2)}%
+            </span>
+          )}
         </div>
       </div>
-      <FullPageChart data={chartData} basePrice={token.price} change7d={changeValue} />
+      
+      {loading ? (
+        <div className="w-full h-80 flex items-center justify-center">
+          <div className="text-center">
+            <div className="w-10 h-10 border-4 border-orange-500 border-t-transparent rounded-full animate-spin mx-auto mb-3" />
+            <p className={darkMode ? 'text-gray-400' : 'text-gray-500'}>Loading chart data...</p>
+          </div>
+        </div>
+      ) : error ? (
+        <div className="w-full h-80 flex items-center justify-center">
+          <div className="text-center">
+            <p className="text-red-400 mb-2">⚠️ {error}</p>
+            <p className={`text-sm ${darkMode ? 'text-gray-500' : 'text-gray-400'}`}>
+              Try a different timeframe
+            </p>
+          </div>
+        </div>
+      ) : (
+        <FullPageChart 
+          data={chartData} 
+          basePrice={token.price} 
+          change7d={priceChange} 
+          timeLabels={timeLabels}
+        />
+      )}
     </div>
   );
 };
