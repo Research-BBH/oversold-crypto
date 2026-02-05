@@ -162,7 +162,7 @@ export const RSIThresholdAnalysis = ({ rsi, priceHistory, darkMode }) => {
   // Chart dimensions
   const width = 900;
   const height = 380;
-  const brushHeight = 60;
+  const brushHeight = 80; // Increased for labels outside brush
   const padding = { top: 30, right: 70, bottom: 20, left: 20 };
   const chartWidth = width - padding.left - padding.right;
   const chartHeight = height - padding.top - padding.bottom;
@@ -197,13 +197,14 @@ export const RSIThresholdAnalysis = ({ rsi, priceHistory, darkMode }) => {
   const signalColor = mode === 'oversold' ? '#f97316' : '#22c55e';
 
   // Mini chart for brush (shows all data)
+  // Brush area is y=8 to y=52, so chart draws from y=12 to y=48 (36px range)
   const miniPrices = allDailyData.map(d => d.price);
   const miniMin = miniPrices.length > 0 ? Math.min(...miniPrices) : 0;
   const miniMax = miniPrices.length > 0 ? Math.max(...miniPrices) : 1;
   const miniRange = miniMax - miniMin || 1;
 
   const getMiniX = (index) => padding.left + (index / Math.max(allDailyData.length - 1, 1)) * chartWidth;
-  const getMiniY = (price) => 15 + 30 - ((price - miniMin) / miniRange) * 30;
+  const getMiniY = (price) => 12 + 36 - ((price - miniMin) / miniRange) * 36;
 
   const miniLinePath = allDailyData.map((d, i) => {
     const x = getMiniX(i);
@@ -214,7 +215,7 @@ export const RSIThresholdAnalysis = ({ rsi, priceHistory, darkMode }) => {
   // RSI mini line
   const getMiniRsiY = (rsiVal) => {
     if (rsiVal === null) return 30;
-    return 15 + 30 - (rsiVal / 100) * 30;
+    return 12 + 36 - (rsiVal / 100) * 36;
   };
 
   const miniRsiPath = allDailyData
@@ -355,41 +356,90 @@ export const RSIThresholdAnalysis = ({ rsi, priceHistory, darkMode }) => {
   const labelStep = Math.max(1, Math.floor(visibleData.length / labelCount));
   const xLabels = visibleData.filter((_, i) => i % labelStep === 0 || i === visibleData.length - 1);
 
-  // Smart label positioning - avoid collisions
+  // Smart label positioning - avoid collisions and stay within chart bounds
   const labelPositions = useMemo(() => {
     if (!showLabels) return [];
     
     const positions = [];
-    const usedYRanges = [];
+    const usedRanges = [];
+    const labelHeight = 20;
+    const labelWidth = 48;
+    const maxLabelY = padding.top + chartHeight - 10; // Don't go below chart
     
-    signalDays.forEach((d) => {
+    // Sort signal days by x position for better placement
+    const sortedSignals = [...signalDays].map(d => {
       const dataIdx = visibleData.indexOf(d);
-      const x = getX(dataIdx);
-      const y = getY(d.price);
+      return { ...d, dataIdx, x: getX(dataIdx), y: getY(d.price) };
+    }).sort((a, b) => a.x - b.x);
+    
+    sortedSignals.forEach((d) => {
+      const x = d.x;
+      const y = d.y;
       
-      // Find a y position that doesn't overlap
-      let labelY = y + 35;
-      let attempts = 0;
-      const labelHeight = 22;
-      const labelWidth = 50;
+      // Try placing label below the point first, then above if needed
+      let labelY = y + 30;
+      let placed = false;
       
-      while (attempts < 5) {
-        const overlaps = usedYRanges.some(range => 
-          Math.abs(range.x - x) < labelWidth && 
-          Math.abs(range.y - labelY) < labelHeight
+      // Try positions below (up to 3 attempts)
+      for (let attempt = 0; attempt < 3 && !placed; attempt++) {
+        const testY = y + 30 + (attempt * (labelHeight + 4));
+        
+        // Check if within bounds
+        if (testY + labelHeight > maxLabelY) continue;
+        
+        // Check for collisions with existing labels
+        const overlaps = usedRanges.some(range => 
+          Math.abs(range.x - x) < labelWidth &&
+          Math.abs(range.y - testY) < labelHeight + 4
         );
         
-        if (!overlaps) break;
-        labelY += labelHeight;
-        attempts++;
+        if (!overlaps) {
+          labelY = testY;
+          placed = true;
+        }
       }
       
-      usedYRanges.push({ x, y: labelY });
-      positions.push({ x, y, labelY, dataIdx, rsi: d.rsi, price: d.price, date: d.date });
+      // If couldn't place below, try above
+      if (!placed) {
+        for (let attempt = 0; attempt < 3; attempt++) {
+          const testY = y - 35 - (attempt * (labelHeight + 4));
+          
+          // Check if within bounds (not above chart)
+          if (testY < padding.top + 10) continue;
+          
+          const overlaps = usedRanges.some(range => 
+            Math.abs(range.x - x) < labelWidth &&
+            Math.abs(range.y - testY) < labelHeight + 4
+          );
+          
+          if (!overlaps) {
+            labelY = testY;
+            placed = true;
+            break;
+          }
+        }
+      }
+      
+      // Final fallback - just use default position
+      if (!placed) {
+        labelY = Math.min(y + 30, maxLabelY - labelHeight);
+      }
+      
+      usedRanges.push({ x, y: labelY });
+      positions.push({ 
+        x, 
+        y, 
+        labelY, 
+        dataIdx: d.dataIdx, 
+        rsi: d.rsi, 
+        price: d.price, 
+        date: d.date,
+        above: labelY < y // Track if label is above the point
+      });
     });
     
     return positions;
-  }, [signalDays, visibleData, showLabels, getX, getY]);
+  }, [signalDays, visibleData, showLabels, getX, getY, padding.top, chartHeight]);
 
   return (
     <div className={`${darkMode ? 'bg-white/5 border-white/10' : 'bg-white border-gray-200'} rounded-2xl p-6 border`}>
@@ -587,15 +637,17 @@ export const RSIThresholdAnalysis = ({ rsi, priceHistory, darkMode }) => {
               {/* Smart labels (only when zoomed in enough) */}
               {labelPositions.map((pos, idx) => (
                 <g key={idx}>
+                  {/* Connecting line */}
                   <line
                     x1={pos.x}
-                    y1={pos.y + 7}
+                    y1={pos.above ? pos.y - 7 : pos.y + 7}
                     x2={pos.x}
-                    y2={pos.labelY - 9}
+                    y2={pos.above ? pos.labelY + 9 : pos.labelY - 9}
                     stroke={signalColor}
                     strokeWidth="1"
                     opacity="0.5"
                   />
+                  {/* Label background */}
                   <rect
                     x={pos.x - 22}
                     y={pos.labelY - 9}
@@ -604,6 +656,7 @@ export const RSIThresholdAnalysis = ({ rsi, priceHistory, darkMode }) => {
                     rx="4"
                     fill={pos.rsi < 20 || pos.rsi > 80 ? signalColor : '#facc15'}
                   />
+                  {/* RSI value text */}
                   <text
                     x={pos.x}
                     y={pos.labelY + 4}
@@ -748,9 +801,9 @@ export const RSIThresholdAnalysis = ({ rsi, priceHistory, darkMode }) => {
               {/* Background */}
               <rect
                 x={padding.left}
-                y="5"
+                y="8"
                 width={chartWidth}
-                height="50"
+                height="44"
                 fill={darkMode ? 'rgba(255,255,255,0.03)' : 'rgba(0,0,0,0.03)'}
                 rx="4"
               />
@@ -787,17 +840,17 @@ export const RSIThresholdAnalysis = ({ rsi, priceHistory, darkMode }) => {
               {/* Non-selected areas (dimmed) */}
               <rect
                 x={padding.left}
-                y="5"
+                y="8"
                 width={zoomRange.start * chartWidth}
-                height="50"
+                height="44"
                 fill={darkMode ? 'rgba(0,0,0,0.5)' : 'rgba(0,0,0,0.3)'}
                 rx="4"
               />
               <rect
                 x={padding.left + zoomRange.end * chartWidth}
-                y="5"
+                y="8"
                 width={(1 - zoomRange.end) * chartWidth}
-                height="50"
+                height="44"
                 fill={darkMode ? 'rgba(0,0,0,0.5)' : 'rgba(0,0,0,0.3)'}
                 rx="4"
               />
@@ -805,9 +858,9 @@ export const RSIThresholdAnalysis = ({ rsi, priceHistory, darkMode }) => {
               {/* Selection box */}
               <rect
                 x={padding.left + zoomRange.start * chartWidth}
-                y="5"
+                y="8"
                 width={(zoomRange.end - zoomRange.start) * chartWidth}
-                height="50"
+                height="44"
                 fill="transparent"
                 stroke={signalColor}
                 strokeWidth="2"
@@ -823,25 +876,25 @@ export const RSIThresholdAnalysis = ({ rsi, priceHistory, darkMode }) => {
               >
                 <rect
                   x={padding.left + zoomRange.start * chartWidth - 6}
-                  y="10"
+                  y="14"
                   width="12"
-                  height="40"
+                  height="32"
                   fill={signalColor}
                   rx="3"
                 />
                 <line
                   x1={padding.left + zoomRange.start * chartWidth - 2}
-                  y1="20"
+                  y1="22"
                   x2={padding.left + zoomRange.start * chartWidth - 2}
-                  y2="40"
+                  y2="38"
                   stroke="#fff"
                   strokeWidth="1"
                 />
                 <line
                   x1={padding.left + zoomRange.start * chartWidth + 2}
-                  y1="20"
+                  y1="22"
                   x2={padding.left + zoomRange.start * chartWidth + 2}
-                  y2="40"
+                  y2="38"
                   stroke="#fff"
                   strokeWidth="1"
                 />
@@ -854,38 +907,38 @@ export const RSIThresholdAnalysis = ({ rsi, priceHistory, darkMode }) => {
               >
                 <rect
                   x={padding.left + zoomRange.end * chartWidth - 6}
-                  y="10"
+                  y="14"
                   width="12"
-                  height="40"
+                  height="32"
                   fill={signalColor}
                   rx="3"
                 />
                 <line
                   x1={padding.left + zoomRange.end * chartWidth - 2}
-                  y1="20"
+                  y1="22"
                   x2={padding.left + zoomRange.end * chartWidth - 2}
-                  y2="40"
+                  y2="38"
                   stroke="#fff"
                   strokeWidth="1"
                 />
                 <line
                   x1={padding.left + zoomRange.end * chartWidth + 2}
-                  y1="20"
+                  y1="22"
                   x2={padding.left + zoomRange.end * chartWidth + 2}
-                  y2="40"
+                  y2="38"
                   stroke="#fff"
                   strokeWidth="1"
                 />
               </g>
 
-              {/* Labels */}
-              <text x={padding.left + 5} y="60" className="text-[9px]" fill={darkMode ? '#6b7280' : '#9ca3af'}>
+              {/* Labels - positioned below the brush area */}
+              <text x={padding.left + 5} y="72" className="text-[9px]" fill={darkMode ? '#6b7280' : '#9ca3af'}>
                 {allDailyData[0]?.date.toLocaleDateString('en-US', { month: 'short', year: '2-digit' })}
               </text>
-              <text x={width - padding.right - 5} y="60" textAnchor="end" className="text-[9px]" fill={darkMode ? '#6b7280' : '#9ca3af'}>
+              <text x={width - padding.right - 5} y="72" textAnchor="end" className="text-[9px]" fill={darkMode ? '#6b7280' : '#9ca3af'}>
                 {allDailyData[allDailyData.length - 1]?.date.toLocaleDateString('en-US', { month: 'short', year: '2-digit' })}
               </text>
-              <text x={width / 2} y="60" textAnchor="middle" className="text-[9px]" fill="#8b5cf6">
+              <text x={width / 2} y="72" textAnchor="middle" className="text-[9px]" fill="#8b5cf6">
                 RSI
               </text>
             </svg>
