@@ -942,7 +942,7 @@ if (signalFilters.size > 0) {
                 </span>
               </div>
               <div
-                className={`col-span-1 relative flex items-center justify-center cursor-pointer ${
+                className={`col-span-1 relative flex items-center justify-center pl-4 cursor-pointer ${
                   darkMode ? 'hover:text-white' : 'hover:text-gray-900'
                 } transition-colors group`}
                 onClick={() => {
@@ -1075,7 +1075,7 @@ if (signalFilters.size > 0) {
                         </span>
                       </div>
                       {/* RSI - col-span-1 */}
-                      <div className="col-span-1 flex items-center justify-center">
+                      <div className="col-span-1 flex items-center justify-center pl-4">
                         <div
                           className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-md text-xs font-semibold tabular-nums ${rs.bg} ${rs.text}`}
                         >
