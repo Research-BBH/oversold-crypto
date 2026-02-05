@@ -34,23 +34,22 @@ const calculateRSI = (prices, period = 14) => {
   return 100 - (100 / (1 + rs));
 };
 
-// RSI Signal Chart - Shows daily price chart with zones where RSI is below/above threshold
-const RSISignalChart = ({ priceHistory, threshold, mode, darkMode }) => {
+// RSI Signal Chart - Shows daily price chart with zones and RSI labels
+const RSISignalChart = ({ priceHistory, threshold, mode, darkMode, timeframe = '6m' }) => {
   const width = 900;
-  const height = 350;
+  const height = 380;
   const padding = { top: 30, right: 70, bottom: 60, left: 20 };
   const chartWidth = width - padding.left - padding.right;
   const chartHeight = height - padding.top - padding.bottom;
 
   // Convert to daily data with RSI
-  const dailyData = useMemo(() => {
+  const allDailyData = useMemo(() => {
     if (!priceHistory || priceHistory.length < 15) return [];
     
     const isAlreadyDaily = priceHistory.length <= 200;
     let result = [];
     
     if (isAlreadyDaily) {
-      // Data is already daily candles - use directly
       for (let i = 0; i < priceHistory.length; i++) {
         const pricesUpToNow = priceHistory.slice(0, i + 1);
         const rsi = calculateRSI(pricesUpToNow, 14);
@@ -68,7 +67,6 @@ const RSISignalChart = ({ priceHistory, threshold, mode, darkMode }) => {
         });
       }
     } else {
-      // Resample hourly to daily
       const totalDays = Math.min(180, Math.floor(priceHistory.length / 24));
       const pointsPerDay = Math.floor(priceHistory.length / totalDays);
       
@@ -101,7 +99,13 @@ const RSISignalChart = ({ priceHistory, threshold, mode, darkMode }) => {
     return result;
   }, [priceHistory]);
 
-  // Find days where RSI is in the zone (below threshold for oversold, above for overbought)
+  // Filter data based on timeframe
+  const dailyData = useMemo(() => {
+    const daysToShow = timeframe === '1m' ? 30 : timeframe === '3m' ? 90 : allDailyData.length;
+    return allDailyData.slice(-daysToShow);
+  }, [allDailyData, timeframe]);
+
+  // Find days where RSI is in the zone
   const signalDays = useMemo(() => {
     return dailyData.filter(d => {
       if (d.rsi === null) return false;
@@ -123,7 +127,7 @@ const RSISignalChart = ({ priceHistory, threshold, mode, darkMode }) => {
   const minPrice = Math.min(...prices);
   const maxPrice = Math.max(...prices);
   const priceRange = maxPrice - minPrice || 1;
-  const pricePadding = priceRange * 0.1;
+  const pricePadding = priceRange * 0.15; // More padding for labels
 
   const getX = (index) => padding.left + (index / (dailyData.length - 1)) * chartWidth;
   const getY = (price) => padding.top + chartHeight - ((price - minPrice + pricePadding) / (priceRange + pricePadding * 2)) * chartHeight;
@@ -143,9 +147,9 @@ const RSISignalChart = ({ priceHistory, threshold, mode, darkMode }) => {
   const lineColor = mode === 'oversold' ? '#f97316' : '#22c55e';
   const signalColor = mode === 'oversold' ? '#f97316' : '#22c55e';
 
-  // Generate x-axis labels (show ~8-10 labels)
-  const labelCount = Math.min(10, dailyData.length);
-  const labelStep = Math.floor(dailyData.length / labelCount);
+  // Generate x-axis labels
+  const labelCount = timeframe === '1m' ? 6 : timeframe === '3m' ? 8 : 10;
+  const labelStep = Math.max(1, Math.floor(dailyData.length / labelCount));
   const xLabels = dailyData.filter((_, i) => i % labelStep === 0 || i === dailyData.length - 1);
 
   // Find contiguous signal zones for shading
@@ -177,6 +181,17 @@ const RSISignalChart = ({ priceHistory, threshold, mode, darkMode }) => {
     return zones;
   }, [dailyData, threshold, mode]);
 
+  // Determine if we should show individual labels (when zoomed in and not too many signals)
+  const showIndividualLabels = timeframe === '1m' || (timeframe === '3m' && signalDays.length <= 15);
+  
+  // For labels, stagger heights to avoid overlap
+  const getLabelOffset = (idx, total) => {
+    if (total <= 5) return 0;
+    // Alternate between 3 heights
+    const pattern = idx % 3;
+    return pattern * 22;
+  };
+
   return (
     <div className="w-full overflow-x-auto">
       <svg viewBox={`0 0 ${width} ${height}`} className="w-full h-auto min-w-[700px]">
@@ -204,7 +219,7 @@ const RSISignalChart = ({ priceHistory, threshold, mode, darkMode }) => {
           />
         ))}
 
-        {/* Signal zone shading - highlight areas where RSI is in zone */}
+        {/* Signal zone shading */}
         {signalZones.map((zone, idx) => {
           const x1 = getX(zone.startIdx);
           const x2 = getX(zone.endIdx);
@@ -234,21 +249,65 @@ const RSISignalChart = ({ priceHistory, threshold, mode, darkMode }) => {
           strokeLinejoin="round"
         />
 
-        {/* Signal day markers - small dots on the line */}
+        {/* Signal day markers and labels */}
         {signalDays.map((d, idx) => {
-          const x = getX(d.day);
+          const dataIdx = dailyData.indexOf(d);
+          const x = getX(dataIdx);
           const y = getY(d.price);
+          const labelOffset = getLabelOffset(idx, signalDays.length);
           
           return (
-            <circle
-              key={idx}
-              cx={x}
-              cy={y}
-              r="5"
-              fill={signalColor}
-              stroke={darkMode ? '#1a1a2e' : '#fff'}
-              strokeWidth="2"
-            />
+            <g key={idx}>
+              {/* Dot on line */}
+              <circle
+                cx={x}
+                cy={y}
+                r="5"
+                fill={signalColor}
+                stroke={darkMode ? '#1a1a2e' : '#fff'}
+                strokeWidth="2"
+              />
+              
+              {/* Show RSI labels when zoomed in */}
+              {showIndividualLabels && d.rsi !== null && (
+                <>
+                  {/* Connecting line */}
+                  <line
+                    x1={x}
+                    y1={y + 7}
+                    x2={x}
+                    y2={y + 18 + labelOffset}
+                    stroke={signalColor}
+                    strokeWidth="1.5"
+                    opacity="0.7"
+                  />
+                  {/* Arrow head */}
+                  <polygon
+                    points={`${x},${y + 7} ${x - 4},${y + 13} ${x + 4},${y + 13}`}
+                    fill={signalColor}
+                  />
+                  {/* RSI label background */}
+                  <rect
+                    x={x - 24}
+                    y={y + 20 + labelOffset}
+                    width="48"
+                    height="18"
+                    rx="4"
+                    fill={d.rsi < 20 || d.rsi > 80 ? signalColor : '#facc15'}
+                  />
+                  {/* RSI value */}
+                  <text
+                    x={x}
+                    y={y + 33 + labelOffset}
+                    textAnchor="middle"
+                    className="text-[10px] font-bold"
+                    fill={d.rsi < 20 || d.rsi > 80 ? '#fff' : '#000'}
+                  >
+                    {d.rsi.toFixed(1)}
+                  </text>
+                </>
+              )}
+            </g>
           );
         })}
 
@@ -312,7 +371,7 @@ const RSISignalChart = ({ priceHistory, threshold, mode, darkMode }) => {
 };
 
 // RSI Indicator Chart
-const RSIIndicatorChart = ({ priceHistory, threshold, mode, darkMode }) => {
+const RSIIndicatorChart = ({ priceHistory, threshold, mode, darkMode, timeframe = '6m' }) => {
   const width = 900;
   const height = 80;
   const padding = { top: 10, right: 70, bottom: 20, left: 20 };
@@ -320,7 +379,7 @@ const RSIIndicatorChart = ({ priceHistory, threshold, mode, darkMode }) => {
   const chartHeight = height - padding.top - padding.bottom;
 
   // Calculate daily RSI values
-  const dailyRsi = useMemo(() => {
+  const allDailyRsi = useMemo(() => {
     if (!priceHistory || priceHistory.length < 15) return [];
     
     const isAlreadyDaily = priceHistory.length <= 200;
@@ -346,6 +405,12 @@ const RSIIndicatorChart = ({ priceHistory, threshold, mode, darkMode }) => {
     
     return result;
   }, [priceHistory]);
+
+  // Filter based on timeframe
+  const dailyRsi = useMemo(() => {
+    const daysToShow = timeframe === '1m' ? 30 : timeframe === '3m' ? 90 : allDailyRsi.length;
+    return allDailyRsi.slice(-daysToShow);
+  }, [allDailyRsi, timeframe]);
 
   if (dailyRsi.length < 5) return null;
 
@@ -406,6 +471,7 @@ const RSIIndicatorChart = ({ priceHistory, threshold, mode, darkMode }) => {
 const RSIThresholdAnalysis = ({ rsi, priceHistory, darkMode }) => {
   const [mode, setMode] = useState('oversold');
   const [threshold, setThreshold] = useState(30);
+  const [chartTimeframe, setChartTimeframe] = useState('6m');
 
   // Calculate daily RSI values
   const dailyRsiData = useMemo(() => {
@@ -433,15 +499,21 @@ const RSIThresholdAnalysis = ({ rsi, priceHistory, darkMode }) => {
     return result;
   }, [priceHistory]);
 
+  // Filter based on chart timeframe for stats
+  const filteredRsiData = useMemo(() => {
+    const daysToShow = chartTimeframe === '1m' ? 30 : chartTimeframe === '3m' ? 90 : dailyRsiData.length;
+    return dailyRsiData.slice(-daysToShow);
+  }, [dailyRsiData, chartTimeframe]);
+
   // Count days where RSI is in the zone (monotonic with threshold)
   const daysInZone = useMemo(() => {
-    return dailyRsiData.filter(rsi => {
+    return filteredRsiData.filter(rsi => {
       if (rsi === null) return false;
       return mode === 'oversold' ? rsi < threshold : rsi > threshold;
     }).length;
-  }, [dailyRsiData, threshold, mode]);
+  }, [filteredRsiData, threshold, mode]);
 
-  const totalDays = dailyRsiData.length;
+  const totalDays = filteredRsiData.length;
   const percentInZone = totalDays > 0 ? ((daysInZone / totalDays) * 100).toFixed(1) : 0;
 
   const getMessage = () => {
@@ -531,21 +603,52 @@ const RSIThresholdAnalysis = ({ rsi, priceHistory, darkMode }) => {
 
       {/* Signal Chart */}
       {hasData ? (
-        <div className="space-y-2">
-          <div className="flex items-center justify-between mb-2">
-            <span className={`text-xs font-medium ${darkMode ? 'text-gray-400' : 'text-gray-600'}`}>
-              {mode === 'oversold' ? '🔴' : '🟢'} {daysInZone} day{daysInZone !== 1 ? 's' : ''} in zone ({percentInZone}%)
-            </span>
-            <span className={`text-xs ${darkMode ? 'text-gray-500' : 'text-gray-500'}`}>
-              {dataMonths > 1 ? `${dataMonths} months` : `${totalDays} days`}
-            </span>
+        <div className="space-y-3">
+          {/* Timeframe selector and stats */}
+          <div className="flex items-center justify-between">
+            <div className="flex items-center gap-3">
+              <span className={`text-xs font-medium ${darkMode ? 'text-gray-400' : 'text-gray-600'}`}>
+                {mode === 'oversold' ? '🔴' : '🟢'} {daysInZone} day{daysInZone !== 1 ? 's' : ''} in zone ({percentInZone}%)
+              </span>
+            </div>
+            
+            {/* Timeframe buttons */}
+            <div className={`inline-flex rounded-lg p-1 ${darkMode ? 'bg-white/5' : 'bg-gray-100'}`}>
+              {[
+                { id: '1m', label: '1M' },
+                { id: '3m', label: '3M' },
+                { id: '6m', label: '6M' }
+              ].map((tf) => (
+                <button
+                  key={tf.id}
+                  onClick={() => setChartTimeframe(tf.id)}
+                  className={`px-3 py-1 rounded-md text-xs font-medium transition-all ${
+                    chartTimeframe === tf.id
+                      ? mode === 'oversold' 
+                        ? 'bg-orange-500 text-white shadow'
+                        : 'bg-green-500 text-white shadow'
+                      : darkMode ? 'text-gray-400 hover:text-white' : 'text-gray-600 hover:text-gray-900'
+                  }`}
+                >
+                  {tf.label}
+                </button>
+              ))}
+            </div>
           </div>
+
+          {/* Hint for zooming */}
+          {chartTimeframe === '6m' && daysInZone > 10 && (
+            <p className={`text-xs ${darkMode ? 'text-gray-500' : 'text-gray-500'}`}>
+              💡 Zoom in to 1M or 3M to see individual RSI values
+            </p>
+          )}
           
           <RSISignalChart
             priceHistory={priceHistory}
             threshold={threshold}
             mode={mode}
             darkMode={darkMode}
+            timeframe={chartTimeframe}
           />
           
           <RSIIndicatorChart
@@ -553,6 +656,7 @@ const RSIThresholdAnalysis = ({ rsi, priceHistory, darkMode }) => {
             threshold={threshold}
             mode={mode}
             darkMode={darkMode}
+            timeframe={chartTimeframe}
           />
         </div>
       ) : (
