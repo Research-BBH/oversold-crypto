@@ -193,22 +193,22 @@ const calculateSignalScore = (token, signals, fundingRate) => {
   
   // ============ BUY SIGNALS (Oversold) ============
   
-  // 1. RSI Oversold (20 points base, +10 bonus for extreme < 20)
+  // 1. RSI Oversold (25 points base, +5 bonus for extreme < 25)
   if (token.rsi !== null && token.rsi !== undefined) {
     buyAvailableCount++;
     if (token.rsi < 30) {
-      const basePoints = 20;
-      const bonusPoints = token.rsi < 20 ? 10 : (token.rsi < 25 ? 5 : 0);
+      const basePoints = 25;
+      const bonusPoints = token.rsi < 25 ? 5 : 0;
       buyScore += basePoints + bonusPoints;
       buyActiveCount++;
     }
   }
   
-  // 2. Above 50 SMA - Uptrend (20 points - CRITICAL for buying dips)
+  // 2. Above 50 SMA - Uptrend (30 points - CRITICAL for buying dips)
   if (signals.aboveSMA50 !== null) {
     buyAvailableCount++;
     if (signals.aboveSMA50 === true) {
-      buyScore += 20;
+      buyScore += 30;
       buyActiveCount++;
     }
   }
@@ -222,28 +222,28 @@ const calculateSignalScore = (token, signals, fundingRate) => {
     }
   }
   
-  // 4. Volume Spike (10 points)
+  // 4. Volume Spike (15 points)
   if (signals.volumeSpike !== null) {
     buyAvailableCount++;
     if (signals.volumeSpike === true) {
-      buyScore += 10;
+      buyScore += 15;
       buyActiveCount++;
     }
   }
   
-  // 5. Negative Funding Rate (10 points)
-  if (fundingRate !== null && fundingRate !== undefined) {
-    buyAvailableCount++;
-    if (fundingRate < 0) {
-      buyScore += 10;
-      buyActiveCount++;
-    }
-  }
-  
-  // 6. Bullish Divergence (15 points - strong reversal signal)
+  // 5. Bullish Divergence (10 points - strong reversal signal)
   if (signals.bullishDivergence !== null) {
     buyAvailableCount++;
     if (signals.bullishDivergence === true) {
+      buyScore += 10;
+      buyActiveCount++;
+    }
+  }
+  
+  // 6. Negative Funding Rate (15 points)
+  if (fundingRate !== null && fundingRate !== undefined) {
+    buyAvailableCount++;
+    if (fundingRate < 0) {
       buyScore += 15;
       buyActiveCount++;
     }
