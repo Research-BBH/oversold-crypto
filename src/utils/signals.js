@@ -440,15 +440,19 @@ export const analyzeToken = (token, historicalData = null) => {
     const sma50 = calculateSMA(prices, 50);
     analysis.sma50 = sma50;
     analysis.signals.aboveSMA = token.price > sma50;
+    analysis.signals.aboveSMA50 = token.price > sma50; // For buy signals
+    analysis.signals.belowSMA50 = token.price < sma50; // For sell signals
     
     // SMA 20 (for sell signals)
     const sma20 = calculateSMA(prices, 20);
     analysis.sma20 = sma20;
+    analysis.signals.belowSMA20 = sma20 ? token.price < sma20 : null;
     
     // Bollinger Bands
     const bb = calculateBollingerBands(prices, 20, 2);
     analysis.bollingerBands = bb;
     analysis.signals.belowBB = bb && token.price < bb.lower;
+    analysis.signals.aboveBB = bb ? token.price > bb.upper : null; // For sell signals
     
     // Volume
     if (volumes.length > 20) {
@@ -462,17 +466,32 @@ export const analyzeToken = (token, historicalData = null) => {
       const divergence = detectRSIDivergence(prices, historicalData.rsiValues, 20);
       analysis.divergence = divergence;
       analysis.signals.bullishDivergence = divergence.bullish;
+      analysis.signals.bearishDivergence = divergence.bearish;
     }
+    
+    // Near ATH calculation (within 10% of max price from available data)
+    if (prices.length > 0) {
+      const maxPrice = Math.max(...prices);
+      analysis.signals.nearATH = token.price >= maxPrice * 0.9;
+    }
+    
+    // Engulfing patterns require OHLC data which we don't have on frontend
+    analysis.signals.bullishEngulfing = null;
+    analysis.signals.bearishEngulfing = null;
     
     // Funding Rate (if available from exchange data)
     if (historicalData.fundingRate !== undefined && historicalData.fundingRate !== null) {
       analysis.fundingRate = historicalData.fundingRate;
       analysis.signals.negativeFunding = historicalData.fundingRate < 0;
+      analysis.signals.positiveFunding = historicalData.fundingRate > 0.01;
+      analysis.signals.hasFunding = true;
     }
   }
   
   // Calculate Vol/MCap ratio for sell signals
   const volMcapRatio = token.mcap > 0 ? (token.volume / token.mcap) * 100 : null;
+  analysis.volMcapRatio = volMcapRatio;
+  analysis.signals.highVolMcap = volMcapRatio !== null && volMcapRatio > 10;
   analysis.volMcapRatio = volMcapRatio;
   
   // Calculate BUY score
