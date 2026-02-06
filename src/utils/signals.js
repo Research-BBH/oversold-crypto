@@ -365,7 +365,8 @@ export const analyzeToken = (token, historicalData = null) => {
   analysis.signalDetails = {
     signals: scoreResult.signals,
     activeCount: scoreResult.activeCount,
-    totalSignals: scoreResult.totalSignals
+    totalSignals: scoreResult.totalSignals,
+    availableCount: scoreResult.availableSignals
   };
   analysis.strength = getSignalStrength(scoreResult.score);
   
