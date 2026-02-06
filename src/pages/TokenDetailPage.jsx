@@ -289,7 +289,33 @@ export const TokenDetailPage = ({ token, onBack, darkMode, setDarkMode }) => {
           setHistoricalPrices(token.sparklineRaw);
         }
         
-        const analysis = analyzeToken(token, historicalData);
+        // Use API signal data if available (already calculated with proper point values)
+        let analysis;
+        if (token.signalScoreDetails && token.signals) {
+          // Token already has signals from API - use those
+          analysis = {
+            token: token.symbol,
+            price: token.price,
+            rsi: token.rsi,
+            score: token.signalScore,
+            sellScore: token.sellScore,
+            signals: token.signals,
+            signalDetails: token.signalScoreDetails,
+            signalScoreDetails: token.signalScoreDetails, // Alias for compatibility
+            sma50: token.sma50,
+            sma20: token.sma20,
+            bollingerBands: token.bollingerBands,
+            volumeRatio: token.volumeRatio,
+            volMcapRatio: token.volMcapRatio,
+            fundingRate: token.fundingRate,
+            dataSource: token.dataSource || 'api',
+            enhanced: token.enhanced
+          };
+        } else {
+          // No API data - calculate from historical data
+          analysis = analyzeToken(token, historicalData);
+        }
+        
         analysis.dataSource = dataSource;
         analysis.dataPoints = historicalData?.prices?.length || 0;
         
