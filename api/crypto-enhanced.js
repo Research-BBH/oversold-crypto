@@ -87,6 +87,100 @@ const calculateVolumeRatio = (volumes, period = 20) => {
   return currentVolume / avgVolume;
 };
 
+// Detect RSI divergence (bullish: price lower low, RSI higher low; bearish: price higher high, RSI lower high)
+const detectDivergence = (prices, period = 14, lookback = 20) => {
+  if (!prices || prices.length < lookback + period) {
+    return { bullish: false, bearish: false };
+  }
+  
+  // Calculate RSI values for the lookback period
+  const rsiValues = [];
+  for (let i = period; i <= prices.length; i++) {
+    const slice = prices.slice(i - period - 1, i);
+    const rsi = calculateRSI(slice, period);
+    if (rsi !== null) rsiValues.push(rsi);
+  }
+  
+  if (rsiValues.length < lookback) {
+    return { bullish: false, bearish: false };
+  }
+  
+  const recentPrices = prices.slice(-lookback);
+  const recentRSI = rsiValues.slice(-lookback);
+  
+  // Find local lows and highs
+  const priceLows = [];
+  const priceHighs = [];
+  
+  for (let i = 2; i < recentPrices.length - 2; i++) {
+    // Local low
+    if (recentPrices[i] < recentPrices[i-1] && recentPrices[i] < recentPrices[i-2] &&
+        recentPrices[i] < recentPrices[i+1] && recentPrices[i] < recentPrices[i+2]) {
+      priceLows.push({ index: i, price: recentPrices[i], rsi: recentRSI[i] });
+    }
+    // Local high
+    if (recentPrices[i] > recentPrices[i-1] && recentPrices[i] > recentPrices[i-2] &&
+        recentPrices[i] > recentPrices[i+1] && recentPrices[i] > recentPrices[i+2]) {
+      priceHighs.push({ index: i, price: recentPrices[i], rsi: recentRSI[i] });
+    }
+  }
+  
+  let bullish = false;
+  let bearish = false;
+  
+  // Bullish divergence: price makes lower low, RSI makes higher low
+  if (priceLows.length >= 2) {
+    const last = priceLows[priceLows.length - 1];
+    const prev = priceLows[priceLows.length - 2];
+    if (last.price < prev.price && last.rsi > prev.rsi) {
+      bullish = true;
+    }
+  }
+  
+  // Bearish divergence: price makes higher high, RSI makes lower high
+  if (priceHighs.length >= 2) {
+    const last = priceHighs[priceHighs.length - 1];
+    const prev = priceHighs[priceHighs.length - 2];
+    if (last.price > prev.price && last.rsi < prev.rsi) {
+      bearish = true;
+    }
+  }
+  
+  return { bullish, bearish };
+};
+
+// Detect engulfing candle patterns
+const detectEngulfingPattern = (prices, opens) => {
+  if (!prices || !opens || prices.length < 2 || opens.length < 2) {
+    return { bullish: false, bearish: false };
+  }
+  
+  const len = prices.length;
+  const prevOpen = opens[len - 2];
+  const prevClose = prices[len - 2];
+  const currOpen = opens[len - 1];
+  const currClose = prices[len - 1];
+  
+  const prevBody = Math.abs(prevClose - prevOpen);
+  const currBody = Math.abs(currClose - currOpen);
+  
+  // Bullish engulfing: previous candle is red, current candle is green and engulfs previous
+  const bullish = prevClose < prevOpen && // Previous was red
+                  currClose > currOpen && // Current is green
+                  currOpen <= prevClose && // Current opens at or below previous close
+                  currClose >= prevOpen && // Current closes at or above previous open
+                  currBody > prevBody; // Current body is larger
+  
+  // Bearish engulfing: previous candle is green, current candle is red and engulfs previous
+  const bearish = prevClose > prevOpen && // Previous was green
+                  currClose < currOpen && // Current is red
+                  currOpen >= prevClose && // Current opens at or above previous close
+                  currClose <= prevOpen && // Current closes at or below previous open
+                  currBody > prevBody; // Current body is larger
+  
+  return { bullish, bearish };
+};
+
 // Calculate signal score (0-100) based on available signals
 const calculateSignalScore = (token, signals, fundingRate) => {
   let score = 0;
@@ -187,7 +281,9 @@ const fetchBybitData = async (symbol) => {
     if (klinesData.retCode !== 0 || !klinesData.result?.list) return null;
     
     const klines = klinesData.result.list.reverse();
-    const prices = klines.map(k => parseFloat(k[4]));
+    // Bybit kline format: [timestamp, open, high, low, close, volume, turnover]
+    const opens = klines.map(k => parseFloat(k[1]));
+    const prices = klines.map(k => parseFloat(k[4])); // close prices
     const volumes = klines.map(k => parseFloat(k[5]));
     
     let fundingRate = null;
@@ -198,7 +294,7 @@ const fetchBybitData = async (symbol) => {
       }
     }
     
-    return { prices, volumes, fundingRate, source: 'bybit' };
+    return { prices, opens, volumes, fundingRate, source: 'bybit' };
   } catch (error) {
     return null;
   }
@@ -220,7 +316,9 @@ const fetchOKXData = async (symbol) => {
     if (candlesData.code !== '0' || !candlesData.data) return null;
     
     const candles = candlesData.data.reverse();
-    const prices = candles.map(c => parseFloat(c[4]));
+    // OKX candle format: [ts, open, high, low, close, vol, volCcy, volCcyQuote, confirm]
+    const opens = candles.map(c => parseFloat(c[1]));
+    const prices = candles.map(c => parseFloat(c[4])); // close prices
     const volumes = candles.map(c => parseFloat(c[6]));
     
     let fundingRate = null;
@@ -231,7 +329,7 @@ const fetchOKXData = async (symbol) => {
       }
     }
     
-    return { prices, volumes, fundingRate, source: 'okx' };
+    return { prices, opens, volumes, fundingRate, source: 'okx' };
   } catch (error) {
     return null;
   }
@@ -250,10 +348,27 @@ const enhanceToken = async (token) => {
   // If we got exchange data, calculate signals
   if (exchangeData && exchangeData.prices.length >= 50) {
     const sma50 = calculateSMA(exchangeData.prices, 50);
+    const sma20 = calculateSMA(exchangeData.prices, 20);
     const bb = calculateBollingerBands(exchangeData.prices, 20, 2);
     const volumeRatio = exchangeData.volumes.length > 20 
       ? calculateVolumeRatio(exchangeData.volumes, 20) 
       : null;
+    
+    // Calculate divergence
+    const divergence = detectDivergence(exchangeData.prices);
+    
+    // Calculate engulfing patterns
+    const engulfing = exchangeData.opens 
+      ? detectEngulfingPattern(exchangeData.prices, exchangeData.opens)
+      : { bullish: false, bearish: false };
+    
+    // Calculate price near ATH (within 10% of all-time high from available data)
+    const maxPrice = Math.max(...exchangeData.prices);
+    const nearATH = token.price >= maxPrice * 0.9;
+    
+    // Calculate volume/market cap ratio (high vol/mcap can indicate distribution or accumulation)
+    const volMcapRatio = token.mcap > 0 ? (token.volume / token.mcap) * 100 : null;
+    const highVolMcap = volMcapRatio !== null && volMcapRatio > 10; // > 10% is significant
     
     const signals = {
       // Buy signals (oversold)
@@ -264,12 +379,19 @@ const enhanceToken = async (token) => {
       volumeSpike: volumeRatio ? volumeRatio > 1.5 : null,
       hasFunding: exchangeData.fundingRate !== null && exchangeData.fundingRate !== undefined,
       negativeFunding: exchangeData.fundingRate !== null && exchangeData.fundingRate < 0,
+      bullishDivergence: divergence.bullish,
+      bullishEngulfing: engulfing.bullish,
       // Sell signals (overbought)
       rsiOverbought: token.rsi !== null && token.rsi > 70,
       rsiOverboughtExtreme: token.rsi !== null && token.rsi > 80,
       belowSMA50: sma50 ? token.price < sma50 : null,
+      belowSMA20: sma20 ? token.price < sma20 : null,
       aboveBB: bb ? token.price > bb.upper : null,
       positiveFunding: exchangeData.fundingRate !== null && exchangeData.fundingRate > 0.01,
+      bearishDivergence: divergence.bearish,
+      bearishEngulfing: engulfing.bearish,
+      nearATH: nearATH,
+      highVolMcap: highVolMcap,
     };
     
     const signalScoreData = calculateSignalScore(token, signals, exchangeData.fundingRate);
@@ -281,8 +403,10 @@ const enhanceToken = async (token) => {
       signalScoreDetails: signalScoreData,
       // Raw values for detail view
       sma50,
+      sma20,
       bollingerBands: bb,
       volumeRatio,
+      volMcapRatio,
       fundingRate: exchangeData.fundingRate,
       dataSource: exchangeData.source,
       enhanced: true,
@@ -290,6 +414,9 @@ const enhanceToken = async (token) => {
   }
   
   // Return basic token with signal flags based on available data
+  // Calculate vol/mcap for non-enhanced tokens too
+  const volMcapRatio = token.mcap > 0 ? (token.volume / token.mcap) * 100 : null;
+  
   const signals = {
     // Buy signals (oversold)
     rsiOversold: token.rsi !== null && token.rsi < 30,
@@ -299,12 +426,19 @@ const enhanceToken = async (token) => {
     volumeSpike: null,
     hasFunding: null,
     negativeFunding: null,
+    bullishDivergence: null,
+    bullishEngulfing: null,
     // Sell signals (overbought)
     rsiOverbought: token.rsi !== null && token.rsi > 70,
     rsiOverboughtExtreme: token.rsi !== null && token.rsi > 80,
     belowSMA50: null,
+    belowSMA20: null,
     aboveBB: null,
     positiveFunding: null,
+    bearishDivergence: null,
+    bearishEngulfing: null,
+    nearATH: null,
+    highVolMcap: volMcapRatio !== null && volMcapRatio > 10,
   };
   
   const signalScoreData = calculateSignalScore(token, signals, null);
@@ -514,6 +648,8 @@ export default async function handler(req) {
     
     // Remaining tokens without enhancement
     const remainingTokens = baseTokens.slice(250).map(token => {
+      const volMcapRatio = token.mcap > 0 ? (token.volume / token.mcap) * 100 : null;
+      
       const signals = {
         // Buy signals (oversold)
         rsiOversold: token.rsi !== null && token.rsi < 30,
@@ -523,12 +659,19 @@ export default async function handler(req) {
         volumeSpike: null,
         hasFunding: null,
         negativeFunding: null,
+        bullishDivergence: null,
+        bullishEngulfing: null,
         // Sell signals (overbought)
         rsiOverbought: token.rsi !== null && token.rsi > 70,
         rsiOverboughtExtreme: token.rsi !== null && token.rsi > 80,
         belowSMA50: null,
+        belowSMA20: null,
         aboveBB: null,
         positiveFunding: null,
+        bearishDivergence: null,
+        bearishEngulfing: null,
+        nearATH: null,
+        highVolMcap: volMcapRatio !== null && volMcapRatio > 10,
       };
       
       const signalScoreData = calculateSignalScore(token, signals, null);

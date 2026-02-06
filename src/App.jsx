@@ -265,15 +265,36 @@ if (signalFilters.size > 0) {
           case 'negative_funding':
             if (!token.signals || token.signals.negativeFunding !== true) return false;
             break;
+          case 'bullish_divergence':
+            if (!token.signals || token.signals.bullishDivergence !== true) return false;
+            break;
+          case 'bullish_engulfing':
+            if (!token.signals || token.signals.bullishEngulfing !== true) return false;
+            break;
           // Sell signal filters (overbought)
           case 'below_sma50':
             if (!token.signals || token.signals.belowSMA50 !== true) return false;
+            break;
+          case 'below_sma20':
+            if (!token.signals || token.signals.belowSMA20 !== true) return false;
             break;
           case 'above_bb':
             if (!token.signals || token.signals.aboveBB !== true) return false;
             break;
           case 'positive_funding':
             if (!token.signals || token.signals.positiveFunding !== true) return false;
+            break;
+          case 'bearish_divergence':
+            if (!token.signals || token.signals.bearishDivergence !== true) return false;
+            break;
+          case 'bearish_engulfing':
+            if (!token.signals || token.signals.bearishEngulfing !== true) return false;
+            break;
+          case 'near_ath':
+            if (!token.signals || token.signals.nearATH !== true) return false;
+            break;
+          case 'high_vol_mcap':
+            if (!token.signals || token.signals.highVolMcap !== true) return false;
             break;
         }
       }
@@ -604,6 +625,7 @@ if (signalFilters.size > 0) {
               { id: 'rsi_oversold', label: '🔴 Oversold', desc: 'RSI below 30', type: 'signal' },
               { id: 'rsi_neutral', label: '⚪ Neutral', desc: 'RSI between 30-70', type: 'signal' },
               { id: 'rsi_overbought', label: '🟢 Overbought', desc: 'RSI above 70', type: 'signal' },
+              { id: 'rsi_overbought_extreme', label: '🔥 Extreme OB', desc: 'RSI above 80', type: 'signal' },
               { id: 'losers24h', label: '📉 24h Losers', desc: 'Biggest 24h drops', type: 'preset' },
               { id: 'losers7d', label: '📉 7d Losers', desc: 'Biggest 7d drops', type: 'preset' },
               { id: 'gainers', label: '📈 24h Gainers', desc: 'Biggest 24h gains', type: 'preset' },
@@ -650,7 +672,9 @@ if (signalFilters.size > 0) {
               { id: 'below_bb', label: '⚠️ Below BB', desc: 'Below Bollinger Band', type: 'signal', enhanced: true },
               { id: 'above_sma50', label: '📈 Above SMA50', desc: 'Price > 50-day SMA (uptrend)', type: 'signal', enhanced: true },
               { id: 'volume_spike', label: '🔥 Volume Spike', desc: 'Volume > 1.5x average', type: 'signal', enhanced: true },
-              { id: 'negative_funding', label: '💵 Negative Funding', desc: 'Shorts paying longs', type: 'signal', enhanced: true },
+              { id: 'negative_funding', label: '💵 Neg Funding', desc: 'Shorts paying longs', type: 'signal', enhanced: true },
+              { id: 'bullish_divergence', label: '📈 Bull Divergence', desc: 'Price lower low, RSI higher low', type: 'signal', enhanced: true },
+              { id: 'bullish_engulfing', label: '🟢 Bull Engulf', desc: 'Bullish engulfing candle pattern', type: 'signal', enhanced: true },
             ].map((filter) => {
               const isActive = signalFilters.has(filter.id);
               const isDisabled = filter.enhanced && !useEnhancedAPI;
@@ -686,8 +710,11 @@ if (signalFilters.size > 0) {
             {[
               { id: 'above_bb', label: '📊 Above BB', desc: 'Above Upper Bollinger Band', type: 'signal', enhanced: true },
               { id: 'below_sma50', label: '📉 Below SMA50', desc: 'Price < 50-day SMA (downtrend)', type: 'signal', enhanced: true },
-              { id: 'rsi_overbought_extreme', label: '🔴 RSI > 80', desc: 'Extremely overbought', type: 'signal', enhanced: false },
-              { id: 'positive_funding', label: '💸 Positive Funding', desc: 'Longs paying shorts (crowded)', type: 'signal', enhanced: true },
+              { id: 'positive_funding', label: '💸 Pos Funding', desc: 'Longs paying shorts (crowded)', type: 'signal', enhanced: true },
+              { id: 'bearish_divergence', label: '📉 Bear Divergence', desc: 'Price higher high, RSI lower high', type: 'signal', enhanced: true },
+              { id: 'bearish_engulfing', label: '🔴 Bear Engulf', desc: 'Bearish engulfing candle pattern', type: 'signal', enhanced: true },
+              { id: 'near_ath', label: '🏔️ Near ATH', desc: 'Price within 10% of all-time high', type: 'signal', enhanced: true },
+              { id: 'high_vol_mcap', label: '📊 High Vol/MCap', desc: 'Volume > 10% of market cap', type: 'signal', enhanced: false },
             ].map((filter) => {
               const isActive = signalFilters.has(filter.id);
               const isDisabled = filter.enhanced && !useEnhancedAPI;
