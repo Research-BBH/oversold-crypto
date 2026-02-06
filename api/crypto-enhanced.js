@@ -528,27 +528,41 @@ const enhanceToken = async (token) => {
   // Calculate vol/mcap for non-enhanced tokens too
   const volMcapRatio = token.mcap > 0 ? (token.volume / token.mcap) * 100 : null;
   
+  // Use sparkline data as fallback for SMA/BB calculations
+  let sma50 = null;
+  let sma20 = null;
+  let bb = null;
+  let nearATH = null;
+  
+  if (token.sparklineRaw && token.sparklineRaw.length >= 50) {
+    sma50 = calculateSMA(token.sparklineRaw, 50);
+    sma20 = calculateSMA(token.sparklineRaw, 20);
+    bb = calculateBollingerBands(token.sparklineRaw, 20, 2);
+    const maxPrice = Math.max(...token.sparklineRaw);
+    nearATH = token.price >= maxPrice * 0.9;
+  }
+  
   const signals = {
     // Buy signals (oversold)
     rsiOversold: token.rsi !== null && token.rsi < 30,
     rsiExtreme: token.rsi !== null && token.rsi < 25,
-    aboveSMA50: null,
-    belowBB: null,
-    volumeSpike: null,
+    aboveSMA50: sma50 ? token.price > sma50 : null,
+    belowBB: bb ? token.price < bb.lower : null,
+    volumeSpike: null, // Can't calculate without historical volume data
     hasFunding: null,
     negativeFunding: null,
-    bullishDivergence: null,
-    bullishEngulfing: null,
+    bullishDivergence: null, // Can't calculate without RSI history
+    bullishEngulfing: null, // Can't calculate without OHLC data
     // Sell signals (overbought)
     rsiOverbought: token.rsi !== null && token.rsi > 70,
     rsiOverboughtExtreme: token.rsi !== null && token.rsi > 80,
-    belowSMA50: null,
-    belowSMA20: null,
-    aboveBB: null,
+    belowSMA50: sma50 ? token.price < sma50 : null,
+    belowSMA20: sma20 ? token.price < sma20 : null,
+    aboveBB: bb ? token.price > bb.upper : null,
     positiveFunding: null,
-    bearishDivergence: null,
-    bearishEngulfing: null,
-    nearATH: null,
+    bearishDivergence: null, // Can't calculate without RSI history
+    bearishEngulfing: null, // Can't calculate without OHLC data
+    nearATH: nearATH,
     highVolMcap: volMcapRatio !== null && volMcapRatio > 10,
   };
   
