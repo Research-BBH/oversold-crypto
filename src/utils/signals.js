@@ -256,6 +256,125 @@ export const calculateSignalScore = (data) => {
 };
 
 /**
+ * Calculate comprehensive SELL signal score (0-100)
+ * For overbought conditions and bearish signals
+ */
+export const calculateSellSignalScore = (data) => {
+  let score = 0;
+  const signals = [];
+  let availableSignals = 0;
+  
+  // 1. RSI Overbought (20 points base, +10 bonus for extreme > 80)
+  if (data.rsi !== null && data.rsi !== undefined) {
+    availableSignals++;
+    if (data.rsi > 70) {
+      const basePoints = 20;
+      const bonusPoints = data.rsi > 80 ? 10 : (data.rsi > 75 ? 5 : 0);
+      const totalPoints = basePoints + bonusPoints;
+      score += totalPoints;
+      
+      const label = data.rsi > 80 ? 'RSI Overbought (Extreme)' : 'RSI Overbought';
+      signals.push({ 
+        name: label, 
+        weight: totalPoints, 
+        active: true,
+        isExtreme: data.rsi > 80
+      });
+    } else {
+      signals.push({ name: 'RSI Overbought', weight: 20, active: false });
+    }
+  } else {
+    signals.push({ name: 'RSI Overbought', weight: 20, active: false, unavailable: true });
+  }
+  
+  // 2. Below 50 SMA - Downtrend (15 points)
+  if (data.price && data.sma50) {
+    availableSignals++;
+    if (data.price < data.sma50) {
+      score += 15;
+      signals.push({ name: 'Below 50 SMA', weight: 15, active: true });
+    } else {
+      signals.push({ name: 'Below 50 SMA', weight: 15, active: false });
+    }
+  } else {
+    signals.push({ name: 'Below 50 SMA', weight: 15, active: false, unavailable: true });
+  }
+  
+  // 3. Below 20 SMA - Short-term weakness (10 points)
+  if (data.price && data.sma20) {
+    availableSignals++;
+    if (data.price < data.sma20) {
+      score += 10;
+      signals.push({ name: 'Below 20 SMA', weight: 10, active: true });
+    } else {
+      signals.push({ name: 'Below 20 SMA', weight: 10, active: false });
+    }
+  } else {
+    signals.push({ name: 'Below 20 SMA', weight: 10, active: false, unavailable: true });
+  }
+  
+  // 4. Above Bollinger Band Upper (15 points)
+  if (data.price && data.bollingerBands) {
+    availableSignals++;
+    if (data.price > data.bollingerBands.upper) {
+      score += 15;
+      signals.push({ name: 'Above BB Upper', weight: 15, active: true });
+    } else {
+      signals.push({ name: 'Above BB Upper', weight: 15, active: false });
+    }
+  } else {
+    signals.push({ name: 'Above BB Upper', weight: 15, active: false, unavailable: true });
+  }
+  
+  // 5. Positive Funding Rate (10 points)
+  if (data.fundingRate !== undefined && data.fundingRate !== null) {
+    availableSignals++;
+    if (data.fundingRate > 0.01) {
+      score += 10;
+      signals.push({ name: 'Positive Funding', weight: 10, active: true });
+    } else {
+      signals.push({ name: 'Positive Funding', weight: 10, active: false });
+    }
+  } else {
+    signals.push({ name: 'Positive Funding', weight: 10, active: false, unavailable: true });
+  }
+  
+  // 6. Bearish Divergence (15 points)
+  if (data.divergence) {
+    availableSignals++;
+    if (data.divergence.bearish) {
+      score += 15;
+      signals.push({ name: 'Bearish Divergence', weight: 15, active: true });
+    } else {
+      signals.push({ name: 'Bearish Divergence', weight: 15, active: false });
+    }
+  } else {
+    signals.push({ name: 'Bearish Divergence', weight: 15, active: false, unavailable: true });
+  }
+  
+  // 7. High Volume/MCap ratio (5 points)
+  if (data.volMcapRatio !== undefined && data.volMcapRatio !== null) {
+    availableSignals++;
+    if (data.volMcapRatio > 10) {
+      score += 5;
+      signals.push({ name: 'High Vol/MCap', weight: 5, active: true });
+    } else {
+      signals.push({ name: 'High Vol/MCap', weight: 5, active: false });
+    }
+  } else {
+    signals.push({ name: 'High Vol/MCap', weight: 5, active: false, unavailable: true });
+  }
+  
+  return {
+    score: Math.min(score, 100),
+    signals,
+    activeCount: signals.filter(s => s.active && !s.unavailable).length,
+    totalSignals: signals.length,
+    availableSignals: availableSignals
+  };
+};
+
+/**
  * Get signal strength tier based on score
  */
 export const getSignalStrength = (score) => {
@@ -322,6 +441,10 @@ export const analyzeToken = (token, historicalData = null) => {
     analysis.sma50 = sma50;
     analysis.signals.aboveSMA = token.price > sma50;
     
+    // SMA 20 (for sell signals)
+    const sma20 = calculateSMA(prices, 20);
+    analysis.sma20 = sma20;
+    
     // Bollinger Bands
     const bb = calculateBollingerBands(prices, 20, 2);
     analysis.bollingerBands = bb;
@@ -348,7 +471,11 @@ export const analyzeToken = (token, historicalData = null) => {
     }
   }
   
-  // Calculate score
+  // Calculate Vol/MCap ratio for sell signals
+  const volMcapRatio = token.mcap > 0 ? (token.volume / token.mcap) * 100 : null;
+  analysis.volMcapRatio = volMcapRatio;
+  
+  // Calculate BUY score
   const scoreData = {
     rsi: token.rsi,
     price: token.price,
@@ -361,12 +488,32 @@ export const analyzeToken = (token, historicalData = null) => {
   
   const scoreResult = calculateSignalScore(scoreData);
   analysis.score = scoreResult.score;
+  
+  // Calculate SELL score
+  const sellScoreData = {
+    rsi: token.rsi,
+    price: token.price,
+    sma50: analysis.sma50,
+    sma20: analysis.sma20,
+    bollingerBands: analysis.bollingerBands,
+    divergence: analysis.divergence,
+    fundingRate: analysis.fundingRate,
+    volMcapRatio: analysis.volMcapRatio
+  };
+  
+  const sellScoreResult = calculateSellSignalScore(sellScoreData);
+  analysis.sellScore = sellScoreResult.score;
+  
   // Store the full result including signals array, activeCount, and totalSignals
   analysis.signalDetails = {
     signals: scoreResult.signals,
     activeCount: scoreResult.activeCount,
     totalSignals: scoreResult.totalSignals,
-    availableCount: scoreResult.availableSignals
+    availableCount: scoreResult.availableSignals,
+    // Add sell signal details
+    sellScore: sellScoreResult.score,
+    sellActiveCount: sellScoreResult.activeCount,
+    sellAvailableCount: sellScoreResult.availableSignals
   };
   analysis.strength = getSignalStrength(scoreResult.score);
   
