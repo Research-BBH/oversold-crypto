@@ -1,26 +1,15 @@
 // ==================================================
 // FILE: src/utils/bybit.js - Bybit API Integration
+// Uses server-side proxy to avoid CORS issues
 // ==================================================
 
-/**
- * Map common symbols to Bybit format
- * Bybit uses format like BTCUSDT, ETHUSDT, etc.
- */
-const getBybitSymbol = (symbol) => {
-  const cleanSymbol = symbol?.toUpperCase().trim();
-  
-  // Remove common suffixes
-  const normalized = cleanSymbol
-    .replace(/USD$/, '')
-    .replace(/USDT$/, '')
-    .replace(/USDC$/, '');
-  
-  // Bybit uses USDT pairs
-  return `${normalized}USDT`;
-};
+import { calculateRSI, calculateHistoricalRSI } from './rsi';
+
+// Re-export RSI functions for backward compatibility
+export { calculateHistoricalRSI };
 
 /**
- * Fetch historical klines (OHLCV) from Bybit
+ * Fetch historical klines (OHLCV) from Bybit via proxy
  * @param {string} symbol - Token symbol (e.g., 'BTC', 'ETH')
  * @param {string} interval - Timeframe ('1' = 1min, '60' = 1hour, 'D' = 1day)
  * @param {number} limit - Number of candles (max 200 per request)
@@ -28,15 +17,13 @@ const getBybitSymbol = (symbol) => {
  */
 export const fetchBybitKlines = async (symbol, interval = '60', limit = 200) => {
   try {
-    const bybitSymbol = getBybitSymbol(symbol);
-    
-    // Bybit V5 API - Linear (USDT) perpetual futures
-    const url = `https://api.bybit.com/v5/market/kline?category=linear&symbol=${bybitSymbol}&interval=${interval}&limit=${limit}`;
+    // Use our proxy API to avoid CORS issues
+    const url = `/api/bybit?symbol=${encodeURIComponent(symbol)}&endpoint=klines&interval=${interval}&limit=${limit}`;
     
     const response = await fetch(url);
     
     if (!response.ok) {
-      console.warn(`Bybit API error for ${symbol}: ${response.status}`);
+      console.warn(`Bybit proxy error for ${symbol}: ${response.status}`);
       return null;
     }
     
@@ -44,7 +31,7 @@ export const fetchBybitKlines = async (symbol, interval = '60', limit = 200) => 
     
     // Check if request was successful
     if (data.retCode !== 0 || !data.result?.list) {
-      console.warn(`Bybit returned error for ${symbol}: ${data.retMsg}`);
+      console.warn(`Bybit returned error for ${symbol}: ${data.retMsg || data.error}`);
       return null;
     }
     
@@ -80,15 +67,13 @@ export const fetchBybitKlines = async (symbol, interval = '60', limit = 200) => 
 };
 
 /**
- * Fetch current funding rate from Bybit
+ * Fetch current funding rate from Bybit via proxy
  * @param {string} symbol - Token symbol
  * @returns {Object|null} - { rate, nextFundingTime, symbol }
  */
 export const fetchBybitFundingRate = async (symbol) => {
   try {
-    const bybitSymbol = getBybitSymbol(symbol);
-    
-    const url = `https://api.bybit.com/v5/market/tickers?category=linear&symbol=${bybitSymbol}`;
+    const url = `/api/bybit?symbol=${encodeURIComponent(symbol)}&endpoint=ticker`;
     
     const response = await fetch(url);
     
@@ -107,7 +92,7 @@ export const fetchBybitFundingRate = async (symbol) => {
     return {
       rate: parseFloat(ticker.fundingRate),
       nextFundingTime: parseInt(ticker.nextFundingTime),
-      symbol: bybitSymbol,
+      symbol: ticker.symbol,
       source: 'bybit'
     };
   } catch (error) {
@@ -117,16 +102,14 @@ export const fetchBybitFundingRate = async (symbol) => {
 };
 
 /**
- * Fetch historical funding rates from Bybit
+ * Fetch historical funding rates from Bybit via proxy
  * @param {string} symbol - Token symbol
  * @param {number} limit - Number of funding rate records (max 200)
  * @returns {Array|null} - Array of { rate, fundingTime }
  */
 export const fetchBybitFundingHistory = async (symbol, limit = 100) => {
   try {
-    const bybitSymbol = getBybitSymbol(symbol);
-    
-    const url = `https://api.bybit.com/v5/market/funding/history?category=linear&symbol=${bybitSymbol}&limit=${limit}`;
+    const url = `/api/bybit?symbol=${encodeURIComponent(symbol)}&endpoint=funding&limit=${limit}`;
     
     const response = await fetch(url);
     
@@ -197,15 +180,13 @@ export const getBybitTokenData = async (symbol, hours = 168) => {
 };
 
 /**
- * Check if a symbol exists on Bybit
+ * Check if a symbol exists on Bybit via proxy
  * @param {string} symbol - Token symbol
  * @returns {boolean} - True if symbol exists on Bybit
  */
 export const checkBybitSymbolExists = async (symbol) => {
   try {
-    const bybitSymbol = getBybitSymbol(symbol);
-    
-    const url = `https://api.bybit.com/v5/market/tickers?category=linear&symbol=${bybitSymbol}`;
+    const url = `/api/bybit?symbol=${encodeURIComponent(symbol)}&endpoint=ticker`;
     
     const response = await fetch(url);
     const data = await response.json();
@@ -216,61 +197,5 @@ export const checkBybitSymbolExists = async (symbol) => {
   }
 };
 
-/**
- * Calculate RSI from price array
- */
-export const calculateHistoricalRSI = (prices, period = 14) => {
-  if (!prices || prices.length < period + 1) return [];
-  
-  const rsiValues = [];
-  
-  for (let i = period; i < prices.length; i++) {
-    const slice = prices.slice(0, i + 1);
-    const rsi = calculateSingleRSI(slice, period);
-    if (rsi !== null) {
-      rsiValues.push(rsi);
-    }
-  }
-  
-  return rsiValues;
-};
-
-const calculateSingleRSI = (prices, period) => {
-  const changes = [];
-  for (let i = 1; i < prices.length; i++) {
-    changes.push(prices[i] - prices[i - 1]);
-  }
-  
-  if (changes.length < period) return null;
-  
-  const recentChanges = changes.slice(-period * 2);
-  
-  let avgGain = 0;
-  let avgLoss = 0;
-  
-  for (let i = 0; i < period; i++) {
-    const change = recentChanges[i] || 0;
-    if (change > 0) {
-      avgGain += change;
-    } else {
-      avgLoss += Math.abs(change);
-    }
-  }
-  
-  avgGain /= period;
-  avgLoss /= period;
-  
-  for (let i = period; i < recentChanges.length; i++) {
-    const change = recentChanges[i] || 0;
-    const gain = change > 0 ? change : 0;
-    const loss = change < 0 ? Math.abs(change) : 0;
-    
-    avgGain = (avgGain * (period - 1) + gain) / period;
-    avgLoss = (avgLoss * (period - 1) + loss) / period;
-  }
-  
-  if (avgLoss === 0) return 100;
-  
-  const rs = avgGain / avgLoss;
-  return 100 - (100 / (1 + rs));
-};
+// RSI calculation functions are imported from ./rsi.js
+// Use calculateHistoricalRSI exported above for backward compatibility

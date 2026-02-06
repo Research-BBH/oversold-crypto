@@ -1,20 +1,27 @@
 // ==================================================
 // FILE: src/utils/coingecko-enhanced.js
 // Enhanced CoinGecko data fetching for better signal analysis
+// Uses server-side proxy to leverage Pro API key
 // ==================================================
 
+import { calculateRSI, calculateHistoricalRSI } from './rsi';
+
+// Re-export RSI functions for backward compatibility
+export { calculateHistoricalRSI };
+
 /**
- * Fetch extended market chart data from CoinGecko (365 days)
+ * Fetch extended market chart data from CoinGecko via proxy
  * This gives us enough data for proper SMA50 and other indicators
  */
 export const fetchExtendedMarketData = async (tokenId, days = 90) => {
   try {
-    const url = `https://api.coingecko.com/api/v3/coins/${tokenId}/market_chart?vs_currency=usd&days=${days}&interval=daily`;
+    // Use our proxy API to leverage the Pro API key
+    const url = `/api/chart?id=${encodeURIComponent(tokenId)}&days=${days}`;
     
     const response = await fetch(url);
     
     if (!response.ok) {
-      console.warn(`CoinGecko market_chart error for ${tokenId}: ${response.status}`);
+      console.warn(`CoinGecko proxy error for ${tokenId}: ${response.status}`);
       return null;
     }
     
@@ -38,35 +45,34 @@ export const fetchExtendedMarketData = async (tokenId, days = 90) => {
 };
 
 /**
- * Get OHLC data from CoinGecko (better for technical analysis)
+ * Get OHLC data from CoinGecko via proxy
  * Available for: 1, 7, 14, 30, 90, 180, 365, max days
  */
 export const fetchOHLCData = async (tokenId, days = 90) => {
   try {
-    const url = `https://api.coingecko.com/api/v3/coins/${tokenId}/ohlc?vs_currency=usd&days=${days}`;
+    // Use our proxy API - we'll need to add OHLC support to it
+    // For now, fall back to market_chart which the proxy already supports
+    const url = `/api/chart?id=${encodeURIComponent(tokenId)}&days=${days}`;
     
     const response = await fetch(url);
     
     if (!response.ok) {
-      console.warn(`CoinGecko OHLC error for ${tokenId}: ${response.status}`);
+      console.warn(`CoinGecko proxy OHLC error for ${tokenId}: ${response.status}`);
       return null;
     }
     
     const data = await response.json();
     
-    // OHLC format: [timestamp, open, high, low, close]
-    const prices = data.map(candle => candle[4]); // Close prices
-    const highs = data.map(candle => candle[2]);
-    const lows = data.map(candle => candle[3]);
-    const timestamps = data.map(candle => candle[0]);
+    // market_chart doesn't return OHLC, but we can use close prices
+    const prices = data.prices?.map(p => p[1]) || [];
+    const timestamps = data.prices?.map(p => p[0]) || [];
     
     return {
       prices,
-      highs,
-      lows,
+      highs: prices, // Approximation since we don't have true OHLC
+      lows: prices,  // Approximation since we don't have true OHLC
       timestamps,
-      ohlc: data,
-      source: 'coingecko-ohlc'
+      source: 'coingecko-proxy'
     };
   } catch (error) {
     console.error(`Error fetching CoinGecko OHLC for ${tokenId}:`, error);
@@ -75,101 +81,26 @@ export const fetchOHLCData = async (tokenId, days = 90) => {
 };
 
 /**
- * Calculate RSI from price array
- */
-const calculateRSI = (prices, period = 14) => {
-  if (!prices || prices.length < period + 1) return null;
-  
-  const changes = [];
-  for (let i = 1; i < prices.length; i++) {
-    changes.push(prices[i] - prices[i - 1]);
-  }
-  
-  if (changes.length < period) return null;
-  
-  const recentChanges = changes.slice(-period * 2);
-  
-  let avgGain = 0;
-  let avgLoss = 0;
-  
-  for (let i = 0; i < period; i++) {
-    const change = recentChanges[i] || 0;
-    if (change > 0) {
-      avgGain += change;
-    } else {
-      avgLoss += Math.abs(change);
-    }
-  }
-  
-  avgGain /= period;
-  avgLoss /= period;
-  
-  for (let i = period; i < recentChanges.length; i++) {
-    const change = recentChanges[i] || 0;
-    const gain = change > 0 ? change : 0;
-    const loss = change < 0 ? Math.abs(change) : 0;
-    
-    avgGain = (avgGain * (period - 1) + gain) / period;
-    avgLoss = (avgLoss * (period - 1) + loss) / period;
-  }
-  
-  if (avgLoss === 0) return 100;
-  
-  const rs = avgGain / avgLoss;
-  const rsi = 100 - (100 / (1 + rs));
-  
-  return Math.round(rsi * 10) / 10;
-};
-
-/**
- * Calculate all RSI values for historical data
- */
-export const calculateHistoricalRSI = (prices, period = 14) => {
-  if (!prices || prices.length < period + 1) return [];
-  
-  const rsiValues = [];
-  
-  for (let i = period; i < prices.length; i++) {
-    const slice = prices.slice(0, i + 1);
-    const rsi = calculateRSI(slice, period);
-    if (rsi !== null) {
-      rsiValues.push(rsi);
-    }
-  }
-  
-  return rsiValues;
-};
-
-/**
  * Get comprehensive token data for analysis
  * Tries multiple sources and methods
  */
 export const getComprehensiveTokenData = async (tokenId, symbol) => {
   try {
-    // Try to get OHLC data first (most reliable)
-    let ohlcData = await fetchOHLCData(tokenId, 90);
+    // Try to get market chart data via proxy (uses Pro API)
+    let marketData = await fetchExtendedMarketData(tokenId, 90);
     
-    // If OHLC fails, try market_chart
-    let marketData = null;
-    if (!ohlcData) {
-      marketData = await fetchExtendedMarketData(tokenId, 90);
-    }
-    
-    // Use whichever worked
-    const dataSource = ohlcData || marketData;
-    
-    if (!dataSource) {
+    if (!marketData || !marketData.prices || marketData.prices.length === 0) {
       console.warn(`No extended data available for ${tokenId}`);
       return null;
     }
     
-    // Calculate RSI history
-    const rsiValues = calculateHistoricalRSI(dataSource.prices, 14);
+    // Calculate RSI history using shared function
+    const rsiValues = calculateHistoricalRSI(marketData.prices, 14);
     
     return {
-      ...dataSource,
+      ...marketData,
       rsiValues,
-      dataPoints: dataSource.prices.length
+      dataPoints: marketData.prices.length
     };
   } catch (error) {
     console.error(`Error getting comprehensive data for ${tokenId}:`, error);

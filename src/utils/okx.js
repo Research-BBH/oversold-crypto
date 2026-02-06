@@ -1,26 +1,15 @@
 // ==================================================
 // FILE: src/utils/okx.js - OKX API Integration
+// Uses server-side proxy to avoid CORS issues
 // ==================================================
 
-/**
- * Map common symbols to OKX format
- * OKX uses format like BTC-USDT-SWAP, ETH-USDT-SWAP
- */
-const getOKXSymbol = (symbol) => {
-  const cleanSymbol = symbol?.toUpperCase().trim();
-  
-  // Remove common suffixes
-  const normalized = cleanSymbol
-    .replace(/USD$/, '')
-    .replace(/USDT$/, '')
-    .replace(/USDC$/, '');
-  
-  // OKX perpetual swaps use -USDT-SWAP format
-  return `${normalized}-USDT-SWAP`;
-};
+import { calculateRSI, calculateHistoricalRSI } from './rsi';
+
+// Re-export RSI functions for backward compatibility
+export { calculateHistoricalRSI };
 
 /**
- * Fetch historical candlestick data from OKX
+ * Fetch historical candlestick data from OKX via proxy
  * @param {string} symbol - Token symbol (e.g., 'BTC', 'ETH')
  * @param {string} bar - Timeframe ('1m', '1H', '1D', etc.)
  * @param {number} limit - Number of candles (max 300)
@@ -28,15 +17,13 @@ const getOKXSymbol = (symbol) => {
  */
 export const fetchOKXCandles = async (symbol, bar = '1H', limit = 300) => {
   try {
-    const okxSymbol = getOKXSymbol(symbol);
-    
-    // OKX V5 API - Market data endpoint
-    const url = `https://www.okx.com/api/v5/market/candles?instId=${okxSymbol}&bar=${bar}&limit=${limit}`;
+    // Use our proxy API to avoid CORS issues
+    const url = `/api/okx?symbol=${encodeURIComponent(symbol)}&endpoint=candles&bar=${bar}&limit=${limit}`;
     
     const response = await fetch(url);
     
     if (!response.ok) {
-      console.warn(`OKX API error for ${symbol}: ${response.status}`);
+      console.warn(`OKX proxy error for ${symbol}: ${response.status}`);
       return null;
     }
     
@@ -44,7 +31,7 @@ export const fetchOKXCandles = async (symbol, bar = '1H', limit = 300) => {
     
     // Check if request was successful
     if (data.code !== '0' || !data.data) {
-      console.warn(`OKX returned error for ${symbol}: ${data.msg}`);
+      console.warn(`OKX returned error for ${symbol}: ${data.msg || data.error}`);
       return null;
     }
     
@@ -82,15 +69,13 @@ export const fetchOKXCandles = async (symbol, bar = '1H', limit = 300) => {
 };
 
 /**
- * Fetch current funding rate from OKX
+ * Fetch current funding rate from OKX via proxy
  * @param {string} symbol - Token symbol
  * @returns {Object|null} - { rate, nextFundingTime, fundingTime, symbol }
  */
 export const fetchOKXFundingRate = async (symbol) => {
   try {
-    const okxSymbol = getOKXSymbol(symbol);
-    
-    const url = `https://www.okx.com/api/v5/public/funding-rate?instId=${okxSymbol}`;
+    const url = `/api/okx?symbol=${encodeURIComponent(symbol)}&endpoint=funding`;
     
     const response = await fetch(url);
     
@@ -110,7 +95,7 @@ export const fetchOKXFundingRate = async (symbol) => {
       rate: parseFloat(fundingData.fundingRate),
       nextFundingTime: parseInt(fundingData.nextFundingTime),
       fundingTime: parseInt(fundingData.fundingTime),
-      symbol: okxSymbol,
+      symbol: fundingData.instId,
       source: 'okx'
     };
   } catch (error) {
@@ -120,16 +105,14 @@ export const fetchOKXFundingRate = async (symbol) => {
 };
 
 /**
- * Fetch historical funding rates from OKX
+ * Fetch historical funding rates from OKX via proxy
  * @param {string} symbol - Token symbol
  * @param {number} limit - Number of funding rate records (max 100)
  * @returns {Array|null} - Array of { rate, fundingTime, realizedRate }
  */
 export const fetchOKXFundingHistory = async (symbol, limit = 100) => {
   try {
-    const okxSymbol = getOKXSymbol(symbol);
-    
-    const url = `https://www.okx.com/api/v5/public/funding-rate-history?instId=${okxSymbol}&limit=${limit}`;
+    const url = `/api/okx?symbol=${encodeURIComponent(symbol)}&endpoint=funding-history&limit=${limit}`;
     
     const response = await fetch(url);
     
@@ -203,15 +186,13 @@ export const getOKXTokenData = async (symbol, hours = 168) => {
 };
 
 /**
- * Check if a symbol exists on OKX
+ * Check if a symbol exists on OKX via proxy
  * @param {string} symbol - Token symbol
  * @returns {boolean} - True if symbol exists on OKX
  */
 export const checkOKXSymbolExists = async (symbol) => {
   try {
-    const okxSymbol = getOKXSymbol(symbol);
-    
-    const url = `https://www.okx.com/api/v5/market/ticker?instId=${okxSymbol}`;
+    const url = `/api/okx?symbol=${encodeURIComponent(symbol)}&endpoint=ticker`;
     
     const response = await fetch(url);
     const data = await response.json();
@@ -224,12 +205,13 @@ export const checkOKXSymbolExists = async (symbol) => {
 
 /**
  * Get all available instruments (trading pairs) on OKX
- * Useful for checking what's tradeable
+ * Note: This still uses direct API call as it's for admin/debug purposes
  * @param {string} instType - Instrument type ('SWAP', 'FUTURES', 'SPOT')
  * @returns {Array|null} - List of available instruments
  */
 export const getOKXInstruments = async (instType = 'SWAP') => {
   try {
+    // This endpoint is rarely called, so direct API is acceptable
     const url = `https://www.okx.com/api/v5/public/instruments?instType=${instType}`;
     
     const response = await fetch(url);
@@ -260,61 +242,5 @@ export const getOKXInstruments = async (instType = 'SWAP') => {
   }
 };
 
-/**
- * Calculate RSI from price array
- */
-export const calculateHistoricalRSI = (prices, period = 14) => {
-  if (!prices || prices.length < period + 1) return [];
-  
-  const rsiValues = [];
-  
-  for (let i = period; i < prices.length; i++) {
-    const slice = prices.slice(0, i + 1);
-    const rsi = calculateSingleRSI(slice, period);
-    if (rsi !== null) {
-      rsiValues.push(rsi);
-    }
-  }
-  
-  return rsiValues;
-};
-
-const calculateSingleRSI = (prices, period) => {
-  const changes = [];
-  for (let i = 1; i < prices.length; i++) {
-    changes.push(prices[i] - prices[i - 1]);
-  }
-  
-  if (changes.length < period) return null;
-  
-  const recentChanges = changes.slice(-period * 2);
-  
-  let avgGain = 0;
-  let avgLoss = 0;
-  
-  for (let i = 0; i < period; i++) {
-    const change = recentChanges[i] || 0;
-    if (change > 0) {
-      avgGain += change;
-    } else {
-      avgLoss += Math.abs(change);
-    }
-  }
-  
-  avgGain /= period;
-  avgLoss /= period;
-  
-  for (let i = period; i < recentChanges.length; i++) {
-    const change = recentChanges[i] || 0;
-    const gain = change > 0 ? change : 0;
-    const loss = change < 0 ? Math.abs(change) : 0;
-    
-    avgGain = (avgGain * (period - 1) + gain) / period;
-    avgLoss = (avgLoss * (period - 1) + loss) / period;
-  }
-  
-  if (avgLoss === 0) return 100;
-  
-  const rs = avgGain / avgLoss;
-  return 100 - (100 / (1 + rs));
-};
+// RSI calculation functions are imported from ./rsi.js
+// Use calculateHistoricalRSI exported above for backward compatibility
