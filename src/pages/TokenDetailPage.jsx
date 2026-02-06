@@ -9,31 +9,13 @@ import { RSIMeter, FullPageChart } from '../components/Charts';
 import { FullSignalAnalysis } from '../components/SignalAnalysis';
 import { RSIThresholdAnalysis } from '../components/RSIThresholdChart';
 import { analyzeToken } from '../utils/signals';
-import { getBybitTokenData, calculateHistoricalRSI as calculateBybitRSI } from '../utils/bybit';
-import { getOKXTokenData, calculateHistoricalRSI as calculateOKXRSI } from '../utils/okx';
+import { getBybitTokenData } from '../utils/bybit';
+import { getOKXTokenData } from '../utils/okx';
 import { getComprehensiveTokenData } from '../utils/coingecko-enhanced';
+import { calculateRSI, calculateHistoricalRSI } from '../utils/rsi';
 import { useState, useEffect, useMemo } from 'react';
 
-// Calculate RSI from price array
-const calculateRSI = (prices, period = 14) => {
-  if (prices.length < period + 1) return null;
-  
-  let gains = 0;
-  let losses = 0;
-  
-  for (let i = prices.length - period; i < prices.length; i++) {
-    const change = prices[i] - prices[i - 1];
-    if (change > 0) gains += change;
-    else losses -= change;
-  }
-  
-  const avgGain = gains / period;
-  const avgLoss = losses / period;
-  
-  if (avgLoss === 0) return 100;
-  const rs = avgGain / avgLoss;
-  return 100 - (100 / (1 + rs));
-};
+// RSI calculation imported from ../utils/rsi
 
 // Timeframe configuration
 const TIMEFRAMES = [
@@ -219,7 +201,7 @@ export const TokenDetailPage = ({ token, onBack, darkMode, setDarkMode }) => {
           const bybitData = await getBybitTokenData(token.symbol, 4320);
           
           if (bybitData && bybitData.prices.length >= 50) {
-            const rsiValues = calculateBybitRSI(bybitData.prices, 14);
+            const rsiValues = calculateHistoricalRSI(bybitData.prices, 14);
             historicalData = {
               prices: bybitData.prices,
               volumes: bybitData.volumes,
@@ -241,7 +223,7 @@ export const TokenDetailPage = ({ token, onBack, darkMode, setDarkMode }) => {
             const okxData = await getOKXTokenData(token.symbol, 4320);
             
             if (okxData && okxData.prices.length >= 50) {
-              const rsiValues = calculateOKXRSI(okxData.prices, 14);
+              const rsiValues = calculateHistoricalRSI(okxData.prices, 14);
               historicalData = {
                 prices: okxData.prices,
                 volumes: okxData.volumes,
