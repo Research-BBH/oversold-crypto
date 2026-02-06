@@ -73,15 +73,36 @@ export const SignalScoreCircle = ({ score }) => {
   );
 };
 
-// Signal descriptions for education
-const SIGNAL_DESCRIPTIONS = {
-  'RSI Oversold': 'RSI below 30 indicates the asset may be undervalued. Historically, prices tend to bounce from oversold levels. Bonus: +5pts if RSI drops below 25 (extreme).',
-  'RSI Oversold (Extreme)': 'RSI below 25 is extremely oversold. This often precedes strong reversals, but can also indicate serious fundamental issues. +5 bonus points for extreme conditions.',
-  'Above 50 SMA': 'Price is above the 50-period Simple Moving Average, indicating an uptrend. This is the most critical filter - buying dips in uptrends has higher success rates.',
+// Signal descriptions for education - BUY signals
+const BUY_SIGNAL_DESCRIPTIONS = {
+  'RSI Oversold': 'RSI below 30 indicates the asset may be undervalued. Historically, prices tend to bounce from oversold levels.',
+  'RSI Oversold (Extreme)': 'RSI below 25 is extremely oversold. This often precedes strong reversals, but can also indicate serious fundamental issues. +5 bonus points for < 25, +10 for < 20.',
+  'Above 50 SMA': 'Price is above the 50-period Simple Moving Average, indicating an uptrend. Buying dips in uptrends has higher success rates.',
   'Below BB Lower': 'Price is below the lower Bollinger Band (2 standard deviations below 20-period SMA). This is statistically rare and often precedes mean reversion.',
   'Volume Spike': 'Trading volume is significantly higher than the 20-period average. High volume on dips can indicate capitulation or accumulation.',
   'Bullish Divergence': 'Price made a lower low, but RSI made a higher low. This momentum divergence often precedes bullish reversals.',
-  'Negative Funding': 'Perpetual futures funding rate is negative, meaning shorts are paying longs. This indicates bearish sentiment that often marks bottoms. Only available for tokens with futures markets.',
+  'Bullish Engulfing': 'A bullish engulfing candlestick pattern where the current green candle completely engulfs the previous red candle. This is a reversal signal.',
+  'Negative Funding': 'Perpetual futures funding rate is negative, meaning shorts are paying longs. This indicates bearish sentiment that often marks bottoms.',
+};
+
+// Signal descriptions for education - SELL signals
+const SELL_SIGNAL_DESCRIPTIONS = {
+  'RSI Overbought': 'RSI above 70 indicates the asset may be overvalued. Historically, prices tend to pull back from overbought levels.',
+  'RSI Overbought (Extreme)': 'RSI above 80 is extremely overbought. This often precedes corrections. +5 bonus points for > 75, +10 for > 80.',
+  'Below 50 SMA': 'Price is below the 50-period Simple Moving Average, indicating a downtrend. Selling rallies in downtrends has higher success rates.',
+  'Below 20 SMA': 'Price is below the 20-period Simple Moving Average, indicating short-term weakness. This is a faster signal than SMA50.',
+  'Above BB Upper': 'Price is above the upper Bollinger Band (2 standard deviations above 20-period SMA). This is statistically rare and often precedes mean reversion.',
+  'Bearish Divergence': 'Price made a higher high, but RSI made a lower high. This momentum divergence often precedes bearish reversals.',
+  'Bearish Engulfing': 'A bearish engulfing candlestick pattern where the current red candle completely engulfs the previous green candle. This is a reversal signal.',
+  'Positive Funding': 'Perpetual futures funding rate is highly positive (>0.01%), meaning longs are paying shorts. This indicates crowded long positions.',
+  'Near ATH': 'Price is within 10% of the all-time high (from available data). This level often acts as resistance where selling pressure increases.',
+  'High Vol/MCap': 'Trading volume exceeds 10% of market cap. This unusually high activity can indicate distribution (selling) or heightened speculation.',
+};
+
+// Combined for backward compatibility
+const SIGNAL_DESCRIPTIONS = {
+  ...BUY_SIGNAL_DESCRIPTIONS,
+  ...SELL_SIGNAL_DESCRIPTIONS,
 };
 
 export const SignalsList = ({ signals, darkMode, showDescriptions = true }) => {
@@ -256,67 +277,86 @@ export const FullSignalAnalysis = ({ analysis, darkMode }) => {
     );
   }
 
-  const recommendation = getBuyRecommendation(analysis);
+  const buyRecommendation = getBuyRecommendation(analysis);
+  const sellRecommendation = getSellRecommendation(analysis);
+  
+  // Build buy signals array
+  const buySignals = buildBuySignals(analysis);
+  const sellSignals = buildSellSignals(analysis);
 
   return (
     <div className="space-y-4">
-      {/* Score and Recommendation */}
+      {/* Buy and Sell Scores Side by Side */}
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-        <div className={`${darkMode ? 'bg-white/5 border-white/10' : 'bg-white border-gray-200'} border rounded-xl p-6 flex flex-col items-center justify-center`}>
-          <p className="text-sm text-gray-500 mb-2">Signal Score</p>
-          <SignalScoreCircle score={analysis.score || 0} />
-          <p className="text-xs text-gray-500 mt-2">
-            {analysis.signalDetails?.activeCount || 0}/{analysis.signalDetails?.totalSignals || 0} signals active
-          </p>
-          {analysis.signalDetails?.availableSignals < analysis.signalDetails?.totalSignals && (
-            <p className="text-xs text-gray-600 mt-1">
-              ({analysis.signalDetails?.availableSignals} with data available)
-            </p>
-          )}
+        {/* Buy Score Section */}
+        <div className={`${darkMode ? 'bg-green-500/5 border-green-500/20' : 'bg-green-50 border-green-200'} border rounded-xl p-6`}>
+          <div className="flex items-center gap-2 mb-4">
+            <span className="text-lg">📈</span>
+            <h3 className="font-semibold text-green-500">Buy Signal Analysis</h3>
+          </div>
+          <div className="flex items-center justify-between">
+            <div className="flex flex-col items-center">
+              <SignalScoreCircle score={analysis.score || 0} />
+              <p className="text-xs text-gray-500 mt-2">
+                {analysis.signalDetails?.activeCount || 0}/{analysis.signalDetails?.availableCount || 0} active
+              </p>
+            </div>
+            <div className="flex-1 ml-4">
+              {buyRecommendation && <BuyRecommendation recommendation={buyRecommendation} darkMode={darkMode} />}
+            </div>
+          </div>
         </div>
         
-        <div className="flex flex-col gap-3">
-          {recommendation && <BuyRecommendation recommendation={recommendation} darkMode={darkMode} />}
-          {analysis.reliability && (
-            <MarketCapReliability reliability={analysis.reliability} darkMode={darkMode} />
-          )}
+        {/* Sell Score Section */}
+        <div className={`${darkMode ? 'bg-red-500/5 border-red-500/20' : 'bg-red-50 border-red-200'} border rounded-xl p-6`}>
+          <div className="flex items-center gap-2 mb-4">
+            <span className="text-lg">📉</span>
+            <h3 className="font-semibold text-red-500">Sell Signal Analysis</h3>
+          </div>
+          <div className="flex items-center justify-between">
+            <div className="flex flex-col items-center">
+              <SellScoreCircle score={analysis.signalDetails?.sellScore || analysis.sellScore || 0} />
+              <p className="text-xs text-gray-500 mt-2">
+                {analysis.signalDetails?.sellActiveCount || 0}/{analysis.signalDetails?.sellAvailableCount || 0} active
+              </p>
+            </div>
+            <div className="flex-1 ml-4">
+              {sellRecommendation && <SellRecommendation recommendation={sellRecommendation} darkMode={darkMode} />}
+            </div>
+          </div>
         </div>
       </div>
-
-      {/* Signal Details */}
-      {analysis.signalDetails && analysis.signalDetails.signals && analysis.signalDetails.signals.length > 0 && (
-        <div className={`${darkMode ? 'bg-white/5 border-white/10' : 'bg-white border-gray-200'} border rounded-xl p-6`}>
-          <h3 className="font-semibold mb-4">Signal Breakdown</h3>
-          <SignalsList signals={analysis.signalDetails.signals} darkMode={darkMode} />
-        </div>
+      
+      {/* Market Cap Reliability */}
+      {analysis.reliability && (
+        <MarketCapReliability reliability={analysis.reliability} darkMode={darkMode} />
       )}
+
+      {/* Buy Signal Details */}
+      <div className={`${darkMode ? 'bg-white/5 border-white/10' : 'bg-white border-gray-200'} border rounded-xl p-6`}>
+        <div className="flex items-center gap-2 mb-4">
+          <span className="w-3 h-3 rounded-full bg-green-500"></span>
+          <h3 className="font-semibold">Buy Signals Breakdown</h3>
+          <span className="text-xs text-gray-500 ml-auto">Max 100 pts</span>
+        </div>
+        <SignalsListEnhanced signals={buySignals} darkMode={darkMode} descriptions={BUY_SIGNAL_DESCRIPTIONS} />
+      </div>
+      
+      {/* Sell Signal Details */}
+      <div className={`${darkMode ? 'bg-white/5 border-white/10' : 'bg-white border-gray-200'} border rounded-xl p-6`}>
+        <div className="flex items-center gap-2 mb-4">
+          <span className="w-3 h-3 rounded-full bg-red-500"></span>
+          <h3 className="font-semibold">Sell Signals Breakdown</h3>
+          <span className="text-xs text-gray-500 ml-auto">Max 100 pts</span>
+        </div>
+        <SignalsListEnhanced signals={sellSignals} darkMode={darkMode} descriptions={SELL_SIGNAL_DESCRIPTIONS} type="sell" />
+      </div>
 
       {/* Technical Indicators */}
       {(analysis.sma50 || analysis.bollingerBands || analysis.volumeRatio || analysis.divergence) && (
         <div className={`${darkMode ? 'bg-white/5 border-white/10' : 'bg-white border-gray-200'} border rounded-xl p-6`}>
           <h3 className="font-semibold mb-4">Technical Indicators</h3>
           <TechnicalIndicators analysis={analysis} darkMode={darkMode} />
-        </div>
-      )}
-
-      {/* Expected Performance */}
-      {analysis.strength && (
-        <div className={`${darkMode ? 'bg-white/5 border-white/10' : 'bg-white border-gray-200'} border rounded-xl p-6`}>
-          <h3 className="font-semibold mb-3">Expected Performance</h3>
-          <div className="grid grid-cols-3 gap-4">
-            <div>
-              <p className="text-xs text-gray-500 mb-1">Position Size</p>
-              <p className="text-sm font-bold">{analysis.strength.positionSize || 'N/A'}</p>
-            </div>
-            <div>
-              <p className="text-xs text-gray-500 mb-1">Historical Win Rate</p>
-              <p className="text-sm font-bold text-green-400">{analysis.strength.winRate || 'N/A'}</p>
-            </div>
-            <div>
-              <p className="text-xs text-gray-500 mb-1">Conviction</p>
-              <p className="text-sm font-bold">{analysis.strength.level || 'N/A'}</p>
-            </div>
-          </div>
         </div>
       )}
       
@@ -329,13 +369,13 @@ export const FullSignalAnalysis = ({ analysis, darkMode }) => {
               <p className="text-xs font-medium text-blue-500 mb-1">Data Source Information</p>
               <p className={`text-xs ${darkMode ? 'text-blue-400/80' : 'text-blue-700'}`}>
                 {analysis.dataSource === 'bybit' && 
-                  `Using Bybit real-time data (${analysis.dataPoints} data points). All 6 signals available with highest accuracy including funding rates.`}
+                  `Using Bybit real-time data (${analysis.dataPoints} data points). All signals available with highest accuracy including funding rates.`}
                 {analysis.dataSource === 'okx' && 
-                  `Using OKX real-time data (${analysis.dataPoints} data points). All 6 signals available including funding rates.`}
+                  `Using OKX real-time data (${analysis.dataPoints} data points). All signals available including funding rates.`}
                 {analysis.dataSource === 'coingecko' && 
-                  `Using CoinGecko historical data (${analysis.dataPoints} data points). 5/6 signals available - funding rate unavailable (requires futures market).`}
+                  `Using CoinGecko historical data (${analysis.dataPoints} data points). Most signals available - funding rate unavailable (requires futures market).`}
                 {analysis.dataSource === 'sparkline' && 
-                  `Using limited 7-day data (${analysis.dataPoints} points). Some signals unavailable - needs longer historical data for SMA50 calculation.`}
+                  `Using limited 7-day data (${analysis.dataPoints} points). Some signals unavailable - needs longer historical data for SMA calculations.`}
                 {analysis.dataSource === 'fallback' && 
                   'Using minimal data. Signal analysis is limited. Consider checking back later for updated data.'}
               </p>
@@ -345,6 +385,330 @@ export const FullSignalAnalysis = ({ analysis, darkMode }) => {
       )}
     </div>
   );
+};
+
+// Sell Score Circle (red themed)
+const SellScoreCircle = ({ score }) => {
+  const safeScore = score || 0;
+
+  const getColor = (s) => {
+    if (s >= 75) return 'text-red-400';
+    if (s >= 60) return 'text-orange-400';
+    if (s >= 45) return 'text-yellow-400';
+    return 'text-gray-400';
+  };
+
+  const getStroke = (s) => {
+    if (s >= 75) return '#ef4444';
+    if (s >= 60) return '#f97316';
+    if (s >= 45) return '#eab308';
+    return '#9ca3af';
+  };
+
+  const radius = 40;
+  const circumference = 2 * Math.PI * radius;
+  const strokeDashoffset = circumference - (safeScore / 100) * circumference;
+
+  return (
+    <div className="relative w-24 h-24">
+      <svg className="w-24 h-24 transform -rotate-90">
+        <circle cx="48" cy="48" r={radius} stroke="rgba(255,255,255,0.1)" strokeWidth="8" fill="none" />
+        <circle
+          cx="48" cy="48" r={radius}
+          stroke={getStroke(safeScore)}
+          strokeWidth="8"
+          fill="none"
+          strokeDasharray={circumference}
+          strokeDashoffset={strokeDashoffset}
+          strokeLinecap="round"
+          className="transition-all duration-1000"
+        />
+      </svg>
+      <div className="absolute inset-0 flex items-center justify-center">
+        <span className={`text-2xl font-bold ${getColor(safeScore)}`}>{Math.round(safeScore)}</span>
+      </div>
+    </div>
+  );
+};
+
+// Enhanced signals list with descriptions
+const SignalsListEnhanced = ({ signals, darkMode, descriptions, type = 'buy' }) => {
+  if (!signals || signals.length === 0) {
+    return <p className="text-gray-500 text-sm">No signal data available</p>;
+  }
+
+  const activeColor = type === 'buy' ? 'bg-green-500' : 'bg-red-500';
+  const activeTextColor = type === 'buy' ? 'text-green-500' : 'text-red-500';
+
+  return (
+    <div className="space-y-3">
+      {signals.map((signal, index) => {
+        const isUnavailable = signal.unavailable === true;
+        const isActive = signal.active && !isUnavailable;
+        
+        return (
+          <div
+            key={index}
+            className={`p-3 rounded-lg ${darkMode ? 'bg-white/5' : 'bg-gray-100'}`}
+          >
+            <div className="flex items-center justify-between">
+              <div className="flex items-center gap-2">
+                <span className={`w-2 h-2 rounded-full ${
+                  isUnavailable ? 'bg-gray-600' : 
+                  isActive ? activeColor : 'bg-gray-500'
+                }`} />
+                <span className={`text-sm font-medium ${
+                  isUnavailable ? 'text-gray-600' :
+                  isActive ? (darkMode ? 'text-white' : 'text-gray-900') : 'text-gray-500'
+                }`}>
+                  {signal.name}
+                </span>
+                {isUnavailable && (
+                  <span className="text-xs px-2 py-0.5 rounded bg-gray-700/50 text-gray-500">
+                    Data N/A
+                  </span>
+                )}
+              </div>
+              <div className="flex items-center gap-2">
+                <span className="text-xs text-gray-500">{signal.weight}pts</span>
+                {isActive && <span className={`${activeTextColor} text-xs`}>✓</span>}
+              </div>
+            </div>
+            {descriptions[signal.name] && (
+              <p className={`text-xs mt-2 ${darkMode ? 'text-gray-400' : 'text-gray-600'}`}>
+                {descriptions[signal.name]}
+              </p>
+            )}
+          </div>
+        );
+      })}
+    </div>
+  );
+};
+
+// Build buy signals array from analysis
+const buildBuySignals = (analysis) => {
+  const signals = [];
+  const s = analysis.signals || {};
+  
+  // RSI Oversold (20 pts + bonus)
+  const rsiOversold = analysis.rsi !== null && analysis.rsi < 30;
+  const rsiExtreme = analysis.rsi !== null && analysis.rsi < 25;
+  const rsiWeight = rsiExtreme ? 30 : (rsiOversold ? 20 : 20);
+  signals.push({
+    name: rsiExtreme ? 'RSI Oversold (Extreme)' : 'RSI Oversold',
+    weight: rsiWeight,
+    active: rsiOversold,
+    unavailable: analysis.rsi === null
+  });
+  
+  // Above SMA50 (20 pts)
+  signals.push({
+    name: 'Above 50 SMA',
+    weight: 20,
+    active: s.aboveSMA50 === true,
+    unavailable: s.aboveSMA50 === null
+  });
+  
+  // Below BB (15 pts)
+  signals.push({
+    name: 'Below BB Lower',
+    weight: 15,
+    active: s.belowBB === true,
+    unavailable: s.belowBB === null
+  });
+  
+  // Volume Spike (10 pts)
+  signals.push({
+    name: 'Volume Spike',
+    weight: 10,
+    active: s.volumeSpike === true,
+    unavailable: s.volumeSpike === null
+  });
+  
+  // Negative Funding (10 pts)
+  signals.push({
+    name: 'Negative Funding',
+    weight: 10,
+    active: s.negativeFunding === true,
+    unavailable: s.negativeFunding === null && s.hasFunding !== true
+  });
+  
+  // Bullish Divergence (15 pts)
+  signals.push({
+    name: 'Bullish Divergence',
+    weight: 15,
+    active: s.bullishDivergence === true,
+    unavailable: s.bullishDivergence === null
+  });
+  
+  // Bullish Engulfing (10 pts)
+  signals.push({
+    name: 'Bullish Engulfing',
+    weight: 10,
+    active: s.bullishEngulfing === true,
+    unavailable: s.bullishEngulfing === null
+  });
+  
+  return signals;
+};
+
+// Build sell signals array from analysis
+const buildSellSignals = (analysis) => {
+  const signals = [];
+  const s = analysis.signals || {};
+  
+  // RSI Overbought (20 pts + bonus)
+  const rsiOverbought = analysis.rsi !== null && analysis.rsi > 70;
+  const rsiExtreme = analysis.rsi !== null && analysis.rsi > 80;
+  const rsiWeight = rsiExtreme ? 30 : (rsiOverbought ? 20 : 20);
+  signals.push({
+    name: rsiExtreme ? 'RSI Overbought (Extreme)' : 'RSI Overbought',
+    weight: rsiWeight,
+    active: rsiOverbought,
+    unavailable: analysis.rsi === null
+  });
+  
+  // Below SMA50 (15 pts)
+  signals.push({
+    name: 'Below 50 SMA',
+    weight: 15,
+    active: s.belowSMA50 === true,
+    unavailable: s.belowSMA50 === null
+  });
+  
+  // Below SMA20 (10 pts)
+  signals.push({
+    name: 'Below 20 SMA',
+    weight: 10,
+    active: s.belowSMA20 === true,
+    unavailable: s.belowSMA20 === null
+  });
+  
+  // Above BB (15 pts)
+  signals.push({
+    name: 'Above BB Upper',
+    weight: 15,
+    active: s.aboveBB === true,
+    unavailable: s.aboveBB === null
+  });
+  
+  // Positive Funding (10 pts)
+  signals.push({
+    name: 'Positive Funding',
+    weight: 10,
+    active: s.positiveFunding === true,
+    unavailable: s.positiveFunding === null && s.hasFunding !== true
+  });
+  
+  // Bearish Divergence (15 pts)
+  signals.push({
+    name: 'Bearish Divergence',
+    weight: 15,
+    active: s.bearishDivergence === true,
+    unavailable: s.bearishDivergence === null
+  });
+  
+  // Bearish Engulfing (10 pts)
+  signals.push({
+    name: 'Bearish Engulfing',
+    weight: 10,
+    active: s.bearishEngulfing === true,
+    unavailable: s.bearishEngulfing === null
+  });
+  
+  // Near ATH (10 pts)
+  signals.push({
+    name: 'Near ATH',
+    weight: 10,
+    active: s.nearATH === true,
+    unavailable: s.nearATH === null
+  });
+  
+  // High Vol/MCap (5 pts)
+  signals.push({
+    name: 'High Vol/MCap',
+    weight: 5,
+    active: s.highVolMcap === true,
+    unavailable: s.highVolMcap === null
+  });
+  
+  return signals;
+};
+
+// Sell Recommendation component
+const SellRecommendation = ({ recommendation, darkMode }) => {
+  if (!recommendation) return null;
+
+  const colors = {
+    STRONG_SELL: darkMode ? 'bg-red-500/20 border-red-500' : 'bg-red-50 border-red-500',
+    SELL: darkMode ? 'bg-orange-500/20 border-orange-500' : 'bg-orange-50 border-orange-500',
+    CONSIDER_SELLING: darkMode ? 'bg-yellow-500/20 border-yellow-500' : 'bg-yellow-50 border-yellow-500',
+    HOLD: darkMode ? 'bg-gray-500/20 border-gray-500' : 'bg-gray-50 border-gray-500'
+  };
+
+  return (
+    <div className={`border-2 rounded-xl p-4 ${colors[recommendation.action] || colors.HOLD}`}>
+      <div className="flex items-center gap-3 mb-2">
+        <span className="text-2xl">{recommendation.emoji}</span>
+        <div>
+          <h3 className="font-bold text-base">{recommendation.action.replace(/_/g, ' ')}</h3>
+          <p className="text-xs opacity-75">Confidence: {recommendation.confidence}</p>
+        </div>
+      </div>
+      <p className="text-xs mt-1">{recommendation.message}</p>
+    </div>
+  );
+};
+
+// Helper to get sell recommendation
+const getSellRecommendation = (analysis) => {
+  if (!analysis) return null;
+
+  const sellScore = analysis.signalDetails?.sellScore || analysis.sellScore || 0;
+  const { reliability } = analysis;
+  
+  let adjustedScore = sellScore;
+  
+  if (reliability) {
+    switch (reliability.tier) {
+      case 'HIGHLY_RELIABLE': break;
+      case 'RELIABLE': adjustedScore *= 0.95; break;
+      case 'MODERATELY_RELIABLE': adjustedScore *= 0.85; break;
+      case 'UNRELIABLE': adjustedScore *= 0.70; break;
+      case 'HIGHLY_UNRELIABLE': adjustedScore *= 0.50; break;
+    }
+  }
+  
+  if (adjustedScore >= 75) {
+    return {
+      action: 'STRONG_SELL',
+      emoji: '🔴',
+      confidence: 'Very High',
+      message: 'Multiple sell signals active - consider taking profits'
+    };
+  } else if (adjustedScore >= 60) {
+    return {
+      action: 'SELL',
+      emoji: '🟠',
+      confidence: 'High',
+      message: 'Sell signals present - review your position'
+    };
+  } else if (adjustedScore >= 45) {
+    return {
+      action: 'CONSIDER_SELLING',
+      emoji: '🟡',
+      confidence: 'Moderate',
+      message: 'Some warning signs - monitor closely'
+    };
+  } else {
+    return {
+      action: 'HOLD',
+      emoji: '⚪',
+      confidence: 'Low',
+      message: 'Few sell signals - no immediate action needed'
+    };
+  }
 };
 
 // Helper to get recommendation
