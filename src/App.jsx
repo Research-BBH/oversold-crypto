@@ -890,7 +890,7 @@ if (signalFilters.size > 0) {
           >
             {/* Table Header */}
             <div
-              className={`hidden lg:grid grid-cols-12 gap-4 px-5 py-3 border-b ${
+              className={`hidden lg:grid grid-cols-13 gap-4 px-5 py-3 border-b ${
                 darkMode ? 'border-white/10' : 'border-gray-100'
               } text-[11px] text-gray-500 font-semibold uppercase tracking-wider`}
             >
@@ -1050,11 +1050,9 @@ if (signalFilters.size > 0) {
                   setPreset(null);
                   setRsiFilter(null);
                 }}
+                title="Buy Signal Score"
               >
-                <div className="flex flex-col items-center leading-tight">
-                  <span>SIGNAL</span>
-                  <span>SCORE</span>
-                </div>
+                <span className="text-green-500">BUY</span>
                 <span
                   className={`ml-1 transition-opacity ${
                     sortBy.startsWith('signalScore')
@@ -1065,7 +1063,29 @@ if (signalFilters.size > 0) {
                   {sortBy === 'signalScore_asc' ? '↑' : '↓'}
                 </span>
               </div>
-              <div className="col-span-2 hidden lg:flex items-center justify-center">7D Chart</div>
+              <div
+                className={`col-span-1 relative hidden lg:flex items-center justify-center cursor-pointer ${
+                  darkMode ? 'hover:text-white' : 'hover:text-gray-900'
+                } transition-colors group`}
+                onClick={() => {
+                  setSortBy(sortBy === 'sellScore_desc' ? 'sellScore_asc' : 'sellScore_desc');
+                  setPreset(null);
+                  setRsiFilter(null);
+                }}
+                title="Sell Signal Score"
+              >
+                <span className="text-red-500">SELL</span>
+                <span
+                  className={`ml-1 transition-opacity ${
+                    sortBy.startsWith('sellScore')
+                      ? 'opacity-100 text-orange-500'
+                      : 'opacity-0 group-hover:opacity-50'
+                  }`}
+                >
+                  {sortBy === 'sellScore_asc' ? '↑' : '↓'}
+                </span>
+              </div>
+              <div className="col-span-1 hidden lg:flex items-center justify-center">7D Chart</div>
               <div className="col-span-1 flex items-center justify-center">Actions</div>
             </div>
 
@@ -1092,7 +1112,7 @@ if (signalFilters.size > 0) {
                     <div
                       key={t.id}
                       onClick={() => window.location.hash = `#/token/${t.id}`}
-                      className={`grid grid-cols-8 lg:grid-cols-12 gap-4 px-5 py-3 border-b ${
+                      className={`grid grid-cols-8 lg:grid-cols-13 gap-4 px-5 py-3 border-b ${
                         darkMode
                           ? 'border-white/5 hover:bg-white/[0.03]'
                           : 'border-gray-100 hover:bg-gray-50'
@@ -1162,7 +1182,7 @@ if (signalFilters.size > 0) {
                           {t.rsi !== null ? t.rsi.toFixed(0) : '--'}
                         </div>
                       </div>
-                      {/* Signal Score - col-span-1 */}
+                      {/* Buy Score - col-span-1 */}
                       <div className="col-span-1 hidden lg:flex items-center justify-center">
                         {t.signalScore !== undefined && t.signalScore !== null ? (
                           <div
@@ -1170,20 +1190,20 @@ if (signalFilters.size > 0) {
                               t.signalScore >= 60
                                 ? 'bg-green-500/20 text-green-400'
                                 : t.signalScore >= 45
-                                ? 'bg-blue-500/20 text-blue-400'
+                                ? 'bg-green-500/10 text-green-300'
                                 : t.signalScore >= 25
-                                ? 'bg-yellow-500/20 text-yellow-400'
-                                : 'bg-gray-500/20 text-gray-400'
+                                ? 'bg-gray-500/20 text-gray-400'
+                                : 'bg-gray-500/10 text-gray-500'
                             }`}
-                            title={`${t.signalScoreDetails?.activeCount || 0}/${t.signalScoreDetails?.availableCount || 0} signals active`}
+                            title={`Buy: ${t.signalScoreDetails?.activeCount || 0}/${t.signalScoreDetails?.availableCount || 0} signals active`}
                           >
                             <span className={`w-1.5 h-1.5 rounded-full ${
                               t.signalScore >= 60
                                 ? 'bg-green-500'
                                 : t.signalScore >= 45
-                                ? 'bg-blue-500'
+                                ? 'bg-green-400'
                                 : t.signalScore >= 25
-                                ? 'bg-yellow-500'
+                                ? 'bg-gray-400'
                                 : 'bg-gray-500'
                             }`} />
                             {t.signalScore}
@@ -1192,8 +1212,38 @@ if (signalFilters.size > 0) {
                           <span className="text-gray-600 text-xs">--</span>
                         )}
                       </div>
-                      {/* Chart - col-span-2 */}
-                      <div className="col-span-2 hidden lg:flex items-center justify-center">
+                      {/* Sell Score - col-span-1 */}
+                      <div className="col-span-1 hidden lg:flex items-center justify-center">
+                        {t.sellScore !== undefined && t.sellScore !== null ? (
+                          <div
+                            className={`inline-flex items-center gap-1 px-2 py-1 rounded-md text-xs font-semibold tabular-nums ${
+                              t.sellScore >= 60
+                                ? 'bg-red-500/20 text-red-400'
+                                : t.sellScore >= 45
+                                ? 'bg-red-500/10 text-red-300'
+                                : t.sellScore >= 25
+                                ? 'bg-gray-500/20 text-gray-400'
+                                : 'bg-gray-500/10 text-gray-500'
+                            }`}
+                            title={`Sell: ${t.signalScoreDetails?.sellActiveCount || 0}/${t.signalScoreDetails?.sellAvailableCount || 0} signals active`}
+                          >
+                            <span className={`w-1.5 h-1.5 rounded-full ${
+                              t.sellScore >= 60
+                                ? 'bg-red-500'
+                                : t.sellScore >= 45
+                                ? 'bg-red-400'
+                                : t.sellScore >= 25
+                                ? 'bg-gray-400'
+                                : 'bg-gray-500'
+                            }`} />
+                            {t.sellScore}
+                          </div>
+                        ) : (
+                          <span className="text-gray-600 text-xs">--</span>
+                        )}
+                      </div>
+                      {/* Chart - col-span-1 */}
+                      <div className="col-span-1 hidden lg:flex items-center justify-center">
                         <Spark data={t.sparkline} color={sparkColor} h={24} />
                       </div>
                       {/* Actions - col-span-1 */}
