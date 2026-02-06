@@ -246,6 +246,10 @@ export const calculateSignalScore = (data) => {
     signals.push({ name: 'Negative Funding', weight: 15, active: false, unavailable: true });
   }
   
+  // 7. Bullish Engulfing (10 points)
+  // Note: Requires OHLC data which we don't have on frontend, so always unavailable
+  signals.push({ name: 'Bullish Engulfing', weight: 10, active: false, unavailable: true });
+  
   return {
     score: Math.min(score, 100),
     signals,
@@ -352,7 +356,24 @@ export const calculateSellSignalScore = (data) => {
     signals.push({ name: 'Bearish Divergence', weight: 15, active: false, unavailable: true });
   }
   
-  // 7. High Volume/MCap ratio (5 points)
+  // 7. Bearish Engulfing (10 points)
+  // Note: Requires OHLC data which we don't have on frontend, so always unavailable
+  signals.push({ name: 'Bearish Engulfing', weight: 10, active: false, unavailable: true });
+  
+  // 8. Near ATH (10 points)
+  if (data.nearATH !== undefined && data.nearATH !== null) {
+    availableSignals++;
+    if (data.nearATH === true) {
+      score += 10;
+      signals.push({ name: 'Near ATH', weight: 10, active: true });
+    } else {
+      signals.push({ name: 'Near ATH', weight: 10, active: false });
+    }
+  } else {
+    signals.push({ name: 'Near ATH', weight: 10, active: false, unavailable: true });
+  }
+  
+  // 9. High Volume/MCap ratio (5 points)
   if (data.volMcapRatio !== undefined && data.volMcapRatio !== null) {
     availableSignals++;
     if (data.volMcapRatio > 10) {
@@ -517,7 +538,8 @@ export const analyzeToken = (token, historicalData = null) => {
     bollingerBands: analysis.bollingerBands,
     divergence: analysis.divergence,
     fundingRate: analysis.fundingRate,
-    volMcapRatio: analysis.volMcapRatio
+    volMcapRatio: analysis.volMcapRatio,
+    nearATH: analysis.signals.nearATH
   };
   
   const sellScoreResult = calculateSellSignalScore(sellScoreData);
