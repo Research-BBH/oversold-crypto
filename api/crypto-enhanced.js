@@ -633,7 +633,7 @@ const getCategoryFromMetadata = (id, name, symbol) => {
   }
   
   const exchangeIds = ['binancecoin', 'crypto-com-chain', 'okb', 'kucoin-shares', 'gate-token',
-                       'ftx-token', 'huobi-token'];
+                       'huobi-token', 'bitget-token', 'mx-token'];
   if (exchangeIds.includes(idLower) || idLower.includes('exchange')) {
     return 'exchange';
   }
@@ -690,6 +690,11 @@ export default async function handler(req) {
       
       const pageData = await cgRes.json();
       allData.push(...pageData);
+      
+      // Add delay between requests to avoid rate limiting
+      if (page < 4) {
+        await new Promise(resolve => setTimeout(resolve, 150));
+      }
     }
     
     // Deduplicate
@@ -851,7 +856,7 @@ export default async function handler(req) {
         status: 200, 
         headers: { 
           'Content-Type': 'application/json',
-          'Cache-Control': 'no-cache, no-store, must-revalidate, max-age=0', // No cache during updates
+          'Cache-Control': 's-maxage=60, stale-while-revalidate=300', // Cache for 60s, serve stale for 5min
           'Access-Control-Allow-Origin': '*',
         } 
       }

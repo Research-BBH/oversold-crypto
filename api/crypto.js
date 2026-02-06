@@ -140,7 +140,7 @@ const getCategoryFromMetadata = (id, name, symbol) => {
   
   // Exchange tokens
   const exchangeIds = ['binancecoin', 'crypto-com-chain', 'okb', 'kucoin-shares', 'gate-token',
-                       'ftx-token', 'huobi-token'];
+                       'huobi-token', 'bitget-token', 'mx-token'];
   if (exchangeIds.includes(idLower) || idLower.includes('exchange')) {
     return 'exchange';
   }
@@ -196,6 +196,11 @@ export default async function handler(req) {
       
       const pageData = await cgRes.json();
       allData.push(...pageData);
+      
+      // Add delay between requests to avoid rate limiting
+      if (page < 4) {
+        await new Promise(resolve => setTimeout(resolve, 150));
+      }
     }
     
     const cgData = allData;
