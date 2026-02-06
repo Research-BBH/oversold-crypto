@@ -246,7 +246,10 @@ if (signalFilters.size > 0) {
           case 'rsi_overbought':
             if (token.rsi === null || token.rsi < 70) return false;
             break;
-          // Signal-based filters - require signals data
+          case 'rsi_overbought_extreme':
+            if (token.rsi === null || token.rsi < 80) return false;
+            break;
+          // Buy signal filters (oversold)
           case 'above_sma50':
             if (!token.signals || token.signals.aboveSMA50 !== true) return false;
             break;
@@ -261,6 +264,16 @@ if (signalFilters.size > 0) {
             break;
           case 'negative_funding':
             if (!token.signals || token.signals.negativeFunding !== true) return false;
+            break;
+          // Sell signal filters (overbought)
+          case 'below_sma50':
+            if (!token.signals || token.signals.belowSMA50 !== true) return false;
+            break;
+          case 'above_bb':
+            if (!token.signals || token.signals.aboveBB !== true) return false;
+            break;
+          case 'positive_funding':
+            if (!token.signals || token.signals.positiveFunding !== true) return false;
             break;
         }
       }
@@ -630,13 +643,13 @@ if (signalFilters.size > 0) {
             })}
           </div>
           
-          {/* Row 2: Technical Signals */}
-          <div className="flex gap-2">
+          {/* Row 2: Buy Signals (Oversold) */}
+          <div className="flex gap-2 mb-2">
+            <span className={`text-[10px] font-semibold px-2 py-2 rounded-lg ${darkMode ? 'bg-green-500/10 text-green-400' : 'bg-green-50 text-green-600'}`}>BUY</span>
             {[
               { id: 'below_bb', label: '⚠️ Below BB', desc: 'Below Bollinger Band', type: 'signal', enhanced: true },
-              { id: 'above_sma50', label: '📈 Above SMA50', desc: 'Price > 50-day SMA', type: 'signal', enhanced: true },
+              { id: 'above_sma50', label: '📈 Above SMA50', desc: 'Price > 50-day SMA (uptrend)', type: 'signal', enhanced: true },
               { id: 'volume_spike', label: '🔥 Volume Spike', desc: 'Volume > 1.5x average', type: 'signal', enhanced: true },
-              { id: 'has_funding', label: '💰 Has Futures', desc: 'Funding rate available', type: 'signal', enhanced: true },
               { id: 'negative_funding', label: '💵 Negative Funding', desc: 'Shorts paying longs', type: 'signal', enhanced: true },
             ].map((filter) => {
               const isActive = signalFilters.has(filter.id);
@@ -649,7 +662,44 @@ if (signalFilters.size > 0) {
                   disabled={isDisabled}
                   className={`flex-1 px-3 py-2 rounded-xl text-xs whitespace-nowrap transition-all font-medium group relative disabled:opacity-40 disabled:cursor-not-allowed ${
                     isActive
-                      ? 'bg-gradient-to-r from-orange-500 to-red-500 text-white shadow-lg shadow-orange-500/20'
+                      ? 'bg-gradient-to-r from-green-500 to-emerald-500 text-white shadow-lg shadow-green-500/20'
+                      : darkMode
+                      ? 'bg-white/5 text-gray-400 hover:bg-white/10 border border-white/5'
+                      : 'bg-white text-gray-600 hover:bg-gray-50 border border-gray-200'
+                  }`}
+                >
+                  {filter.label}
+                  <span className={`absolute bottom-full left-1/2 -translate-x-1/2 mb-2 px-3 py-2 text-xs rounded-lg opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap pointer-events-none z-10 ${
+                    darkMode ? 'bg-gray-800 text-white' : 'bg-gray-900 text-white'
+                  }`}>
+                    {filter.desc}
+                    {filter.enhanced && <div className="text-[10px] opacity-75 mt-1">Top 250 tokens</div>}
+                  </span>
+                </button>
+              );
+            })}
+          </div>
+          
+          {/* Row 3: Sell Signals (Overbought) */}
+          <div className="flex gap-2">
+            <span className={`text-[10px] font-semibold px-2 py-2 rounded-lg ${darkMode ? 'bg-red-500/10 text-red-400' : 'bg-red-50 text-red-600'}`}>SELL</span>
+            {[
+              { id: 'above_bb', label: '📊 Above BB', desc: 'Above Upper Bollinger Band', type: 'signal', enhanced: true },
+              { id: 'below_sma50', label: '📉 Below SMA50', desc: 'Price < 50-day SMA (downtrend)', type: 'signal', enhanced: true },
+              { id: 'rsi_overbought_extreme', label: '🔴 RSI > 80', desc: 'Extremely overbought', type: 'signal', enhanced: false },
+              { id: 'positive_funding', label: '💸 Positive Funding', desc: 'Longs paying shorts (crowded)', type: 'signal', enhanced: true },
+            ].map((filter) => {
+              const isActive = signalFilters.has(filter.id);
+              const isDisabled = filter.enhanced && !useEnhancedAPI;
+              
+              return (
+                <button
+                  key={filter.id}
+                  onClick={() => toggleSignalFilter(filter.id)}
+                  disabled={isDisabled}
+                  className={`flex-1 px-3 py-2 rounded-xl text-xs whitespace-nowrap transition-all font-medium group relative disabled:opacity-40 disabled:cursor-not-allowed ${
+                    isActive
+                      ? 'bg-gradient-to-r from-red-500 to-pink-500 text-white shadow-lg shadow-red-500/20'
                       : darkMode
                       ? 'bg-white/5 text-gray-400 hover:bg-white/10 border border-white/5'
                       : 'bg-white text-gray-600 hover:bg-gray-50 border border-gray-200'

@@ -256,6 +256,7 @@ const enhanceToken = async (token) => {
       : null;
     
     const signals = {
+      // Buy signals (oversold)
       rsiOversold: token.rsi !== null && token.rsi < 30,
       rsiExtreme: token.rsi !== null && token.rsi < 25,
       aboveSMA50: sma50 ? token.price > sma50 : null,
@@ -263,6 +264,12 @@ const enhanceToken = async (token) => {
       volumeSpike: volumeRatio ? volumeRatio > 1.5 : null,
       hasFunding: exchangeData.fundingRate !== null && exchangeData.fundingRate !== undefined,
       negativeFunding: exchangeData.fundingRate !== null && exchangeData.fundingRate < 0,
+      // Sell signals (overbought)
+      rsiOverbought: token.rsi !== null && token.rsi > 70,
+      rsiOverboughtExtreme: token.rsi !== null && token.rsi > 80,
+      belowSMA50: sma50 ? token.price < sma50 : null,
+      aboveBB: bb ? token.price > bb.upper : null,
+      positiveFunding: exchangeData.fundingRate !== null && exchangeData.fundingRate > 0.01,
     };
     
     const signalScoreData = calculateSignalScore(token, signals, exchangeData.fundingRate);
@@ -284,6 +291,7 @@ const enhanceToken = async (token) => {
   
   // Return basic token with signal flags based on available data
   const signals = {
+    // Buy signals (oversold)
     rsiOversold: token.rsi !== null && token.rsi < 30,
     rsiExtreme: token.rsi !== null && token.rsi < 25,
     aboveSMA50: null,
@@ -291,6 +299,12 @@ const enhanceToken = async (token) => {
     volumeSpike: null,
     hasFunding: null,
     negativeFunding: null,
+    // Sell signals (overbought)
+    rsiOverbought: token.rsi !== null && token.rsi > 70,
+    rsiOverboughtExtreme: token.rsi !== null && token.rsi > 80,
+    belowSMA50: null,
+    aboveBB: null,
+    positiveFunding: null,
   };
   
   const signalScoreData = calculateSignalScore(token, signals, null);
@@ -501,6 +515,7 @@ export default async function handler(req) {
     // Remaining tokens without enhancement
     const remainingTokens = baseTokens.slice(250).map(token => {
       const signals = {
+        // Buy signals (oversold)
         rsiOversold: token.rsi !== null && token.rsi < 30,
         rsiExtreme: token.rsi !== null && token.rsi < 25,
         aboveSMA50: null,
@@ -508,6 +523,12 @@ export default async function handler(req) {
         volumeSpike: null,
         hasFunding: null,
         negativeFunding: null,
+        // Sell signals (overbought)
+        rsiOverbought: token.rsi !== null && token.rsi > 70,
+        rsiOverboughtExtreme: token.rsi !== null && token.rsi > 80,
+        belowSMA50: null,
+        aboveBB: null,
+        positiveFunding: null,
       };
       
       const signalScoreData = calculateSignalScore(token, signals, null);
