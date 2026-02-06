@@ -828,8 +828,10 @@ if (signalFilters.size > 0) {
               <option value="mcap_desc">MCap ↓</option>
               <option value="rsi_asc">RSI ↑ (Oversold)</option>
               <option value="rsi_desc">RSI ↓ (Overbought)</option>
-              <option value="signalScore_desc">Signal Score ↓</option>
-              <option value="signalScore_asc">Signal Score ↑</option>
+              <option value="signalScore_desc">Buy Score ↓</option>
+              <option value="signalScore_asc">Buy Score ↑</option>
+              <option value="sellScore_desc">Sell Score ↓</option>
+              <option value="sellScore_asc">Sell Score ↑</option>
               <option value="change24h_asc">24h % ↑</option>
               <option value="change24h_desc">24h % ↓</option>
               <option value="change7d_asc">7d % ↑</option>

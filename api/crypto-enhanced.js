@@ -182,67 +182,177 @@ const detectEngulfingPattern = (prices, opens) => {
 };
 
 // Calculate signal score (0-100) based on available signals
+// Now calculates both BUY score (for oversold) and SELL score (for overbought)
 const calculateSignalScore = (token, signals, fundingRate) => {
-  let score = 0;
-  let activeCount = 0;
-  let availableCount = 0;
+  let buyScore = 0;
+  let sellScore = 0;
+  let buyActiveCount = 0;
+  let sellActiveCount = 0;
+  let buyAvailableCount = 0;
+  let sellAvailableCount = 0;
   
-  // 1. RSI Signal (25 points base, +5 bonus for extreme = 30 total)
+  // ============ BUY SIGNALS (Oversold) ============
+  
+  // 1. RSI Oversold (20 points base, +10 bonus for extreme < 20)
   if (token.rsi !== null && token.rsi !== undefined) {
-    availableCount++;
+    buyAvailableCount++;
     if (token.rsi < 30) {
-      const basePoints = 25;
-      const bonusPoints = token.rsi < 25 ? 5 : 0;
-      score += basePoints + bonusPoints;
-      activeCount++;
+      const basePoints = 20;
+      const bonusPoints = token.rsi < 20 ? 10 : (token.rsi < 25 ? 5 : 0);
+      buyScore += basePoints + bonusPoints;
+      buyActiveCount++;
     }
   }
   
-  // 2. Trend Filter - Above 50 SMA (30 points - CRITICAL)
+  // 2. Above 50 SMA - Uptrend (20 points - CRITICAL for buying dips)
   if (signals.aboveSMA50 !== null) {
-    availableCount++;
+    buyAvailableCount++;
     if (signals.aboveSMA50 === true) {
-      score += 30;
-      activeCount++;
+      buyScore += 20;
+      buyActiveCount++;
     }
   }
   
-  // 3. Bollinger Bands - Below Lower (15 points)
+  // 3. Below Bollinger Band (15 points)
   if (signals.belowBB !== null) {
-    availableCount++;
+    buyAvailableCount++;
     if (signals.belowBB === true) {
-      score += 15;
-      activeCount++;
+      buyScore += 15;
+      buyActiveCount++;
     }
   }
   
-  // 4. Volume Spike (15 points)
+  // 4. Volume Spike (10 points)
   if (signals.volumeSpike !== null) {
-    availableCount++;
+    buyAvailableCount++;
     if (signals.volumeSpike === true) {
-      score += 15;
-      activeCount++;
+      buyScore += 10;
+      buyActiveCount++;
     }
   }
   
-  // 5. Negative Funding Rate (15 points)
+  // 5. Negative Funding Rate (10 points)
   if (fundingRate !== null && fundingRate !== undefined) {
-    availableCount++;
+    buyAvailableCount++;
     if (fundingRate < 0) {
-      score += 15;
-      activeCount++;
+      buyScore += 10;
+      buyActiveCount++;
     }
   }
   
-  // Note: Bullish Divergence (10 points) requires more historical analysis
-  // and is calculated on the detail page, so we skip it here for performance
+  // 6. Bullish Divergence (15 points - strong reversal signal)
+  if (signals.bullishDivergence !== null) {
+    buyAvailableCount++;
+    if (signals.bullishDivergence === true) {
+      buyScore += 15;
+      buyActiveCount++;
+    }
+  }
+  
+  // 7. Bullish Engulfing (10 points - confirmation pattern)
+  if (signals.bullishEngulfing !== null) {
+    buyAvailableCount++;
+    if (signals.bullishEngulfing === true) {
+      buyScore += 10;
+      buyActiveCount++;
+    }
+  }
+  
+  // ============ SELL SIGNALS (Overbought) ============
+  
+  // 1. RSI Overbought (20 points base, +10 bonus for extreme > 80)
+  if (token.rsi !== null && token.rsi !== undefined) {
+    sellAvailableCount++;
+    if (token.rsi > 70) {
+      const basePoints = 20;
+      const bonusPoints = token.rsi > 80 ? 10 : (token.rsi > 75 ? 5 : 0);
+      sellScore += basePoints + bonusPoints;
+      sellActiveCount++;
+    }
+  }
+  
+  // 2. Below 50 SMA - Downtrend (15 points)
+  if (signals.belowSMA50 !== null) {
+    sellAvailableCount++;
+    if (signals.belowSMA50 === true) {
+      sellScore += 15;
+      sellActiveCount++;
+    }
+  }
+  
+  // 3. Below 20 SMA - Short-term weakness (10 points)
+  if (signals.belowSMA20 !== null) {
+    sellAvailableCount++;
+    if (signals.belowSMA20 === true) {
+      sellScore += 10;
+      sellActiveCount++;
+    }
+  }
+  
+  // 4. Above Bollinger Band (15 points)
+  if (signals.aboveBB !== null) {
+    sellAvailableCount++;
+    if (signals.aboveBB === true) {
+      sellScore += 15;
+      sellActiveCount++;
+    }
+  }
+  
+  // 5. Positive Funding Rate (10 points - crowded longs)
+  if (fundingRate !== null && fundingRate !== undefined) {
+    sellAvailableCount++;
+    if (fundingRate > 0.01) {
+      sellScore += 10;
+      sellActiveCount++;
+    }
+  }
+  
+  // 6. Bearish Divergence (15 points - strong reversal signal)
+  if (signals.bearishDivergence !== null) {
+    sellAvailableCount++;
+    if (signals.bearishDivergence === true) {
+      sellScore += 15;
+      sellActiveCount++;
+    }
+  }
+  
+  // 7. Bearish Engulfing (10 points - confirmation pattern)
+  if (signals.bearishEngulfing !== null) {
+    sellAvailableCount++;
+    if (signals.bearishEngulfing === true) {
+      sellScore += 10;
+      sellActiveCount++;
+    }
+  }
+  
+  // 8. Near ATH (10 points - potential resistance)
+  if (signals.nearATH !== null) {
+    sellAvailableCount++;
+    if (signals.nearATH === true) {
+      sellScore += 10;
+      sellActiveCount++;
+    }
+  }
+  
+  // 9. High Volume/MCap (5 points - potential distribution)
+  if (signals.highVolMcap !== null) {
+    sellAvailableCount++;
+    if (signals.highVolMcap === true) {
+      sellScore += 5;
+      sellActiveCount++;
+    }
+  }
   
   return {
-    score: Math.min(score, 100),
-    activeCount,
-    availableCount,
-    // Max possible is 100 (25+5+30+15+15+10), but without divergence it's 90
-    maxPossible: 90
+    // Main score is BUY score (for oversold screener primary use case)
+    score: Math.min(buyScore, 100),
+    activeCount: buyActiveCount,
+    availableCount: buyAvailableCount,
+    maxPossible: 100,
+    // Also include sell score for overbought analysis
+    sellScore: Math.min(sellScore, 100),
+    sellActiveCount,
+    sellAvailableCount,
   };
 };
 
@@ -400,6 +510,7 @@ const enhanceToken = async (token) => {
       ...token,
       signals,
       signalScore: signalScoreData.score,
+      sellScore: signalScoreData.sellScore,
       signalScoreDetails: signalScoreData,
       // Raw values for detail view
       sma50,
@@ -447,6 +558,7 @@ const enhanceToken = async (token) => {
     ...token,
     signals,
     signalScore: signalScoreData.score,
+    sellScore: signalScoreData.sellScore,
     signalScoreDetails: signalScoreData,
     enhanced: false,
   };
@@ -680,6 +792,7 @@ export default async function handler(req) {
         ...token,
         signals,
         signalScore: signalScoreData.score,
+        sellScore: signalScoreData.sellScore,
         signalScoreDetails: signalScoreData,
         enhanced: false,
       };
