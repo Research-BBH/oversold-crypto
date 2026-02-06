@@ -1195,7 +1195,7 @@ if (signalFilters.size > 0) {
                                 ? 'bg-gray-500/20 text-gray-400'
                                 : 'bg-gray-500/10 text-gray-500'
                             }`}
-                            title={`Buy: ${t.signalScoreDetails?.activeCount || 0}/${t.signalScoreDetails?.availableCount || 0} signals active`}
+                            title={`Buy Signals: ${t.signalScoreDetails?.activeCount || 0}/${t.signalScoreDetails?.availableCount || 0} active`}
                           >
                             <span className={`w-1.5 h-1.5 rounded-full ${
                               t.signalScore >= 60
@@ -1225,7 +1225,7 @@ if (signalFilters.size > 0) {
                                 ? 'bg-gray-500/20 text-gray-400'
                                 : 'bg-gray-500/10 text-gray-500'
                             }`}
-                            title={`Sell: ${t.signalScoreDetails?.sellActiveCount || 0}/${t.signalScoreDetails?.sellAvailableCount || 0} signals active`}
+                            title={`Sell Signals: ${t.signalScoreDetails?.sellActiveCount || 0}/${t.signalScoreDetails?.sellAvailableCount || 0} active`}
                           >
                             <span className={`w-1.5 h-1.5 rounded-full ${
                               t.sellScore >= 60
