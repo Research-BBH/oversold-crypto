@@ -494,7 +494,7 @@ const buildBuySignals = (analysis) => {
   // RSI Oversold (20 pts + bonus)
   const rsiOversold = analysis.rsi !== null && analysis.rsi < 30;
   const rsiExtreme = analysis.rsi !== null && analysis.rsi < 25;
-  const rsiWeight = rsiExtreme ? 30 : (rsiOversold ? 20 : 20);
+  const rsiWeight = rsiExtreme ? 30 : (rsiOversold ? 25 : 25); // 25 base, +5 for extreme = 30
   signals.push({
     name: rsiExtreme ? 'RSI Oversold (Extreme)' : 'RSI Oversold',
     weight: rsiWeight,
@@ -502,10 +502,10 @@ const buildBuySignals = (analysis) => {
     unavailable: analysis.rsi === null
   });
   
-  // Above SMA50 (20 pts)
+  // Above SMA50 (30 pts)
   signals.push({
     name: 'Above 50 SMA',
-    weight: 20,
+    weight: 30,
     active: s.aboveSMA50 === true,
     unavailable: s.aboveSMA50 === null
   });
@@ -518,28 +518,28 @@ const buildBuySignals = (analysis) => {
     unavailable: s.belowBB === null
   });
   
-  // Volume Spike (10 pts)
+  // Volume Spike (15 pts)
   signals.push({
     name: 'Volume Spike',
-    weight: 10,
+    weight: 15,
     active: s.volumeSpike === true,
     unavailable: s.volumeSpike === null
   });
   
-  // Negative Funding (10 pts)
-  signals.push({
-    name: 'Negative Funding',
-    weight: 10,
-    active: s.negativeFunding === true,
-    unavailable: s.negativeFunding === null && s.hasFunding !== true
-  });
-  
-  // Bullish Divergence (15 pts)
+  // Bullish Divergence (10 pts)
   signals.push({
     name: 'Bullish Divergence',
-    weight: 15,
+    weight: 10,
     active: s.bullishDivergence === true,
     unavailable: s.bullishDivergence === null
+  });
+  
+  // Negative Funding (15 pts)
+  signals.push({
+    name: 'Negative Funding',
+    weight: 15,
+    active: s.negativeFunding === true,
+    unavailable: s.negativeFunding === null && s.hasFunding !== true
   });
   
   // Bullish Engulfing (10 pts)
