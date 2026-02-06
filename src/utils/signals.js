@@ -255,7 +255,7 @@ export const calculateSignalScore = (data) => {
     signals,
     activeCount: signals.filter(s => s.active && !s.unavailable).length,
     totalSignals: signals.length,
-    availableSignals: availableSignals
+    availableSignals: 7 // Always 7 total buy signals
   };
 };
 
@@ -391,7 +391,7 @@ export const calculateSellSignalScore = (data) => {
     signals,
     activeCount: signals.filter(s => s.active && !s.unavailable).length,
     totalSignals: signals.length,
-    availableSignals: availableSignals
+    availableSignals: 9 // Always 9 total sell signals
   };
 };
 
