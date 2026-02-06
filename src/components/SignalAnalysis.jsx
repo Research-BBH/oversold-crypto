@@ -298,7 +298,7 @@ export const FullSignalAnalysis = ({ analysis, darkMode }) => {
             <div className="flex flex-col items-center">
               <SignalScoreCircle score={analysis.score || 0} />
               <p className="text-xs text-gray-500 mt-2">
-                {analysis.signalDetails?.activeCount || 0}/{analysis.signalDetails?.availableCount || 0} active
+                {(analysis.signalDetails?.activeCount || analysis.signalScoreDetails?.activeCount || 0)}/{(analysis.signalDetails?.availableCount || analysis.signalScoreDetails?.availableCount || 0)} active
               </p>
             </div>
             <div className="flex-1 ml-4">
@@ -315,9 +315,9 @@ export const FullSignalAnalysis = ({ analysis, darkMode }) => {
           </div>
           <div className="flex items-center justify-between">
             <div className="flex flex-col items-center">
-              <SellScoreCircle score={analysis.signalDetails?.sellScore || analysis.sellScore || 0} />
+              <SellScoreCircle score={analysis.signalScoreDetails?.sellScore || analysis.signalDetails?.sellScore || analysis.sellScore || 0} />
               <p className="text-xs text-gray-500 mt-2">
-                {analysis.signalDetails?.sellActiveCount || 0}/{analysis.signalDetails?.sellAvailableCount || 0} active
+                {(analysis.signalDetails?.sellActiveCount || analysis.signalScoreDetails?.sellActiveCount || 0)}/{(analysis.signalDetails?.sellAvailableCount || analysis.signalScoreDetails?.sellAvailableCount || 0)} active
               </p>
             </div>
             <div className="flex-1 ml-4">
@@ -665,7 +665,7 @@ const SellRecommendation = ({ recommendation, darkMode }) => {
 const getSellRecommendation = (analysis) => {
   if (!analysis) return null;
 
-  const sellScore = analysis.signalDetails?.sellScore || analysis.sellScore || 0;
+  const sellScore = analysis.signalScoreDetails?.sellScore || analysis.signalDetails?.sellScore || analysis.sellScore || 0;
   const { reliability } = analysis;
   
   let adjustedScore = sellScore;
