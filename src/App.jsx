@@ -890,7 +890,7 @@ if (signalFilters.size > 0) {
           >
             {/* Table Header */}
             <div
-              className={`hidden lg:grid grid-cols-13 gap-4 px-5 py-3 border-b ${
+              className={`hidden lg:grid grid-cols-12 gap-4 px-5 py-3 border-b ${
                 darkMode ? 'border-white/10' : 'border-gray-100'
               } text-[11px] text-gray-500 font-semibold uppercase tracking-wider`}
             >
@@ -1021,27 +1021,6 @@ if (signalFilters.size > 0) {
                 </span>
               </div>
               <div
-                className={`col-span-1 relative flex items-center justify-center pl-4 cursor-pointer ${
-                  darkMode ? 'hover:text-white' : 'hover:text-gray-900'
-                } transition-colors group`}
-                onClick={() => {
-                  setSortBy(sortBy === 'rsi_desc' ? 'rsi_asc' : 'rsi_desc');
-                  setPreset(null);
-                  setRsiFilter(null);
-                }}
-              >
-                <span>RSI</span>
-                <span
-                  className={`ml-1 transition-opacity ${
-                    sortBy.startsWith('rsi')
-                      ? 'opacity-100 text-orange-500'
-                      : 'opacity-0 group-hover:opacity-50'
-                  }`}
-                >
-                  {sortBy === 'rsi_asc' ? '↑' : '↓'}
-                </span>
-              </div>
-              <div
                 className={`col-span-1 relative hidden lg:flex items-center justify-center cursor-pointer ${
                   darkMode ? 'hover:text-white' : 'hover:text-gray-900'
                 } transition-colors group`}
@@ -1085,7 +1064,7 @@ if (signalFilters.size > 0) {
                   {sortBy === 'sellScore_asc' ? '↑' : '↓'}
                 </span>
               </div>
-              <div className="col-span-1 hidden lg:flex items-center justify-center">7D Chart</div>
+              <div className="col-span-2 hidden lg:flex items-center justify-center">7D Chart</div>
               <div className="col-span-1 flex items-center justify-center">Actions</div>
             </div>
 
@@ -1100,7 +1079,6 @@ if (signalFilters.size > 0) {
                 </div>
               ) : (
                 filtered.map((t) => {
-                  const rs = getRsiStyle(t.rsi);
                   const watched = watchlist.has(t.id);
                   const sparkColor =
                     t.sparkline?.length > 1
@@ -1112,7 +1090,7 @@ if (signalFilters.size > 0) {
                     <div
                       key={t.id}
                       onClick={() => window.location.hash = `#/token/${t.id}`}
-                      className={`grid grid-cols-8 lg:grid-cols-13 gap-4 px-5 py-3 border-b ${
+                      className={`grid grid-cols-8 lg:grid-cols-12 gap-4 px-5 py-3 border-b ${
                         darkMode
                           ? 'border-white/5 hover:bg-white/[0.03]'
                           : 'border-gray-100 hover:bg-gray-50'
@@ -1172,15 +1150,6 @@ if (signalFilters.size > 0) {
                           {t.change7d >= 0 ? '+' : ''}
                           {t.change7d?.toFixed(1)}%
                         </span>
-                      </div>
-                      {/* RSI - col-span-1 */}
-                      <div className="col-span-1 flex items-center justify-center pl-4">
-                        <div
-                          className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-md text-xs font-semibold tabular-nums ${rs.bg} ${rs.text}`}
-                        >
-                          <span className={`w-1.5 h-1.5 rounded-full ${rs.dot}`} />
-                          {t.rsi !== null ? t.rsi.toFixed(0) : '--'}
-                        </div>
                       </div>
                       {/* Buy Score - col-span-1 */}
                       <div className="col-span-1 hidden lg:flex items-center justify-center">
@@ -1242,8 +1211,8 @@ if (signalFilters.size > 0) {
                           <span className="text-gray-600 text-xs">--</span>
                         )}
                       </div>
-                      {/* Chart - col-span-1 */}
-                      <div className="col-span-1 hidden lg:flex items-center justify-center">
+                      {/* Chart - col-span-2 */}
+                      <div className="col-span-2 hidden lg:flex items-center justify-center">
                         <Spark data={t.sparkline} color={sparkColor} h={24} />
                       </div>
                       {/* Actions - col-span-1 */}
