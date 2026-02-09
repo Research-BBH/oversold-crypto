@@ -1021,7 +1021,7 @@ if (signalFilters.size > 0) {
                 </span>
               </div>
               <div
-                className={`col-span-1 relative hidden lg:flex items-center justify-center cursor-pointer ${
+                className={`col-span-1 relative hidden lg:flex items-center justify-end pl-4 cursor-pointer ${
                   darkMode ? 'hover:text-white' : 'hover:text-gray-900'
                 } transition-colors group`}
                 onClick={() => {
@@ -1043,7 +1043,7 @@ if (signalFilters.size > 0) {
                 </span>
               </div>
               <div
-                className={`col-span-1 relative hidden lg:flex items-center justify-center cursor-pointer ${
+                className={`col-span-1 relative hidden lg:flex items-center justify-start cursor-pointer ${
                   darkMode ? 'hover:text-white' : 'hover:text-gray-900'
                 } transition-colors group`}
                 onClick={() => {
@@ -1064,7 +1064,7 @@ if (signalFilters.size > 0) {
                   {sortBy === 'sellScore_asc' ? '↑' : '↓'}
                 </span>
               </div>
-              <div className="col-span-2 hidden lg:flex items-center justify-center">7D Chart</div>
+              <div className="col-span-2 hidden lg:flex items-center justify-start pl-6">7D Chart</div>
               <div className="col-span-1 flex items-center justify-center">Actions</div>
             </div>
 
@@ -1152,7 +1152,7 @@ if (signalFilters.size > 0) {
                         </span>
                       </div>
                       {/* Buy Score - col-span-1 */}
-                      <div className="col-span-1 hidden lg:flex items-center justify-center">
+                      <div className="col-span-1 hidden lg:flex items-center justify-end pl-4">
                         {t.signalScore !== undefined && t.signalScore !== null ? (
                           <div
                             className={`inline-flex items-center gap-1 px-2 py-1 rounded-md text-xs font-semibold tabular-nums ${
@@ -1182,7 +1182,7 @@ if (signalFilters.size > 0) {
                         )}
                       </div>
                       {/* Sell Score - col-span-1 */}
-                      <div className="col-span-1 hidden lg:flex items-center justify-center">
+                      <div className="col-span-1 hidden lg:flex items-center justify-start">
                         {t.sellScore !== undefined && t.sellScore !== null ? (
                           <div
                             className={`inline-flex items-center gap-1 px-2 py-1 rounded-md text-xs font-semibold tabular-nums ${
@@ -1212,7 +1212,7 @@ if (signalFilters.size > 0) {
                         )}
                       </div>
                       {/* Chart - col-span-2 */}
-                      <div className="col-span-2 hidden lg:flex items-center justify-center">
+                      <div className="col-span-2 hidden lg:flex items-center justify-start pl-6">
                         <Spark data={t.sparkline} color={sparkColor} h={24} />
                       </div>
                       {/* Actions - col-span-1 */}
