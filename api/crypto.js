@@ -157,7 +157,8 @@ const getCategoryFromMetadata = (id, name, symbol) => {
                      'mountain-protocol-usdm', 'ondo-us-dollar-yield', 'resolv-usd',
                      'circuit-usd', 'djed', 'overnight-finance-usd', 'compound-usd-coin',
                      'nusd', 'synth-susd', 'hai', 'terra-usd', 'terrausd', 'flex-usd',
-                     'brz', 'bidr', 'xsgd', 'gyen', 'jpyc', 'gbpt', 'qcad', 'par-stablecoin'];
+                     'brz', 'bidr', 'xsgd', 'gyen', 'jpyc', 'gbpt', 'qcad', 'par-stablecoin',
+                     'figure-heloc'];
   const stableSymbols = ['usdt', 'usdc', 'dai', 'busd', 'tusd', 'usdp', 'gusd', 'frax', 
                          'lusd', 'susd', 'mim', 'ust', 'fei', 'usdd', 'usde', 'pyusd',
                          'eurs', 'eurt', 'eurc', 'ageur', 'ceur', 'jeur', 'gho', 'crvusd',

@@ -752,6 +752,9 @@ const getCategoryFromMetadata = (id, name, symbol) => {
     'yearn-usdc',                // yUSDC
     'yearn-dai',                 // yDAI
     'angle-staked-usda',         // stUSD
+    
+    // === Tokenized Real-World Assets (pegged) ===
+    'figure-heloc',              // FIGR_HELOC - tokenized home equity, pegged to $1
   ];
   
   if (stablecoinIds.includes(idLower)) {
