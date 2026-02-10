@@ -1131,7 +1131,7 @@ if (signalFilters.size > 0) {
                       <div className="col-span-2 hidden lg:flex items-center justify-center">
                         {t.signalScore !== undefined && t.signalScore !== null ? (
                           <div
-                            className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-md text-xs font-semibold tabular-nums ${
+                            className={`inline-flex items-center justify-center gap-1.5 px-2.5 py-1 rounded-md text-xs font-semibold tabular-nums min-w-[70px] ${
                               t.signalScore >= 50
                                 ? 'bg-green-500/20 text-green-400'
                                 : t.signalScore >= 25
@@ -1144,7 +1144,7 @@ if (signalFilters.size > 0) {
                             }`}
                             title={`Signal: ${t.signalLabel || (t.signalScore >= 50 ? 'STRONG BUY' : t.signalScore >= 25 ? 'BUY' : t.signalScore > -25 ? 'NEUTRAL' : t.signalScore > -50 ? 'SELL' : 'STRONG SELL')} (${t.signalScoreDetails?.signalCount || 0} signals)`}
                           >
-                            <span className={`w-1.5 h-1.5 rounded-full ${
+                            <span className={`w-1.5 h-1.5 rounded-full shrink-0 ${
                               t.signalScore >= 50
                                 ? 'bg-green-500'
                                 : t.signalScore >= 25
@@ -1156,9 +1156,11 @@ if (signalFilters.size > 0) {
                                 : 'bg-red-500'
                             }`} />
                             <span>{t.signalScore >= 0 ? '+' : ''}{t.signalScore}</span>
-                            <span className="text-[10px] opacity-70 ml-0.5">
-                              {t.signalScore >= 50 ? 'BUY' : t.signalScore >= 25 ? 'BUY' : t.signalScore > -25 ? '' : t.signalScore > -50 ? 'SELL' : 'SELL'}
-                            </span>
+                            {(t.signalScore >= 25 || t.signalScore <= -25) && (
+                              <span className="text-[10px] opacity-70">
+                                {t.signalScore >= 25 ? 'BUY' : 'SELL'}
+                              </span>
+                            )}
                           </div>
                         ) : (
                           <span className="text-gray-600 text-xs">--</span>
