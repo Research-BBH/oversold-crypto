@@ -637,144 +637,158 @@ if (signalFilters.size > 0) {
             )}
           </div>
           
-          {/* Row 1: RSI Spectrum */}
-          <div className="flex gap-2 mb-3">
-            <span className={`text-[10px] font-semibold px-2 py-2 rounded-lg whitespace-nowrap ${darkMode ? 'bg-purple-500/10 text-purple-400' : 'bg-purple-50 text-purple-600'}`}>RSI</span>
-            {[
-              { id: 'rsi_extreme', label: '🔴 Extreme', desc: 'RSI below 20', color: 'red' },
-              { id: 'rsi_oversold', label: '🟠 Oversold', desc: 'RSI below 25', color: 'orange' },
-              { id: 'rsi_neutral', label: '⚪ Neutral', desc: 'RSI 25-75', color: 'gray' },
-              { id: 'rsi_overbought', label: '🟢 Overbought', desc: 'RSI above 75', color: 'green' },
-              { id: 'rsi_overbought_extreme', label: '🔵 Extreme OB', desc: 'RSI above 80', color: 'blue' },
-            ].map((filter) => {
-              const isActive = signalFilters.has(filter.id);
-              return (
-                <button
-                  key={filter.id}
-                  onClick={() => toggleSignalFilter(filter.id)}
-                  className={`flex-1 px-3 py-2 rounded-xl text-xs whitespace-nowrap transition-all font-medium group relative ${
-                    isActive
-                      ? 'bg-gradient-to-r from-purple-500 to-indigo-500 text-white shadow-lg shadow-purple-500/20'
-                      : darkMode
-                      ? 'bg-white/5 text-gray-400 hover:bg-white/10 border border-white/5'
-                      : 'bg-white text-gray-600 hover:bg-gray-50 border border-gray-200'
-                  }`}
-                >
-                  {filter.label}
-                  <span className={`absolute bottom-full left-1/2 -translate-x-1/2 mb-2 px-3 py-2 text-xs rounded-lg opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap pointer-events-none z-10 ${
-                    darkMode ? 'bg-gray-800 text-white' : 'bg-gray-900 text-white'
-                  }`}>
-                    {filter.desc}
-                  </span>
-                </button>
-              );
-            })}
+          {/* Row 1: RSI */}
+          <div className="flex gap-2 mb-2">
+            <span className={`w-16 flex-shrink-0 text-[10px] font-semibold px-2 py-2 rounded-lg text-center ${darkMode ? 'bg-purple-500/10 text-purple-400' : 'bg-purple-50 text-purple-600'}`}>RSI</span>
+            <div className="flex gap-2 flex-1">
+              {[
+                { id: 'rsi_extreme', label: '🔴 Extreme', desc: 'RSI below 20' },
+                { id: 'rsi_oversold', label: '🟠 Oversold', desc: 'RSI below 25' },
+                { id: 'rsi_neutral', label: '⚪ Neutral', desc: 'RSI 25-75' },
+                { id: 'rsi_overbought', label: '🟢 Overbought', desc: 'RSI above 75' },
+                { id: 'rsi_overbought_extreme', label: '🔵 Extreme OB', desc: 'RSI above 80' },
+              ].map((filter) => {
+                const isActive = signalFilters.has(filter.id);
+                return (
+                  <button
+                    key={filter.id}
+                    onClick={() => toggleSignalFilter(filter.id)}
+                    className={`flex-1 px-3 py-2 rounded-xl text-xs whitespace-nowrap transition-all font-medium group relative ${
+                      isActive
+                        ? 'bg-gradient-to-r from-purple-500 to-indigo-500 text-white shadow-lg shadow-purple-500/20'
+                        : darkMode
+                        ? 'bg-white/5 text-gray-400 hover:bg-white/10 border border-white/5'
+                        : 'bg-white text-gray-600 hover:bg-gray-50 border border-gray-200'
+                    }`}
+                  >
+                    {filter.label}
+                    <span className={`absolute bottom-full left-1/2 -translate-x-1/2 mb-2 px-3 py-2 text-xs rounded-lg opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap pointer-events-none z-10 ${
+                      darkMode ? 'bg-gray-800 text-white' : 'bg-gray-900 text-white'
+                    }`}>
+                      {filter.desc}
+                    </span>
+                  </button>
+                );
+              })}
+            </div>
           </div>
           
-          {/* Row 2: Price Movers */}
-          <div className="flex gap-2 mb-3">
-            <span className={`text-[10px] font-semibold px-2 py-2 rounded-lg whitespace-nowrap ${darkMode ? 'bg-blue-500/10 text-blue-400' : 'bg-blue-50 text-blue-600'}`}>MOVERS</span>
-            {[
-              { id: 'losers24h', label: '📉 24h Losers', desc: 'Biggest 24h drops' },
-              { id: 'losers7d', label: '📉 7d Losers', desc: 'Biggest 7d drops' },
-              { id: 'gainers', label: '📈 24h Gainers', desc: 'Biggest 24h gains' },
-              { id: 'gainers7d', label: '📈 7d Gainers', desc: 'Biggest 7d gains' },
-            ].map((filter) => {
-              const isActive = preset === filter.id;
-              return (
-                <button
-                  key={filter.id}
-                  onClick={() => {
-                    setPreset(preset === filter.id ? null : filter.id);
-                    setRsiFilter(null);
-                  }}
-                  className={`flex-1 px-3 py-2 rounded-xl text-xs whitespace-nowrap transition-all font-medium group relative ${
-                    isActive
-                      ? 'bg-gradient-to-r from-blue-500 to-cyan-500 text-white shadow-lg shadow-blue-500/20'
-                      : darkMode
-                      ? 'bg-white/5 text-gray-400 hover:bg-white/10 border border-white/5'
-                      : 'bg-white text-gray-600 hover:bg-gray-50 border border-gray-200'
-                  }`}
-                >
-                  {filter.label}
-                  <span className={`absolute bottom-full left-1/2 -translate-x-1/2 mb-2 px-3 py-2 text-xs rounded-lg opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap pointer-events-none z-10 ${
-                    darkMode ? 'bg-gray-800 text-white' : 'bg-gray-900 text-white'
-                  }`}>
-                    {filter.desc}
-                  </span>
-                </button>
-              );
-            })}
+          {/* Row 2: MOVERS */}
+          <div className="flex gap-2 mb-2">
+            <span className={`w-16 flex-shrink-0 text-[10px] font-semibold px-2 py-2 rounded-lg text-center ${darkMode ? 'bg-blue-500/10 text-blue-400' : 'bg-blue-50 text-blue-600'}`}>MOVERS</span>
+            <div className="flex gap-2 flex-1">
+              {[
+                { id: 'losers24h', label: '📉 24h Losers', desc: 'Biggest 24h drops' },
+                { id: 'losers7d', label: '📉 7d Losers', desc: 'Biggest 7d drops' },
+                { id: 'gainers', label: '📈 24h Gainers', desc: 'Biggest 24h gains' },
+                { id: 'gainers7d', label: '📈 7d Gainers', desc: 'Biggest 7d gains' },
+              ].map((filter) => {
+                const isActive = preset === filter.id;
+                return (
+                  <button
+                    key={filter.id}
+                    onClick={() => {
+                      setPreset(preset === filter.id ? null : filter.id);
+                      setRsiFilter(null);
+                    }}
+                    className={`flex-1 px-3 py-2 rounded-xl text-xs whitespace-nowrap transition-all font-medium group relative ${
+                      isActive
+                        ? 'bg-gradient-to-r from-blue-500 to-cyan-500 text-white shadow-lg shadow-blue-500/20'
+                        : darkMode
+                        ? 'bg-white/5 text-gray-400 hover:bg-white/10 border border-white/5'
+                        : 'bg-white text-gray-600 hover:bg-gray-50 border border-gray-200'
+                    }`}
+                  >
+                    {filter.label}
+                    <span className={`absolute bottom-full left-1/2 -translate-x-1/2 mb-2 px-3 py-2 text-xs rounded-lg opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap pointer-events-none z-10 ${
+                      darkMode ? 'bg-gray-800 text-white' : 'bg-gray-900 text-white'
+                    }`}>
+                      {filter.desc}
+                    </span>
+                  </button>
+                );
+              })}
+            </div>
           </div>
           
-          {/* Signal Pairs Grid */}
-          <div className="grid grid-cols-4 gap-2">
-            {[
-              // Row 1
-              { name: 'Trend', bullish: { id: 'above_sma50', label: '▲ Uptrend', desc: 'Above SMA50' }, bearish: { id: 'below_sma50', label: '▼ Downtrend', desc: 'Below SMA50' }, enhanced: true },
-              { name: 'Bollinger', bullish: { id: 'below_bb', label: '▲ Below BB', desc: 'Oversold (below lower band)' }, bearish: { id: 'above_bb', label: '▼ Above BB', desc: 'Overbought (above upper band)' }, enhanced: true },
-              { name: 'Funding', bullish: { id: 'negative_funding', label: '▲ Negative', desc: 'Shorts paying longs' }, bearish: { id: 'positive_funding', label: '▼ Positive', desc: 'Longs paying shorts' }, enhanced: true },
-              { name: 'Divergence', bullish: { id: 'bullish_divergence', label: '▲ Bullish', desc: 'Price ↓ RSI ↑' }, bearish: { id: 'bearish_divergence', label: '▼ Bearish', desc: 'Price ↑ RSI ↓' }, enhanced: true },
-              // Row 2
-              { name: 'Candles', bullish: { id: 'bullish_engulfing', label: '▲ Bull Engulf', desc: 'Bullish reversal pattern' }, bearish: { id: 'bearish_engulfing', label: '▼ Bear Engulf', desc: 'Bearish reversal pattern' }, enhanced: true },
-              { name: 'Position', bullish: { id: 'near_atl', label: '▲ Near ATL', desc: 'Within 20% of all-time low' }, bearish: { id: 'near_ath', label: '▼ Near ATH', desc: 'Within 10% of all-time high' }, enhanced: true },
-              { name: 'Volume', bullish: { id: 'volume_spike', label: '▲ Spike', desc: 'Volume > 1.5x average' }, bearish: { id: 'high_vol_mcap', label: '▼ High V/MC', desc: 'Volume > 10% market cap' }, enhanced: false },
-            ].map((pair, index) => {
-              const bullishActive = signalFilters.has(pair.bullish.id);
-              const bearishActive = signalFilters.has(pair.bearish.id);
-              const isDisabled = pair.enhanced && !useEnhancedAPI;
-              
-              return (
-                <div 
-                  key={index}
-                  className={`rounded-xl p-2 ${darkMode ? 'bg-white/5 border border-white/5' : 'bg-gray-50 border border-gray-200'}`}
-                >
-                  {/* Pair Label */}
-                  <div className={`text-[10px] font-semibold text-center mb-1.5 ${darkMode ? 'text-gray-500' : 'text-gray-400'}`}>
-                    {pair.name}
-                  </div>
-                  {/* Bullish / Bearish Buttons */}
-                  <div className="flex gap-1">
-                    <button
-                      onClick={() => toggleSignalFilter(pair.bullish.id)}
-                      disabled={isDisabled}
-                      className={`flex-1 px-2 py-1.5 rounded-lg text-[10px] font-medium transition-all group relative disabled:opacity-40 disabled:cursor-not-allowed ${
-                        bullishActive
-                          ? 'bg-green-500 text-white shadow-sm'
-                          : darkMode
-                          ? 'bg-white/5 text-green-400 hover:bg-green-500/20 border border-green-500/20'
-                          : 'bg-white text-green-600 hover:bg-green-50 border border-green-200'
-                      }`}
-                    >
-                      {pair.bullish.label}
-                      <span className={`absolute bottom-full left-1/2 -translate-x-1/2 mb-2 px-2 py-1 text-[10px] rounded opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap pointer-events-none z-20 ${
-                        darkMode ? 'bg-gray-800 text-white' : 'bg-gray-900 text-white'
-                      }`}>
-                        {pair.bullish.desc}
-                      </span>
-                    </button>
-                    <button
-                      onClick={() => toggleSignalFilter(pair.bearish.id)}
-                      disabled={isDisabled}
-                      className={`flex-1 px-2 py-1.5 rounded-lg text-[10px] font-medium transition-all group relative disabled:opacity-40 disabled:cursor-not-allowed ${
-                        bearishActive
-                          ? 'bg-red-500 text-white shadow-sm'
-                          : darkMode
-                          ? 'bg-white/5 text-red-400 hover:bg-red-500/20 border border-red-500/20'
-                          : 'bg-white text-red-600 hover:bg-red-50 border border-red-200'
-                      }`}
-                    >
-                      {pair.bearish.label}
-                      <span className={`absolute bottom-full left-1/2 -translate-x-1/2 mb-2 px-2 py-1 text-[10px] rounded opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap pointer-events-none z-20 ${
-                        darkMode ? 'bg-gray-800 text-white' : 'bg-gray-900 text-white'
-                      }`}>
-                        {pair.bearish.desc}
-                      </span>
-                    </button>
-                  </div>
-                </div>
-              );
-            })}
+          {/* Row 3: BUY (Bullish Signals) */}
+          <div className="flex gap-2 mb-2">
+            <span className={`w-16 flex-shrink-0 text-[10px] font-semibold px-2 py-2 rounded-lg text-center ${darkMode ? 'bg-green-500/10 text-green-400' : 'bg-green-50 text-green-600'}`}>BUY</span>
+            <div className="flex gap-2 flex-1">
+              {[
+                { id: 'above_sma50', label: '▲ Uptrend', desc: 'Price above SMA50', enhanced: true },
+                { id: 'below_bb', label: '▲ Below BB', desc: 'Below lower Bollinger Band', enhanced: true },
+                { id: 'negative_funding', label: '▲ Neg Funding', desc: 'Shorts paying longs', enhanced: true },
+                { id: 'bullish_divergence', label: '▲ Bull Divergence', desc: 'Price ↓ but RSI ↑', enhanced: true },
+                { id: 'bullish_engulfing', label: '▲ Bull Engulf', desc: 'Bullish engulfing candle', enhanced: true },
+                { id: 'near_atl', label: '▲ Near ATL', desc: 'Within 20% of all-time low', enhanced: false },
+                { id: 'volume_spike', label: '▲ Vol Spike', desc: 'Volume > 1.5x average', enhanced: true },
+              ].map((filter) => {
+                const isActive = signalFilters.has(filter.id);
+                const isDisabled = filter.enhanced && !useEnhancedAPI;
+                return (
+                  <button
+                    key={filter.id}
+                    onClick={() => toggleSignalFilter(filter.id)}
+                    disabled={isDisabled}
+                    className={`flex-1 px-3 py-2 rounded-xl text-xs whitespace-nowrap transition-all font-medium group relative disabled:opacity-40 disabled:cursor-not-allowed ${
+                      isActive
+                        ? 'bg-gradient-to-r from-green-500 to-emerald-500 text-white shadow-lg shadow-green-500/20'
+                        : darkMode
+                        ? 'bg-white/5 text-gray-400 hover:bg-white/10 border border-white/5'
+                        : 'bg-white text-gray-600 hover:bg-gray-50 border border-gray-200'
+                    }`}
+                  >
+                    {filter.label}
+                    <span className={`absolute bottom-full left-1/2 -translate-x-1/2 mb-2 px-3 py-2 text-xs rounded-lg opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap pointer-events-none z-10 ${
+                      darkMode ? 'bg-gray-800 text-white' : 'bg-gray-900 text-white'
+                    }`}>
+                      {filter.desc}
+                    </span>
+                  </button>
+                );
+              })}
+            </div>
+          </div>
+          
+          {/* Row 4: SELL (Bearish Signals) */}
+          <div className="flex gap-2">
+            <span className={`w-16 flex-shrink-0 text-[10px] font-semibold px-2 py-2 rounded-lg text-center ${darkMode ? 'bg-red-500/10 text-red-400' : 'bg-red-50 text-red-600'}`}>SELL</span>
+            <div className="flex gap-2 flex-1">
+              {[
+                { id: 'below_sma50', label: '▼ Downtrend', desc: 'Price below SMA50', enhanced: true },
+                { id: 'above_bb', label: '▼ Above BB', desc: 'Above upper Bollinger Band', enhanced: true },
+                { id: 'positive_funding', label: '▼ Pos Funding', desc: 'Longs paying shorts', enhanced: true },
+                { id: 'bearish_divergence', label: '▼ Bear Divergence', desc: 'Price ↑ but RSI ↓', enhanced: true },
+                { id: 'bearish_engulfing', label: '▼ Bear Engulf', desc: 'Bearish engulfing candle', enhanced: true },
+                { id: 'near_ath', label: '▼ Near ATH', desc: 'Within 10% of all-time high', enhanced: true },
+                { id: 'high_vol_mcap', label: '▼ High V/MC', desc: 'Volume > 10% market cap', enhanced: false },
+              ].map((filter) => {
+                const isActive = signalFilters.has(filter.id);
+                const isDisabled = filter.enhanced && !useEnhancedAPI;
+                return (
+                  <button
+                    key={filter.id}
+                    onClick={() => toggleSignalFilter(filter.id)}
+                    disabled={isDisabled}
+                    className={`flex-1 px-3 py-2 rounded-xl text-xs whitespace-nowrap transition-all font-medium group relative disabled:opacity-40 disabled:cursor-not-allowed ${
+                      isActive
+                        ? 'bg-gradient-to-r from-red-500 to-pink-500 text-white shadow-lg shadow-red-500/20'
+                        : darkMode
+                        ? 'bg-white/5 text-gray-400 hover:bg-white/10 border border-white/5'
+                        : 'bg-white text-gray-600 hover:bg-gray-50 border border-gray-200'
+                    }`}
+                  >
+                    {filter.label}
+                    <span className={`absolute bottom-full left-1/2 -translate-x-1/2 mb-2 px-3 py-2 text-xs rounded-lg opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap pointer-events-none z-10 ${
+                      darkMode ? 'bg-gray-800 text-white' : 'bg-gray-900 text-white'
+                    }`}>
+                      {filter.desc}
+                    </span>
+                  </button>
+                );
+              })}
+            </div>
           </div>
         </div>
         
