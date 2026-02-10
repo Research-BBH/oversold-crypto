@@ -158,13 +158,17 @@ const getCategoryFromMetadata = (id, name, symbol) => {
                      'circuit-usd', 'djed', 'overnight-finance-usd', 'compound-usd-coin',
                      'nusd', 'synth-susd', 'hai', 'terra-usd', 'terrausd', 'flex-usd',
                      'brz', 'bidr', 'xsgd', 'gyen', 'jpyc', 'gbpt', 'qcad', 'par-stablecoin',
-                     'figure-heloc'];
+                     'figure-heloc', 'fx-usd-savings', 'fxsave', 'yousd', 'yield-optimizer-usd',
+                     'reusd', 're-protocol-reusd', 'usda', 'usda-2', 'angle-usda', 'liusd',
+                     'infinifi-locked-iusd', 'cap-usd', 'cusd-2', 'fiusd', 'sygnum-platform-fiusd',
+                     'usdx-2', 'stably-usd', 'sperax-usd', 'usd-mars', 'f-x-protocol-fxusd'];
   const stableSymbols = ['usdt', 'usdc', 'dai', 'busd', 'tusd', 'usdp', 'gusd', 'frax', 
                          'lusd', 'susd', 'mim', 'ust', 'fei', 'usdd', 'usde', 'pyusd',
                          'eurs', 'eurt', 'eurc', 'ageur', 'ceur', 'jeur', 'gho', 'crvusd',
                          'usdm', 'usdy', 'usd0', 'usdr', 'usdb', 'usdj', 'usdn', 'usdx',
                          'usdk', 'usk', 'vai', 'bob', 'dola', 'hai', 'silk', 'djed',
-                         'paxg', 'xaut', 'cusd', 'fdusd', 'alusd', 'ousd', 'musd'];
+                         'paxg', 'xaut', 'cusd', 'fdusd', 'alusd', 'ousd', 'musd',
+                         'fxsave', 'yousd', 'reusd', 'usda', 'liusd', 'fiusd'];
   if (stableIds.includes(idLower) || stableSymbols.includes(symbolLower)) {
     return 'stable';
   }

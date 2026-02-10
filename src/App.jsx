@@ -1325,8 +1325,8 @@ if (signalFilters.size > 0) {
                 </div>
                 
                 {/* Right side - Rows per page */}
-                <div className="flex items-center gap-2 text-xs text-gray-500">
-                  <span>Rows:</span>
+                <div className="flex items-center gap-2 text-xs">
+                  <span className={darkMode ? 'text-gray-400' : 'text-gray-600'}>Items per page:</span>
                   <select
                     value={rowsPerPage}
                     onChange={(e) => {
@@ -1335,9 +1335,9 @@ if (signalFilters.size > 0) {
                     }}
                     className={`px-2 py-1 rounded text-xs font-medium cursor-pointer ${
                       darkMode 
-                        ? 'bg-white/5 border-white/10 text-gray-300' 
-                        : 'bg-white border-gray-200 text-gray-700'
-                    } border`}
+                        ? 'bg-gray-800 border-gray-600 text-white' 
+                        : 'bg-white border-gray-300 text-gray-900'
+                    } border focus:outline-none focus:ring-1 focus:ring-orange-500`}
                   >
                     <option value={25}>25</option>
                     <option value={50}>50</option>

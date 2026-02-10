@@ -755,6 +755,31 @@ const getCategoryFromMetadata = (id, name, symbol) => {
     
     // === Tokenized Real-World Assets (pegged) ===
     'figure-heloc',              // FIGR_HELOC - tokenized home equity, pegged to $1
+    
+    // === Additional USD Stables (various) ===
+    'fx-usd-savings',            // FXSAVE - f(x) USD Saving
+    'fxsave',                    // FXSAVE alternate
+    'f-x-protocol-fxusd',        // fxUSD
+    'yousd',                     // YOUSD - Yield Optimizer USD
+    'yield-optimizer-usd',       // YOUSD alternate
+    'reusd',                     // REUSD - Re Protocol reUSD
+    're-protocol-reusd',         // REUSD alternate
+    'usda',                      // USDA
+    'usda-2',                    // USDA alternate
+    'angle-usda',                // USDA (Angle)
+    'liusd',                     // LIUSD - infiniFi Locked iUSD
+    'infinifi-locked-iusd',      // LIUSD alternate  
+    'cap-usd',                   // CUSD - Cap USD
+    'cusd-2',                    // CUSD alternate
+    'fiusd',                     // FIUSD - Sygnum FIUSD
+    'sygnum-platform-fiusd',     // FIUSD alternate
+    'usdx-2',                    // USDX
+    'stably-usd',                // USDS
+    'sperax-usd',                // USDs (Sperax)
+    'usd-mars',                  // USDm
+    'usd-coin-wormhole',         // USDC (Wormhole)
+    'usd-coin-avalanche-bridged-usdc-e', // USDC.e
+    'bridged-usdc-polygon-pos-bridge',   // USDC bridged
   ];
   
   if (stablecoinIds.includes(idLower)) {
@@ -847,11 +872,11 @@ export default async function handler(req) {
       // Check for stablecoin patterns in name/symbol/id
       const hasStablePattern = (
         // Symbol patterns for USD stables
-        /^USD|USD$|USDT|USDC|USDS|USDX|TUSD|BUSD|GUSD|DUSD|LUSD|MUSD|PUSD|SUSD|VUSD|CUSD|EUSD|FUSD|HUSD|IUSD|KUSD|NUSD|OUSD|RUSD|WUSD|YUSD|ZUSD|^UST$|^DAI$|^FRAX$|^FEI$|^MIM$|^RAI$|^USR$|^USK$|^USS$|^USX$|^GHO$|^DOLA$|^CGUSD|^USDF|^USP$|^USDJ$|^USDN$|^USDP$|^USDQ$|^USDL$|^USDB$|^USDV$|^USDW$|^USDZ$|^SILK$|^USDK$|^BOB$|^HAY$|^ALUSD$|^CUSD$|^CEUR$|^DJED$|^EURT$|^EURS$|^EURC$|^AGEUR$|^SEUR$|^JEUR$|^USDFL$/i.test(symbolUpper) ||
+        /^USD|USD$|USDT|USDC|USDS|USDX|TUSD|BUSD|GUSD|DUSD|LUSD|MUSD|PUSD|SUSD|VUSD|CUSD|EUSD|FUSD|HUSD|IUSD|KUSD|NUSD|OUSD|RUSD|WUSD|YUSD|ZUSD|^UST$|^DAI$|^FRAX$|^FEI$|^MIM$|^RAI$|^USR$|^USK$|^USS$|^USX$|^GHO$|^DOLA$|^CGUSD|^USDF|^USP$|^USDJ$|^USDN$|^USDP$|^USDQ$|^USDL$|^USDB$|^USDV$|^USDW$|^USDZ$|^SILK$|^USDK$|^BOB$|^HAY$|^ALUSD$|^CUSD$|^CEUR$|^DJED$|^EURT$|^EURS$|^EURC$|^AGEUR$|^SEUR$|^JEUR$|^USDFL$|^FXSAVE$|^YOUSD$|^REUSD$|^USDA$|^LIUSD$|^FIUSD$|^USDM$/i.test(symbolUpper) ||
         // Name patterns
-        /STABLECOIN|STABLE COIN|USD COIN|DOLLAR|TETHER|PEGGED|SYNTH.*USD|USD.*SYNTH/i.test(nameUpper) ||
+        /STABLECOIN|STABLE COIN|USD COIN|DOLLAR|TETHER|PEGGED|SYNTH.*USD|USD.*SYNTH|USD SAVING|YIELD.*USD|LOCKED.*USD|CAP USD|OPTIMIZER USD/i.test(nameUpper) ||
         // ID patterns
-        /stablecoin|stable-|pegged|-usd$|^usd-|-dollar|tether|usdt|usdc/i.test(idLower)
+        /stablecoin|stable-|pegged|-usd$|^usd-|-dollar|tether|usdt|usdc|reusd|yousd|liusd|fiusd|fxsave|cap-usd/i.test(idLower)
       );
       
       const looksLikeUsdStable = (
