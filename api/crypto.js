@@ -260,8 +260,22 @@ export default async function handler(req) {
       // Smart categorization based on metadata
       let category = getCategoryFromMetadata(coin.id, coin.name, coin.symbol);
       
-      // Additional price-based stablecoin detection
-      // Catches stables that slip through the ID/symbol checks
+      // Additional stablecoin detection for symbols that slip through
+      const stableSymbolsExact = [
+        'usdt', 'usdc', 'dai', 'busd', 'tusd', 'usdp', 'gusd', 'frax', 
+        'lusd', 'susd', 'mim', 'ust', 'fei', 'usdd', 'usde', 'pyusd',
+        'eurs', 'eurt', 'eurc', 'ageur', 'ceur', 'jeur', 'gho', 'crvusd',
+        'usdm', 'usdy', 'usd0', 'usdr', 'usdb', 'usdj', 'usdn', 'usdx',
+        'usdk', 'usk', 'vai', 'bob', 'dola', 'hai', 'silk', 'djed',
+        'paxg', 'xaut', 'cusd', 'fdusd', 'alusd', 'ousd', 'musd',
+        'fxsave', 'yousd', 'reusd', 'usda', 'liusd', 'fiusd', 'usdz',
+        'usdl', 'usds', 'usdq', 'usdfl', 'zusd', 'husd', 'nusd', 'pusd',
+        'vusd', 'eusd', 'rusd', 'wusd', 'kusd', 'iusd', 'tusd', 'dusd'
+      ];
+      const symbolLower = (coin.symbol || '').toLowerCase();
+      const isKnownStableSymbol = stableSymbolsExact.includes(symbolLower);
+      
+      // Price-based stablecoin detection
       const isPriceStable = (
         coin.current_price >= 0.98 && 
         coin.current_price <= 1.02 &&
@@ -269,7 +283,14 @@ export default async function handler(req) {
         Math.abs(coin.price_change_percentage_7d_in_currency || 0) < 1
       );
       
-      if (isPriceStable && category !== 'stable') {
+      // Known symbol + price in stable range
+      const isStableBySymbolAndPrice = (
+        isKnownStableSymbol &&
+        coin.current_price >= 0.90 && 
+        coin.current_price <= 1.15
+      );
+      
+      if ((isPriceStable || isStableBySymbolAndPrice) && category !== 'stable') {
         category = 'stable';
       }
       

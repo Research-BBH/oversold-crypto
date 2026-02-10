@@ -869,6 +869,21 @@ export default async function handler(req) {
       const nameUpper = (coin.name || '').toUpperCase();
       const idLower = (coin.id || '').toLowerCase();
       
+      // Direct symbol match for known stablecoins (case insensitive)
+      const stableSymbolsExact = [
+        'usdt', 'usdc', 'dai', 'busd', 'tusd', 'usdp', 'gusd', 'frax', 
+        'lusd', 'susd', 'mim', 'ust', 'fei', 'usdd', 'usde', 'pyusd',
+        'eurs', 'eurt', 'eurc', 'ageur', 'ceur', 'jeur', 'gho', 'crvusd',
+        'usdm', 'usdy', 'usd0', 'usdr', 'usdb', 'usdj', 'usdn', 'usdx',
+        'usdk', 'usk', 'vai', 'bob', 'dola', 'hai', 'silk', 'djed',
+        'paxg', 'xaut', 'cusd', 'fdusd', 'alusd', 'ousd', 'musd',
+        'fxsave', 'yousd', 'reusd', 'usda', 'liusd', 'fiusd', 'usdz',
+        'usdl', 'usds', 'usdq', 'usdfl', 'zusd', 'husd', 'nusd', 'pusd',
+        'vusd', 'eusd', 'rusd', 'wusd', 'kusd', 'iusd', 'tusd', 'dusd'
+      ];
+      const symbolLower = (coin.symbol || '').toLowerCase();
+      const isKnownStableSymbol = stableSymbolsExact.includes(symbolLower);
+      
       // Check for stablecoin patterns in name/symbol/id
       const hasStablePattern = (
         // Symbol patterns for USD stables
@@ -881,10 +896,10 @@ export default async function handler(req) {
       
       const looksLikeUsdStable = (
         coin.current_price >= 0.95 && 
-        coin.current_price <= 1.05 &&
+        coin.current_price <= 1.10 &&
         Math.abs(coin.price_change_percentage_24h_in_currency || 0) < 2 &&
         Math.abs(coin.price_change_percentage_7d_in_currency || 0) < 5 &&
-        hasStablePattern
+        (hasStablePattern || isKnownStableSymbol)
       );
       
       // Pure price-based detection for obvious stables (very tight price + low volatility)
@@ -896,6 +911,13 @@ export default async function handler(req) {
         Math.abs(coin.price_change_percentage_7d_in_currency || 0) < 1
       );
       
+      // Known stablecoin symbols with price in stable range (more lenient)
+      const isStableBySymbolAndPrice = (
+        isKnownStableSymbol &&
+        coin.current_price >= 0.90 && 
+        coin.current_price <= 1.15
+      );
+      
       // Euro stables (~1.05-1.15 USD typically)
       const looksLikeEurStable = (
         coin.current_price >= 1.00 && 
@@ -905,7 +927,7 @@ export default async function handler(req) {
         /EUR|EURS|EURC|EURT|AGEUR|CEUR|JEUR|SEUR|PAR|EUROE/i.test(symbolUpper)
       );
       
-      const looksLikeStablecoin = looksLikeUsdStable || looksLikeEurStable || isPriceStable;
+      const looksLikeStablecoin = looksLikeUsdStable || looksLikeEurStable || isPriceStable || isStableBySymbolAndPrice;
       
       const finalCategory = looksLikeStablecoin ? 'stable' : category;
       
