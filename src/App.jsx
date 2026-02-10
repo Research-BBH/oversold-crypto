@@ -46,6 +46,8 @@ export default function App() {
   const [signalFilters, setSignalFilters] = useState(new Set());
   const [useEnhancedAPI, setUseEnhancedAPI] = useState(true);
   const [showLowVolume, setShowLowVolume] = useState(false);
+  const [tablePage, setTablePage] = useState(1);
+  const [rowsPerPage, setRowsPerPage] = useState(50);
   const [darkMode, setDarkMode] = useState(() => {
     const saved = localStorage.getItem('oversold_darkMode');
     return saved !== null ? JSON.parse(saved) : true;
@@ -313,6 +315,19 @@ if (signalFilters.size > 0) {
     });
     return r;
   }, [tokens, search, cat, sortBy, showWL, watchlist, preset, rsiFilter, rsiSortDir, signalFilters, showLowVolume]);
+
+  // Reset to page 1 when filters change
+  useEffect(() => {
+    setTablePage(1);
+  }, [search, cat, sortBy, showWL, preset, rsiFilter, signalFilters, showLowVolume]);
+
+  // Paginated tokens for display
+  const paginatedTokens = useMemo(() => {
+    const startIndex = (tablePage - 1) * rowsPerPage;
+    return filtered.slice(startIndex, startIndex + rowsPerPage);
+  }, [filtered, tablePage, rowsPerPage]);
+
+  const totalPages = Math.ceil(filtered.length / rowsPerPage);
 
   const stats = useMemo(() => {
     const withRSI = tokens.filter((t) => t.rsi !== null);
@@ -1045,7 +1060,7 @@ if (signalFilters.size > 0) {
             </div>
 
             {/* Table Body */}
-            <div className="max-h-[58vh] overflow-y-auto">
+            <div>
               {filtered.length === 0 ? (
                 <div className="text-center py-16">
                   <p className="text-4xl mb-3">🔍</p>
@@ -1054,7 +1069,7 @@ if (signalFilters.size > 0) {
                   </p>
                 </div>
               ) : (
-                filtered.map((t) => {
+                paginatedTokens.map((t) => {
                   const watched = watchlist.has(t.id);
                   const sparkColor =
                     t.sparkline?.length > 1
@@ -1215,20 +1230,123 @@ if (signalFilters.size > 0) {
               )}
             </div>
 
-            {/* Table Footer */}
-            <div
-              className={`px-5 py-3 border-t ${
-                darkMode ? 'border-white/10 bg-white/[0.02]' : 'border-gray-100 bg-gray-50'
-              } flex flex-col sm:flex-row justify-between gap-2 text-xs text-gray-500`}
-            >
-              <span>
-                {filtered.length} tokens • {stats.withRSI} with RSI
-                {!showWL && !showLowVolume && (
-                  <span className="ml-1 text-orange-500">• Filtered by volume &gt;$200K</span>
-                )}
-              </span>
-              <span>Data: CoinGecko • RSI (14) • Auto-refresh 1min</span>
-            </div>
+            {/* Pagination Controls */}
+            {filtered.length > 0 && (
+              <div
+                className={`px-5 py-3 border-t ${
+                  darkMode ? 'border-white/10 bg-white/[0.02]' : 'border-gray-100 bg-gray-50'
+                } flex flex-col sm:flex-row items-center justify-between gap-3`}
+              >
+                {/* Left side - Info */}
+                <div className="text-xs text-gray-500">
+                  Showing {((tablePage - 1) * rowsPerPage) + 1}-{Math.min(tablePage * rowsPerPage, filtered.length)} of {filtered.length} tokens
+                  {!showWL && !showLowVolume && (
+                    <span className="ml-1 text-orange-500">• Vol &gt;$200K</span>
+                  )}
+                </div>
+                
+                {/* Center - Page buttons */}
+                <div className="flex items-center gap-1">
+                  <button
+                    onClick={() => setTablePage(1)}
+                    disabled={tablePage === 1}
+                    className={`px-2 py-1 rounded text-xs font-medium transition-colors disabled:opacity-30 disabled:cursor-not-allowed ${
+                      darkMode 
+                        ? 'hover:bg-white/10 text-gray-400' 
+                        : 'hover:bg-gray-200 text-gray-600'
+                    }`}
+                  >
+                    ««
+                  </button>
+                  <button
+                    onClick={() => setTablePage(p => Math.max(1, p - 1))}
+                    disabled={tablePage === 1}
+                    className={`px-2 py-1 rounded text-xs font-medium transition-colors disabled:opacity-30 disabled:cursor-not-allowed ${
+                      darkMode 
+                        ? 'hover:bg-white/10 text-gray-400' 
+                        : 'hover:bg-gray-200 text-gray-600'
+                    }`}
+                  >
+                    ‹
+                  </button>
+                  
+                  {/* Page numbers */}
+                  {(() => {
+                    const pages = [];
+                    const showPages = 5;
+                    let start = Math.max(1, tablePage - Math.floor(showPages / 2));
+                    let end = Math.min(totalPages, start + showPages - 1);
+                    if (end - start + 1 < showPages) {
+                      start = Math.max(1, end - showPages + 1);
+                    }
+                    
+                    for (let i = start; i <= end; i++) {
+                      pages.push(
+                        <button
+                          key={i}
+                          onClick={() => setTablePage(i)}
+                          className={`px-2.5 py-1 rounded text-xs font-medium transition-colors ${
+                            i === tablePage
+                              ? 'bg-orange-500 text-white'
+                              : darkMode
+                              ? 'hover:bg-white/10 text-gray-400'
+                              : 'hover:bg-gray-200 text-gray-600'
+                          }`}
+                        >
+                          {i}
+                        </button>
+                      );
+                    }
+                    return pages;
+                  })()}
+                  
+                  <button
+                    onClick={() => setTablePage(p => Math.min(totalPages, p + 1))}
+                    disabled={tablePage === totalPages}
+                    className={`px-2 py-1 rounded text-xs font-medium transition-colors disabled:opacity-30 disabled:cursor-not-allowed ${
+                      darkMode 
+                        ? 'hover:bg-white/10 text-gray-400' 
+                        : 'hover:bg-gray-200 text-gray-600'
+                    }`}
+                  >
+                    ›
+                  </button>
+                  <button
+                    onClick={() => setTablePage(totalPages)}
+                    disabled={tablePage === totalPages}
+                    className={`px-2 py-1 rounded text-xs font-medium transition-colors disabled:opacity-30 disabled:cursor-not-allowed ${
+                      darkMode 
+                        ? 'hover:bg-white/10 text-gray-400' 
+                        : 'hover:bg-gray-200 text-gray-600'
+                    }`}
+                  >
+                    »»
+                  </button>
+                </div>
+                
+                {/* Right side - Rows per page */}
+                <div className="flex items-center gap-2 text-xs text-gray-500">
+                  <span>Rows:</span>
+                  <select
+                    value={rowsPerPage}
+                    onChange={(e) => {
+                      setRowsPerPage(Number(e.target.value));
+                      setTablePage(1);
+                    }}
+                    className={`px-2 py-1 rounded text-xs font-medium cursor-pointer ${
+                      darkMode 
+                        ? 'bg-white/5 border-white/10 text-gray-300' 
+                        : 'bg-white border-gray-200 text-gray-700'
+                    } border`}
+                  >
+                    <option value={25}>25</option>
+                    <option value={50}>50</option>
+                    <option value={100}>100</option>
+                    <option value={200}>200</option>
+                  </select>
+                </div>
+              </div>
+            )}
           </div>
         )}
 
