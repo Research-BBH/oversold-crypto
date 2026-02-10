@@ -420,6 +420,20 @@ const fetchOKXData = async (symbol) => {
 
 // Enhance a single token with signal data
 const enhanceToken = async (token) => {
+  // Skip signal calculation for stablecoins - technical analysis doesn't apply
+  if (token.category === 'stable') {
+    return {
+      ...token,
+      signals: null,
+      signalScore: null,
+      signalLabel: null,
+      signalStrength: null,
+      signalScoreDetails: null,
+      enhanced: false,
+      isStablecoin: true,
+    };
+  }
+  
   // Try Bybit first
   let exchangeData = await fetchBybitData(token.symbol);
   
@@ -613,10 +627,83 @@ const getCategoryFromMetadata = (id, name, symbol) => {
     return 'exchange';
   }
   
-  const stableIds = ['tether', 'usd-coin', 'dai', 'first-digital-usd', 'true-usd',
-                     'paxos-standard', 'frax', 'tusd', 'usdd'];
-  const stableKeywords = ['usd', 'dollar', 'stable'];
-  if (stableIds.includes(idLower) || stableKeywords.some(k => symbolLower.includes(k))) {
+  // Stablecoins - explicit allowlist of CoinGecko IDs
+  // Technical analysis doesn't apply to price-pegged assets
+  const stablecoinIds = [
+    // === USD Stablecoins (Top by market cap) ===
+    'tether',                    // USDT
+    'usd-coin',                  // USDC
+    'dai',                       // DAI
+    'usds',                      // USDS (Sky Dollar)
+    'ethena-usde',               // USDe
+    'first-digital-usd',         // FDUSD
+    'paypal-usd',                // PYUSD
+    'true-usd',                  // TUSD
+    'usdd',                      // USDD
+    'frax',                      // FRAX
+    'paxos-standard',            // USDP (Pax Dollar)
+    'gemini-dollar',             // GUSD
+    'liquity-usd',               // LUSD
+    'crvusd',                    // crvUSD
+    'gho',                       // GHO (Aave)
+    'usual-usd',                 // USD0
+    'ondo-us-dollar-yield',      // USDY
+    'mountain-protocol-usdm',    // USDM
+    'binance-usd',               // BUSD
+    'husd',                      // HUSD
+    'usdx-money-usdx',           // USDX
+    'electronic-usd',            // eUSD
+    'compound-usd-coin',         // cUSDC
+    'nusd',                      // sUSD (Synthetix)
+    'usd1-wlfi',                 // USD1 (World Liberty)
+    
+    // === Crypto-backed / Algorithmic USD ===
+    'magic-internet-money',      // MIM
+    'alchemix-usd',              // alUSD
+    'origin-dollar',             // OUSD
+    'fei-usd',                   // FEI
+    'vai',                       // VAI
+    'neutrino',                  // USDN
+    'reserve',                   // RSV
+    'rai',                       // RAI (floating peg but still stable)
+    'bean',                      // BEAN
+    'dola-usd',                  // DOLA
+    'angle-usd',                 // USDA
+    'gyroscope-gyd',             // GYD
+    'fixed-forex-iron-bank-eur', // Fixed Forex
+    
+    // === Euro Stablecoins ===
+    'stasis-eurs',               // EURS
+    'euro-coin',                 // EURC
+    'ageur',                     // agEUR
+    'celo-euro',                 // cEUR
+    'par-stablecoin',            // PAR
+    'euroe-stablecoin',          // EUROe
+    'tether-eurt',               // EURT
+    
+    // === Other Fiat Stablecoins ===
+    'bidr',                      // BIDR (IDR)
+    'gyen',                      // GYEN (JPY)
+    'xsgd',                      // XSGD (SGD)
+    'brz',                       // BRZ (BRL)
+    'celo-real-creal',           // cREAL (BRL)
+    'mxnt',                      // MXNT (MXN)
+    'bilira',                    // TRYB (TRY)
+    'gbpt',                      // GBPT (GBP)
+    'cnht',                      // CNHT (CNY)
+    
+    // === Gold/Commodity-backed ===
+    'tether-gold',               // XAUT
+    'pax-gold',                  // PAXG
+    'digix-gold-token',          // DGX
+    'kinesis-gold',              // KAU
+    'veraone',                   // VRO
+    
+    // === Yield-bearing stables (still pegged) ===
+    'savings-dai',               // sDAI
+  ];
+  
+  if (stablecoinIds.includes(idLower)) {
     return 'stable';
   }
   
@@ -754,6 +841,20 @@ export default async function handler(req) {
     
     // Remaining tokens without enhancement
     const remainingTokens = baseTokens.slice(250).map(token => {
+      // Skip signal calculation for stablecoins
+      if (token.category === 'stable') {
+        return {
+          ...token,
+          signals: null,
+          signalScore: null,
+          signalLabel: null,
+          signalStrength: null,
+          signalScoreDetails: null,
+          enhanced: false,
+          isStablecoin: true,
+        };
+      }
+      
       const volMcapRatio = token.mcap > 0 ? (token.volume / token.mcap) * 100 : null;
       
       // Use sparkline data as fallback for SMA/BB calculations
