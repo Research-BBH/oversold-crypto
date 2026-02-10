@@ -280,7 +280,8 @@ export const TokenDetailPage = ({ token, onBack, darkMode, setDarkMode }) => {
             price: token.price,
             rsi: token.rsi,
             score: token.signalScore,
-            sellScore: token.sellScore,
+            signalLabel: token.signalLabel,
+            signalStrength: token.signalStrength,
             signals: token.signals,
             signalDetails: token.signalScoreDetails,
             signalScoreDetails: token.signalScoreDetails, // Alias for compatibility
