@@ -939,24 +939,28 @@ export default async function handler(req) {
       };
     });
     
-    const allTokens = [...enhancedTokens, ...remainingTokens];
-    const enhancedCount = enhancedTokens.filter(t => t.enhanced).length;
+    // Combine all tokens and filter out stablecoins
+    const allTokensRaw = [...enhancedTokens, ...remainingTokens];
+    const allTokens = allTokensRaw.filter(t => t.category !== 'stable' && !t.isStablecoin);
+    const stablecoinsRemoved = allTokensRaw.length - allTokens.length;
+    const enhancedCount = enhancedTokens.filter(t => t.enhanced && t.category !== 'stable').length;
     
     const endTime = Date.now();
     const duration = ((endTime - startTime) / 1000).toFixed(2);
     
-    console.log(`✅ Enhanced ${enhancedCount}/${allTokens.length} tokens in ${duration}s`);
+    console.log(`✅ Enhanced ${enhancedCount}/${allTokens.length} tokens in ${duration}s (removed ${stablecoinsRemoved} stablecoins)`);
     
     return new Response(
       JSON.stringify({
         tokens: allTokens,
         timestamp: new Date().toISOString(),
         source: 'coingecko+exchanges',
-        version: '2.0-sparkline-fallback', // Version indicator
+        version: '2.1-no-stablecoins', // Version indicator
         stats: {
           total: allTokens.length,
           enhanced: enhancedCount,
           withRSI: allTokens.filter(t => t.rsi !== null).length,
+          stablecoinsRemoved: stablecoinsRemoved,
           duration: `${duration}s`,
         }
       }),

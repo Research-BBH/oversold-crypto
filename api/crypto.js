@@ -145,11 +145,21 @@ const getCategoryFromMetadata = (id, name, symbol) => {
     return 'exchange';
   }
   
-  // Stablecoins
+  // Stablecoins - comprehensive list
   const stableIds = ['tether', 'usd-coin', 'dai', 'first-digital-usd', 'true-usd',
-                     'paxos-standard', 'frax', 'tusd', 'usdd'];
-  const stableKeywords = ['usd', 'dollar', 'stable'];
-  if (stableIds.includes(idLower) || stableKeywords.some(k => symbolLower.includes(k))) {
+                     'paxos-standard', 'frax', 'tusd', 'usdd', 'ethena-usde', 'usds',
+                     'paypal-usd', 'tether-gold', 'binance-peg-busd', 'gemini-dollar',
+                     'liquity-usd', 'crvusd', 'frax-ether', 'origin-dollar', 'alchemix-usd',
+                     'rai', 'fei-usd', 'magic-internet-money', 'neutrino', 'reserve',
+                     'stasis-eurs', 'tether-eurt', 'euro-coin', 'ageur', 'celo-euro',
+                     'seur', 'savings-dai', 'usual-usd'];
+  const stableKeywords = ['usd', 'dollar', 'stable', 'eur', 'gbp'];
+  const stableSymbols = ['usdt', 'usdc', 'dai', 'busd', 'tusd', 'usdp', 'gusd', 'frax', 
+                         'lusd', 'susd', 'mim', 'ust', 'fei', 'usdd', 'usde', 'pyusd',
+                         'eurs', 'eurt', 'eurc', 'ageur', 'ceur', 'jeur', 'gho', 'crvusd'];
+  if (stableIds.includes(idLower) || 
+      stableKeywords.some(k => symbolLower.includes(k) && symbolLower.length <= 5) ||
+      stableSymbols.includes(symbolLower)) {
     return 'stable';
   }
   
@@ -273,17 +283,21 @@ export default async function handler(req) {
       };
     });
 
-    const withRSI = tokens.filter(t => t.rsi !== null).length;
+    // Filter out stablecoins - they don't make sense for RSI analysis
+    const tokensFiltered = tokens.filter(t => t.category !== 'stable');
+    const stablecoinsRemoved = tokens.length - tokensFiltered.length;
+    const withRSI = tokensFiltered.filter(t => t.rsi !== null).length;
 
     return new Response(
       JSON.stringify({
-        tokens,
+        tokens: tokensFiltered,
         timestamp: new Date().toISOString(),
         source: 'coingecko',
         stats: {
-          total: tokens.length,
+          total: tokensFiltered.length,
           withRSI: withRSI,
-          dataPoints: tokens[0]?.sparkline?.length || 0,
+          stablecoinsRemoved: stablecoinsRemoved,
+          dataPoints: tokensFiltered[0]?.sparkline?.length || 0,
         }
       }),
       { 
