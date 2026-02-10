@@ -277,51 +277,73 @@ export const FullSignalAnalysis = ({ analysis, darkMode }) => {
     );
   }
 
-  const buyRecommendation = getBuyRecommendation(analysis);
-  const sellRecommendation = getSellRecommendation(analysis);
+  // Get the unified score
+  const score = analysis.score || 0;
+  const signalDetails = analysis.signalScoreDetails || analysis.signalDetails || {};
+  const activeSignals = signalDetails.activeSignals || [];
   
-  // Build buy signals array
-  const buySignals = buildBuySignals(analysis);
-  const sellSignals = buildSellSignals(analysis);
+  // Determine the label and color based on score
+  let label, bgClass, textClass, dotClass;
+  if (score >= 50) {
+    label = 'STRONG BUY';
+    bgClass = darkMode ? 'bg-green-500/10 border-green-500/30' : 'bg-green-50 border-green-300';
+    textClass = 'text-green-500';
+    dotClass = 'bg-green-500';
+  } else if (score >= 25) {
+    label = 'BUY';
+    bgClass = darkMode ? 'bg-emerald-500/10 border-emerald-500/30' : 'bg-emerald-50 border-emerald-300';
+    textClass = 'text-emerald-500';
+    dotClass = 'bg-emerald-500';
+  } else if (score > -25) {
+    label = 'NEUTRAL';
+    bgClass = darkMode ? 'bg-gray-500/10 border-gray-500/30' : 'bg-gray-50 border-gray-300';
+    textClass = 'text-gray-500';
+    dotClass = 'bg-gray-400';
+  } else if (score > -50) {
+    label = 'SELL';
+    bgClass = darkMode ? 'bg-orange-500/10 border-orange-500/30' : 'bg-orange-50 border-orange-300';
+    textClass = 'text-orange-500';
+    dotClass = 'bg-orange-500';
+  } else {
+    label = 'STRONG SELL';
+    bgClass = darkMode ? 'bg-red-500/10 border-red-500/30' : 'bg-red-50 border-red-300';
+    textClass = 'text-red-500';
+    dotClass = 'bg-red-500';
+  }
+
+  // Separate bullish and bearish signals
+  const bullishSignals = activeSignals.filter(s => s.points > 0);
+  const bearishSignals = activeSignals.filter(s => s.points < 0);
 
   return (
     <div className="space-y-4">
-      {/* Buy and Sell Scores Side by Side */}
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-        {/* Buy Score Section */}
-        <div className={`${darkMode ? 'bg-green-500/5 border-green-500/20' : 'bg-green-50 border-green-200'} border rounded-xl p-6`}>
-          <div className="flex items-center gap-2 mb-4">
-            <span className="text-lg">📈</span>
-            <h3 className="font-semibold text-green-500">Buy Signal Analysis</h3>
+      {/* Unified Score Display */}
+      <div className={`${bgClass} border rounded-xl p-6`}>
+        <div className="flex items-center justify-between">
+          {/* Score Circle */}
+          <div className="flex flex-col items-center">
+            <UnifiedScoreCircle score={score} />
+            <p className="text-xs text-gray-500 mt-2">
+              {activeSignals.length} signals active
+            </p>
           </div>
-          <div className="flex items-center justify-between">
-            <div className="flex flex-col items-center">
-              <SignalScoreCircle score={analysis.score || 0} />
-              <p className="text-xs text-gray-500 mt-2">
-                {(analysis.signalDetails?.activeCount || analysis.signalScoreDetails?.activeCount || 0)}/{(analysis.signalDetails?.availableCount || analysis.signalScoreDetails?.availableCount || 0)} active
-              </p>
+          
+          {/* Label and Description */}
+          <div className="flex-1 ml-6">
+            <div className="flex items-center gap-2 mb-2">
+              <span className={`w-3 h-3 rounded-full ${dotClass}`}></span>
+              <span className={`text-2xl font-bold ${textClass}`}>{label}</span>
             </div>
-            <div className="flex-1 ml-4">
-              {buyRecommendation && <BuyRecommendation recommendation={buyRecommendation} darkMode={darkMode} />}
-            </div>
-          </div>
-        </div>
-        
-        {/* Sell Score Section */}
-        <div className={`${darkMode ? 'bg-red-500/5 border-red-500/20' : 'bg-red-50 border-red-200'} border rounded-xl p-6`}>
-          <div className="flex items-center gap-2 mb-4">
-            <span className="text-lg">📉</span>
-            <h3 className="font-semibold text-red-500">Sell Signal Analysis</h3>
-          </div>
-          <div className="flex items-center justify-between">
-            <div className="flex flex-col items-center">
-              <SellScoreCircle score={analysis.signalScoreDetails?.sellScore || analysis.signalDetails?.sellScore || analysis.sellScore || 0} />
-              <p className="text-xs text-gray-500 mt-2">
-                {(analysis.signalDetails?.sellActiveCount || analysis.signalScoreDetails?.sellActiveCount || 0)}/{(analysis.signalDetails?.sellAvailableCount || analysis.signalScoreDetails?.sellAvailableCount || 0)} active
-              </p>
-            </div>
-            <div className="flex-1 ml-4">
-              {sellRecommendation && <SellRecommendation recommendation={sellRecommendation} darkMode={darkMode} />}
+            <p className={`text-sm ${darkMode ? 'text-gray-400' : 'text-gray-600'}`}>
+              {score >= 50 && 'Multiple bullish signals aligned. High conviction setup.'}
+              {score >= 25 && score < 50 && 'Moderate bullish signals present. Consider entry with proper risk management.'}
+              {score > -25 && score < 25 && 'Mixed or weak signals. Wait for clearer setup or trade with caution.'}
+              {score > -50 && score <= -25 && 'Moderate bearish signals present. Consider reducing exposure.'}
+              {score <= -50 && 'Multiple bearish signals aligned. High conviction sell setup.'}
+            </p>
+            <div className="flex gap-4 mt-3 text-xs">
+              <span className="text-green-500">▲ {bullishSignals.length} bullish</span>
+              <span className="text-red-500">▼ {bearishSignals.length} bearish</span>
             </div>
           </div>
         </div>
@@ -332,25 +354,43 @@ export const FullSignalAnalysis = ({ analysis, darkMode }) => {
         <MarketCapReliability reliability={analysis.reliability} darkMode={darkMode} />
       )}
 
-      {/* Buy Signal Details */}
-      <div className={`${darkMode ? 'bg-white/5 border-white/10' : 'bg-white border-gray-200'} border rounded-xl p-6`}>
-        <div className="flex items-center gap-2 mb-4">
-          <span className="w-3 h-3 rounded-full bg-green-500"></span>
-          <h3 className="font-semibold">Buy Signals Breakdown</h3>
-          <span className="text-xs text-gray-500 ml-auto">Max 100 pts</span>
+      {/* Active Signals Breakdown */}
+      {activeSignals.length > 0 && (
+        <div className={`${darkMode ? 'bg-white/5 border-white/10' : 'bg-white border-gray-200'} border rounded-xl p-6`}>
+          <div className="flex items-center gap-2 mb-4">
+            <span className="text-lg">📊</span>
+            <h3 className="font-semibold">Active Signals</h3>
+            <span className="text-xs text-gray-500 ml-auto">Contributing to score</span>
+          </div>
+          <div className="space-y-2">
+            {activeSignals.sort((a, b) => Math.abs(b.points) - Math.abs(a.points)).map((signal, index) => (
+              <div 
+                key={index}
+                className={`flex items-center justify-between p-3 rounded-lg ${
+                  signal.points > 0 
+                    ? (darkMode ? 'bg-green-500/10' : 'bg-green-50')
+                    : (darkMode ? 'bg-red-500/10' : 'bg-red-50')
+                }`}
+              >
+                <div className="flex items-center gap-2">
+                  <span className={`w-2 h-2 rounded-full ${signal.points > 0 ? 'bg-green-500' : 'bg-red-500'}`}></span>
+                  <span className={`text-sm font-medium ${darkMode ? 'text-gray-200' : 'text-gray-800'}`}>
+                    {signal.name}
+                  </span>
+                  {signal.value !== undefined && (
+                    <span className="text-xs text-gray-500">
+                      ({typeof signal.value === 'number' ? signal.value.toFixed(2) : signal.value})
+                    </span>
+                  )}
+                </div>
+                <span className={`text-sm font-bold ${signal.points > 0 ? 'text-green-500' : 'text-red-500'}`}>
+                  {signal.points > 0 ? '+' : ''}{signal.points}
+                </span>
+              </div>
+            ))}
+          </div>
         </div>
-        <SignalsListEnhanced signals={buySignals} darkMode={darkMode} descriptions={BUY_SIGNAL_DESCRIPTIONS} />
-      </div>
-      
-      {/* Sell Signal Details */}
-      <div className={`${darkMode ? 'bg-white/5 border-white/10' : 'bg-white border-gray-200'} border rounded-xl p-6`}>
-        <div className="flex items-center gap-2 mb-4">
-          <span className="w-3 h-3 rounded-full bg-red-500"></span>
-          <h3 className="font-semibold">Sell Signals Breakdown</h3>
-          <span className="text-xs text-gray-500 ml-auto">Max 100 pts</span>
-        </div>
-        <SignalsListEnhanced signals={sellSignals} darkMode={darkMode} descriptions={SELL_SIGNAL_DESCRIPTIONS} type="sell" />
-      </div>
+      )}
 
       {/* Technical Indicators */}
       {(analysis.sma50 || analysis.bollingerBands || analysis.volumeRatio || analysis.divergence) && (
@@ -387,7 +427,67 @@ export const FullSignalAnalysis = ({ analysis, darkMode }) => {
   );
 };
 
-// Sell Score Circle (red themed)
+// Unified Score Circle (-100 to +100)
+const UnifiedScoreCircle = ({ score }) => {
+  const safeScore = score || 0;
+  
+  // Map -100 to +100 to 0-100 for the circle fill
+  const normalizedScore = (safeScore + 100) / 2;
+
+  const getColor = (s) => {
+    if (s >= 50) return 'text-green-400';
+    if (s >= 25) return 'text-emerald-400';
+    if (s > -25) return 'text-gray-400';
+    if (s > -50) return 'text-orange-400';
+    return 'text-red-400';
+  };
+
+  const getStroke = (s) => {
+    if (s >= 50) return '#22c55e';
+    if (s >= 25) return '#10b981';
+    if (s > -25) return '#9ca3af';
+    if (s > -50) return '#f97316';
+    return '#ef4444';
+  };
+
+  const radius = 40;
+  const circumference = 2 * Math.PI * radius;
+  const strokeDashoffset = circumference - (normalizedScore / 100) * circumference;
+
+  return (
+    <div className="relative w-24 h-24">
+      <svg className="w-24 h-24 transform -rotate-90">
+        <circle
+          cx="48"
+          cy="48"
+          r={radius}
+          stroke="rgba(255,255,255,0.1)"
+          strokeWidth="8"
+          fill="none"
+        />
+        <circle
+          cx="48"
+          cy="48"
+          r={radius}
+          stroke={getStroke(safeScore)}
+          strokeWidth="8"
+          fill="none"
+          strokeDasharray={circumference}
+          strokeDashoffset={strokeDashoffset}
+          strokeLinecap="round"
+          className="transition-all duration-1000"
+        />
+      </svg>
+      <div className="absolute inset-0 flex items-center justify-center">
+        <span className={`text-2xl font-bold ${getColor(safeScore)}`}>
+          {safeScore >= 0 ? '+' : ''}{Math.round(safeScore)}
+        </span>
+      </div>
+    </div>
+  );
+};
+
+// Legacy Sell Score Circle (kept for any remaining references)
 const SellScoreCircle = ({ score }) => {
   const safeScore = score || 0;
 
