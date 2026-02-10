@@ -1019,7 +1019,7 @@ if (signalFilters.size > 0) {
                 </span>
               </div>
               <div
-                className={`col-span-2 relative hidden lg:flex items-center justify-center cursor-pointer ${
+                className={`col-span-2 relative hidden lg:flex items-center justify-end pr-4 cursor-pointer ${
                   darkMode ? 'hover:text-white' : 'hover:text-gray-900'
                 } transition-colors group`}
                 onClick={() => {
@@ -1128,7 +1128,7 @@ if (signalFilters.size > 0) {
                         </span>
                       </div>
                       {/* Signal Score - col-span-2 */}
-                      <div className="col-span-2 hidden lg:flex items-center justify-center">
+                      <div className="col-span-2 hidden lg:flex items-center justify-end pr-4">
                         {t.signalScore !== undefined && t.signalScore !== null ? (
                           <div
                             className={`inline-flex items-center justify-center gap-1.5 px-2.5 py-1 rounded-md text-xs font-semibold tabular-nums min-w-[70px] ${
