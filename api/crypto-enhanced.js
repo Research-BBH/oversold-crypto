@@ -656,6 +656,36 @@ const getCategoryFromMetadata = (id, name, symbol) => {
     'compound-usd-coin',         // cUSDC
     'nusd',                      // sUSD (Synthetix)
     'usd1-wlfi',                 // USD1 (World Liberty)
+    'resolv-usd',                // USR
+    'pax-dollar',                // USDP
+    'usdj',                      // USDJ
+    'flex-usd',                  // flexUSD
+    'spiceusd',                  // USDS
+    'bob-token',                 // BOB
+    'hai',                       // HAI
+    'synth-susd',                // sUSD
+    'equilibrium-eosdt',         // EOSDT
+    'money-on-chain',            // DOC
+    'kava-lend',                 // USDX
+    'circuit-usd',               // cUSD (Celo)
+    'usk',                       // USK
+    'djed',                      // DJED
+    'silk-bcec1136-561c-4706-a42c-8b67d0d7f7d2', // SILK
+    'defidollar',                // DUSD
+    'usd-balance',               // USDB
+    'float-protocol-float',      // FLOAT
+    'volt-protocol-stablecoin',  // VOLT
+    'coin98-dollar',             // CUSD
+    'uma',                       // UMA pegged tokens
+    'ratio-stable-coin',         // USDR
+    'yeti-finance',              // YUSD
+    'terra-usd',                 // UST (defunct but might still appear)
+    'terrausd',                  // UST alternative ID
+    'yusd-stablecoin',           // YUSD
+    'stabolut',                  // USDC2
+    'zunusd',                    // zunUSD
+    'strike-usd',                // sUSD
+    'overnight-finance-usd',     // USD+
     
     // === Crypto-backed / Algorithmic USD ===
     'magic-internet-money',      // MIM
@@ -680,6 +710,9 @@ const getCategoryFromMetadata = (id, name, symbol) => {
     'par-stablecoin',            // PAR
     'euroe-stablecoin',          // EUROe
     'tether-eurt',               // EURT
+    'anchored-coins-eur',        // aEUR
+    'seur',                      // sEUR
+    'jarvis-synthetic-euro',     // jEUR
     
     // === Other Fiat Stablecoins ===
     'bidr',                      // BIDR (IDR)
@@ -691,6 +724,14 @@ const getCategoryFromMetadata = (id, name, symbol) => {
     'bilira',                    // TRYB (TRY)
     'gbpt',                      // GBPT (GBP)
     'cnht',                      // CNHT (CNY)
+    'tgbp',                      // TGBP
+    'qcad',                      // QCAD
+    'cad-coin',                  // CADC
+    'nzds',                      // NZDS
+    'xidr',                      // XIDR
+    'jpyc',                      // JPYC
+    'vndc',                      // VNDC
+    'thb-stablecoin',            // THBP
     
     // === Gold/Commodity-backed ===
     'tether-gold',               // XAUT
@@ -698,9 +739,19 @@ const getCategoryFromMetadata = (id, name, symbol) => {
     'digix-gold-token',          // DGX
     'kinesis-gold',              // KAU
     'veraone',                   // VRO
+    'cache-gold',                // CGT
+    'gold-coin-reserve',         // GCR
     
     // === Yield-bearing stables (still pegged) ===
     'savings-dai',               // sDAI
+    'wrapped-steth',             // might be confused with stables
+    'compound-usdt',             // cUSDT
+    'aave-usdc',                 // aUSDC
+    'aave-usdt',                 // aUSDT
+    'aave-dai',                  // aDAI
+    'yearn-usdc',                // yUSDC
+    'yearn-dai',                 // yDAI
+    'angle-staked-usda',         // stUSD
   ];
   
   if (stablecoinIds.includes(idLower)) {
@@ -788,18 +839,33 @@ export default async function handler(req) {
       // Catches USD-pegged stables not in the explicit allowlist
       const symbolUpper = (coin.symbol || '').toUpperCase();
       const nameUpper = (coin.name || '').toUpperCase();
+      const idLower = (coin.id || '').toLowerCase();
+      
+      // Check for stablecoin patterns in name/symbol/id
+      const hasStablePattern = (
+        // Symbol patterns for USD stables
+        /^USD|USD$|USDT|USDC|USDS|USDX|TUSD|BUSD|GUSD|DUSD|LUSD|MUSD|PUSD|SUSD|VUSD|CUSD|EUSD|FUSD|HUSD|IUSD|KUSD|NUSD|OUSD|RUSD|WUSD|YUSD|ZUSD|^UST$|^DAI$|^FRAX$|^FEI$|^MIM$|^RAI$|^USR$|^USK$|^USS$|^USX$|^GHO$|^DOLA$|^CGUSD|^USDF|^USP$|^USDJ$|^USDN$|^USDP$|^USDQ$|^USDL$|^USDB$|^USDV$|^USDW$|^USDZ$|^SILK$|^USDK$|^BOB$|^HAY$|^ALUSD$|^CUSD$|^CEUR$|^DJED$|^EURT$|^EURS$|^EURC$|^AGEUR$|^SEUR$|^JEUR$|^USDFL$/i.test(symbolUpper) ||
+        // Name patterns
+        /STABLECOIN|STABLE COIN|USD COIN|DOLLAR|TETHER|PEGGED|SYNTH.*USD|USD.*SYNTH/i.test(nameUpper) ||
+        // ID patterns
+        /stablecoin|stable-|pegged|-usd$|^usd-|-dollar|tether|usdt|usdc/i.test(idLower)
+      );
       
       const looksLikeUsdStable = (
         coin.current_price >= 0.95 && 
         coin.current_price <= 1.05 &&
-        Math.abs(coin.price_change_percentage_24h_in_currency || 0) < 1.5 &&
-        Math.abs(coin.price_change_percentage_7d_in_currency || 0) < 3 &&
-        (
-          // Symbol patterns for USD stables
-          /^USD|USD$|USDT|USDC|USDS|USDX|TUSD|BUSD|GUSD|DUSD|LUSD|MUSD|PUSD|SUSD|VUSD|CUSD|EUSD|FUSD|HUSD|IUSD|KUSD|NUSD|OUSD|RUSD|WUSD|YUSD|ZUSD|^UST$|^DAI$|^FRAX$|^FEI$|^MIM$|^RAI$|^USR$|^USK$|^USS$|^USX$|^GHO$|^DOLA$|^CGUSD|^USDF|^USP$|^USDJ$|^USDN$|^USDP$|^USDQ$/i.test(symbolUpper) ||
-          // Name patterns
-          /STABLECOIN|STABLE COIN|USD COIN|DOLLAR/i.test(nameUpper)
-        )
+        Math.abs(coin.price_change_percentage_24h_in_currency || 0) < 2 &&
+        Math.abs(coin.price_change_percentage_7d_in_currency || 0) < 5 &&
+        hasStablePattern
+      );
+      
+      // Pure price-based detection for obvious stables (very tight price + low volatility)
+      // This catches stables even without matching name patterns
+      const isPriceStable = (
+        coin.current_price >= 0.98 && 
+        coin.current_price <= 1.02 &&
+        Math.abs(coin.price_change_percentage_24h_in_currency || 0) < 0.5 &&
+        Math.abs(coin.price_change_percentage_7d_in_currency || 0) < 1
       );
       
       // Euro stables (~1.05-1.15 USD typically)
@@ -808,10 +874,10 @@ export default async function handler(req) {
         coin.current_price <= 1.20 &&
         Math.abs(coin.price_change_percentage_24h_in_currency || 0) < 1.5 &&
         Math.abs(coin.price_change_percentage_7d_in_currency || 0) < 3 &&
-        /EUR|EURS|EURC|EURT|AGEUR|CEUR|JEUR|SEUR/i.test(symbolUpper)
+        /EUR|EURS|EURC|EURT|AGEUR|CEUR|JEUR|SEUR|PAR|EUROE/i.test(symbolUpper)
       );
       
-      const looksLikeStablecoin = looksLikeUsdStable || looksLikeEurStable;
+      const looksLikeStablecoin = looksLikeUsdStable || looksLikeEurStable || isPriceStable;
       
       const finalCategory = looksLikeStablecoin ? 'stable' : category;
       

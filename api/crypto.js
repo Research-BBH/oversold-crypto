@@ -152,14 +152,19 @@ const getCategoryFromMetadata = (id, name, symbol) => {
                      'liquity-usd', 'crvusd', 'frax-ether', 'origin-dollar', 'alchemix-usd',
                      'rai', 'fei-usd', 'magic-internet-money', 'neutrino', 'reserve',
                      'stasis-eurs', 'tether-eurt', 'euro-coin', 'ageur', 'celo-euro',
-                     'seur', 'savings-dai', 'usual-usd'];
-  const stableKeywords = ['usd', 'dollar', 'stable', 'eur', 'gbp'];
+                     'seur', 'savings-dai', 'usual-usd', 'gho', 'pax-gold', 'binance-usd',
+                     'husd', 'usdx-money-usdx', 'dola-usd', 'vai', 'usdj', 'bob-token',
+                     'mountain-protocol-usdm', 'ondo-us-dollar-yield', 'resolv-usd',
+                     'circuit-usd', 'djed', 'overnight-finance-usd', 'compound-usd-coin',
+                     'nusd', 'synth-susd', 'hai', 'terra-usd', 'terrausd', 'flex-usd',
+                     'brz', 'bidr', 'xsgd', 'gyen', 'jpyc', 'gbpt', 'qcad', 'par-stablecoin'];
   const stableSymbols = ['usdt', 'usdc', 'dai', 'busd', 'tusd', 'usdp', 'gusd', 'frax', 
                          'lusd', 'susd', 'mim', 'ust', 'fei', 'usdd', 'usde', 'pyusd',
-                         'eurs', 'eurt', 'eurc', 'ageur', 'ceur', 'jeur', 'gho', 'crvusd'];
-  if (stableIds.includes(idLower) || 
-      stableKeywords.some(k => symbolLower.includes(k) && symbolLower.length <= 5) ||
-      stableSymbols.includes(symbolLower)) {
+                         'eurs', 'eurt', 'eurc', 'ageur', 'ceur', 'jeur', 'gho', 'crvusd',
+                         'usdm', 'usdy', 'usd0', 'usdr', 'usdb', 'usdj', 'usdn', 'usdx',
+                         'usdk', 'usk', 'vai', 'bob', 'dola', 'hai', 'silk', 'djed',
+                         'paxg', 'xaut', 'cusd', 'fdusd', 'alusd', 'ousd', 'musd'];
+  if (stableIds.includes(idLower) || stableSymbols.includes(symbolLower)) {
     return 'stable';
   }
   
@@ -248,7 +253,20 @@ export default async function handler(req) {
       let volumeRatio = null;
       
       // Smart categorization based on metadata
-      const category = getCategoryFromMetadata(coin.id, coin.name, coin.symbol);
+      let category = getCategoryFromMetadata(coin.id, coin.name, coin.symbol);
+      
+      // Additional price-based stablecoin detection
+      // Catches stables that slip through the ID/symbol checks
+      const isPriceStable = (
+        coin.current_price >= 0.98 && 
+        coin.current_price <= 1.02 &&
+        Math.abs(coin.price_change_percentage_24h_in_currency || 0) < 0.5 &&
+        Math.abs(coin.price_change_percentage_7d_in_currency || 0) < 1
+      );
+      
+      if (isPriceStable && category !== 'stable') {
+        category = 'stable';
+      }
       
       return {
         id: coin.id,
