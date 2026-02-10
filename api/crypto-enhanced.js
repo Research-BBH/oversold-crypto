@@ -784,6 +784,37 @@ export default async function handler(req) {
       
       const category = getCategoryFromMetadata(coin.id, coin.name, coin.symbol);
       
+      // Additional check: detect likely stablecoins by price behavior
+      // Catches USD-pegged stables not in the explicit allowlist
+      const symbolUpper = (coin.symbol || '').toUpperCase();
+      const nameUpper = (coin.name || '').toUpperCase();
+      
+      const looksLikeUsdStable = (
+        coin.current_price >= 0.95 && 
+        coin.current_price <= 1.05 &&
+        Math.abs(coin.price_change_percentage_24h_in_currency || 0) < 1.5 &&
+        Math.abs(coin.price_change_percentage_7d_in_currency || 0) < 3 &&
+        (
+          // Symbol patterns for USD stables
+          /^USD|USD$|USDT|USDC|USDS|USDX|TUSD|BUSD|GUSD|DUSD|LUSD|MUSD|PUSD|SUSD|VUSD|CUSD|EUSD|FUSD|HUSD|IUSD|KUSD|NUSD|OUSD|RUSD|WUSD|YUSD|ZUSD|^UST$|^DAI$|^FRAX$|^FEI$|^MIM$|^RAI$|^USR$|^USK$|^USS$|^USX$|^GHO$|^DOLA$|^CGUSD|^USDF|^USP$|^USDJ$|^USDN$|^USDP$|^USDQ$/i.test(symbolUpper) ||
+          // Name patterns
+          /STABLECOIN|STABLE COIN|USD COIN|DOLLAR/i.test(nameUpper)
+        )
+      );
+      
+      // Euro stables (~1.05-1.15 USD typically)
+      const looksLikeEurStable = (
+        coin.current_price >= 1.00 && 
+        coin.current_price <= 1.20 &&
+        Math.abs(coin.price_change_percentage_24h_in_currency || 0) < 1.5 &&
+        Math.abs(coin.price_change_percentage_7d_in_currency || 0) < 3 &&
+        /EUR|EURS|EURC|EURT|AGEUR|CEUR|JEUR|SEUR/i.test(symbolUpper)
+      );
+      
+      const looksLikeStablecoin = looksLikeUsdStable || looksLikeEurStable;
+      
+      const finalCategory = looksLikeStablecoin ? 'stable' : category;
+      
       return {
         id: coin.id,
         cgId: coin.id,
@@ -810,7 +841,7 @@ export default async function handler(req) {
         sparkline: normalizedSparkline,
         sparklineRaw: sparklineData,
         image: coin.image,
-        category: category,
+        category: finalCategory,
         volMcap: coin.market_cap ? (coin.total_volume / coin.market_cap) * 100 : 0,
       };
     });
