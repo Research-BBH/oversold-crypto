@@ -181,178 +181,151 @@ const detectEngulfingPattern = (prices, opens) => {
   return { bullish, bearish };
 };
 
-// Calculate signal score (0-100) based on available signals
-// Now calculates both BUY score (for oversold) and SELL score (for overbought)
+// Calculate unified momentum score (-100 to +100)
+// Positive = Bullish, Negative = Bearish, Near zero = Neutral
 const calculateSignalScore = (token, signals, fundingRate) => {
-  let buyScore = 0;
-  let sellScore = 0;
-  let buyActiveCount = 0;
-  let sellActiveCount = 0;
-  let buyAvailableCount = 0;
-  let sellAvailableCount = 0;
+  let score = 0;
+  const activeSignals = [];
   
-  // ============ BUY SIGNALS (Oversold) ============
-  
-  // 1. RSI Oversold (25 points base, +5 bonus for extreme < 25)
+  // ============ RSI (Mutually Exclusive) ============
   if (token.rsi !== null && token.rsi !== undefined) {
-    if (token.rsi < 30) {
-      const basePoints = 25;
-      const bonusPoints = token.rsi < 25 ? 5 : 0;
-      buyScore += basePoints + bonusPoints;
-      buyActiveCount++;
+    if (token.rsi < 20) {
+      score += 30;
+      activeSignals.push({ name: 'RSI Extreme Oversold', value: token.rsi, points: +30 });
+    } else if (token.rsi < 30) {
+      score += 20;
+      activeSignals.push({ name: 'RSI Oversold', value: token.rsi, points: +20 });
+    } else if (token.rsi < 40) {
+      score += 8;
+      activeSignals.push({ name: 'RSI Weak', value: token.rsi, points: +8 });
+    } else if (token.rsi > 80) {
+      score -= 25;
+      activeSignals.push({ name: 'RSI Extreme Overbought', value: token.rsi, points: -25 });
+    } else if (token.rsi > 70) {
+      score -= 15;
+      activeSignals.push({ name: 'RSI Overbought', value: token.rsi, points: -15 });
+    } else if (token.rsi > 60) {
+      score -= 5;
+      activeSignals.push({ name: 'RSI Strong', value: token.rsi, points: -5 });
+    }
+    // RSI 40-60 is neutral, no points
+  }
+  
+  // ============ Trend - SMA50 (Mutually Exclusive) ============
+  if (signals.aboveSMA50 === true) {
+    score += 25;
+    activeSignals.push({ name: 'Above SMA50 (Uptrend)', points: +25 });
+  } else if (signals.belowSMA50 === true) {
+    score -= 15;
+    activeSignals.push({ name: 'Below SMA50 (Downtrend)', points: -15 });
+  }
+  
+  // ============ Bollinger Bands (Mutually Exclusive) ============
+  if (signals.belowBB === true) {
+    score += 15;
+    activeSignals.push({ name: 'Below Lower BB', points: +15 });
+  } else if (signals.aboveBB === true) {
+    score -= 15;
+    activeSignals.push({ name: 'Above Upper BB', points: -15 });
+  }
+  
+  // ============ Volume Spike (Generally bullish - capitulation/accumulation) ============
+  if (signals.volumeSpike === true) {
+    // Volume spike is bullish if RSI is low, bearish if RSI is high
+    if (token.rsi !== null && token.rsi < 40) {
+      score += 12;
+      activeSignals.push({ name: 'Volume Spike (Accumulation)', points: +12 });
+    } else if (token.rsi !== null && token.rsi > 60) {
+      score -= 8;
+      activeSignals.push({ name: 'Volume Spike (Distribution)', points: -8 });
+    } else {
+      score += 5; // Slight bullish bias in neutral zone
+      activeSignals.push({ name: 'Volume Spike', points: +5 });
     }
   }
-  buyAvailableCount++; // Always count RSI
   
-  // 2. Above 50 SMA - Uptrend (30 points - CRITICAL for buying dips)
-  if (signals.aboveSMA50 !== null) {
-    if (signals.aboveSMA50 === true) {
-      buyScore += 30;
-      buyActiveCount++;
-    }
-  }
-  buyAvailableCount++; // Always count SMA50
-  
-  // 3. Below Bollinger Band (15 points)
-  if (signals.belowBB !== null) {
-    if (signals.belowBB === true) {
-      buyScore += 15;
-      buyActiveCount++;
-    }
-  }
-  buyAvailableCount++; // Always count BB
-  
-  // 4. Volume Spike (15 points)
-  if (signals.volumeSpike !== null) {
-    if (signals.volumeSpike === true) {
-      buyScore += 15;
-      buyActiveCount++;
-    }
-  }
-  buyAvailableCount++; // Always count Volume
-  
-  // 5. Bullish Divergence (10 points - strong reversal signal)
-  if (signals.bullishDivergence !== null) {
-    if (signals.bullishDivergence === true) {
-      buyScore += 10;
-      buyActiveCount++;
-    }
-  }
-  buyAvailableCount++; // Always count Divergence
-  
-  // 6. Negative Funding Rate (15 points)
+  // ============ Funding Rate ============
   if (fundingRate !== null && fundingRate !== undefined) {
-    if (fundingRate < 0) {
-      buyScore += 15;
-      buyActiveCount++;
+    if (fundingRate < -0.01) {
+      score += 15;
+      activeSignals.push({ name: 'Strong Negative Funding', value: fundingRate, points: +15 });
+    } else if (fundingRate < 0) {
+      score += 10;
+      activeSignals.push({ name: 'Negative Funding', value: fundingRate, points: +10 });
+    } else if (fundingRate > 0.03) {
+      score -= 12;
+      activeSignals.push({ name: 'Strong Positive Funding', value: fundingRate, points: -12 });
+    } else if (fundingRate > 0.01) {
+      score -= 8;
+      activeSignals.push({ name: 'Positive Funding', value: fundingRate, points: -8 });
     }
   }
-  buyAvailableCount++; // Always count Funding
   
-  // 7. Bullish Engulfing (10 points - confirmation pattern)
-  if (signals.bullishEngulfing !== null) {
-    if (signals.bullishEngulfing === true) {
-      buyScore += 10;
-      buyActiveCount++;
+  // ============ Divergence ============
+  if (signals.bullishDivergence === true) {
+    score += 18;
+    activeSignals.push({ name: 'Bullish Divergence', points: +18 });
+  }
+  if (signals.bearishDivergence === true) {
+    score -= 18;
+    activeSignals.push({ name: 'Bearish Divergence', points: -18 });
+  }
+  
+  // ============ Engulfing Patterns ============
+  if (signals.bullishEngulfing === true) {
+    score += 12;
+    activeSignals.push({ name: 'Bullish Engulfing', points: +12 });
+  }
+  if (signals.bearishEngulfing === true) {
+    score -= 12;
+    activeSignals.push({ name: 'Bearish Engulfing', points: -12 });
+  }
+  
+  // ============ Additional Context ============
+  if (signals.nearATH === true) {
+    score -= 10;
+    activeSignals.push({ name: 'Near All-Time High', points: -10 });
+  }
+  
+  if (signals.highVolMcap === true) {
+    // High vol/mcap in overbought = distribution, in oversold = accumulation
+    if (token.rsi !== null && token.rsi < 35) {
+      score += 5;
+      activeSignals.push({ name: 'High Volume/MCap (Accumulation)', points: +5 });
+    } else if (token.rsi !== null && token.rsi > 65) {
+      score -= 8;
+      activeSignals.push({ name: 'High Volume/MCap (Distribution)', points: -8 });
     }
   }
-  buyAvailableCount++; // Always count Engulfing
   
-  // ============ SELL SIGNALS (Overbought) ============
+  // Clamp score to -100 to +100
+  score = Math.max(-100, Math.min(100, score));
   
-  // 1. RSI Overbought (20 points base, +10 bonus for extreme > 80)
-  if (token.rsi !== null && token.rsi !== undefined) {
-    if (token.rsi > 70) {
-      const basePoints = 20;
-      const bonusPoints = token.rsi > 80 ? 10 : (token.rsi > 75 ? 5 : 0);
-      sellScore += basePoints + bonusPoints;
-      sellActiveCount++;
-    }
+  // Determine signal label and strength
+  let label, strength;
+  if (score >= 50) {
+    label = 'STRONG BUY';
+    strength = 'strong-buy';
+  } else if (score >= 25) {
+    label = 'BUY';
+    strength = 'buy';
+  } else if (score > -25) {
+    label = 'NEUTRAL';
+    strength = 'neutral';
+  } else if (score > -50) {
+    label = 'SELL';
+    strength = 'sell';
+  } else {
+    label = 'STRONG SELL';
+    strength = 'strong-sell';
   }
-  sellAvailableCount++; // Always count RSI
-  
-  // 2. Below 50 SMA - Downtrend (15 points)
-  if (signals.belowSMA50 !== null) {
-    if (signals.belowSMA50 === true) {
-      sellScore += 15;
-      sellActiveCount++;
-    }
-  }
-  sellAvailableCount++; // Always count SMA50
-  
-  // 3. Below 20 SMA - Short-term weakness (10 points)
-  if (signals.belowSMA20 !== null) {
-    if (signals.belowSMA20 === true) {
-      sellScore += 10;
-      sellActiveCount++;
-    }
-  }
-  sellAvailableCount++; // Always count SMA20
-  
-  // 4. Above Bollinger Band (15 points)
-  if (signals.aboveBB !== null) {
-    if (signals.aboveBB === true) {
-      sellScore += 15;
-      sellActiveCount++;
-    }
-  }
-  sellAvailableCount++; // Always count BB
-  
-  // 5. Positive Funding Rate (10 points - crowded longs)
-  if (fundingRate !== null && fundingRate !== undefined) {
-    if (fundingRate > 0.01) {
-      sellScore += 10;
-      sellActiveCount++;
-    }
-  }
-  sellAvailableCount++; // Always count Funding
-  
-  // 6. Bearish Divergence (15 points - strong reversal signal)
-  if (signals.bearishDivergence !== null) {
-    if (signals.bearishDivergence === true) {
-      sellScore += 15;
-      sellActiveCount++;
-    }
-  }
-  sellAvailableCount++; // Always count Divergence
-  
-  // 7. Bearish Engulfing (10 points - confirmation pattern)
-  if (signals.bearishEngulfing !== null) {
-    if (signals.bearishEngulfing === true) {
-      sellScore += 10;
-      sellActiveCount++;
-    }
-  }
-  sellAvailableCount++; // Always count Engulfing
-  
-  // 8. Near ATH (10 points - potential resistance)
-  if (signals.nearATH !== null) {
-    if (signals.nearATH === true) {
-      sellScore += 10;
-      sellActiveCount++;
-    }
-  }
-  sellAvailableCount++; // Always count ATH
-  
-  // 9. High Volume/MCap (5 points - potential distribution)
-  if (signals.highVolMcap !== null) {
-    if (signals.highVolMcap === true) {
-      sellScore += 5;
-      sellActiveCount++;
-    }
-  }
-  sellAvailableCount++; // Always count Vol/MCap
   
   return {
-    // Main score is BUY score (for oversold screener primary use case)
-    score: Math.min(buyScore, 100),
-    activeCount: buyActiveCount,
-    availableCount: buyAvailableCount,
-    maxPossible: 100,
-    // Also include sell score for overbought analysis
-    sellScore: Math.min(sellScore, 100),
-    sellActiveCount,
-    sellAvailableCount,
+    score,              // Unified score from -100 to +100
+    label,              // Human-readable label
+    strength,           // For styling purposes
+    activeSignals,      // List of active signals with their contributions
+    signalCount: activeSignals.length,
   };
 };
 
@@ -510,7 +483,8 @@ const enhanceToken = async (token) => {
       ...token,
       signals,
       signalScore: signalScoreData.score,
-      sellScore: signalScoreData.sellScore,
+      signalLabel: signalScoreData.label,
+      signalStrength: signalScoreData.strength,
       signalScoreDetails: signalScoreData,
       // Raw values for detail view
       sma50,
@@ -572,7 +546,8 @@ const enhanceToken = async (token) => {
     ...token,
     signals,
     signalScore: signalScoreData.score,
-    sellScore: signalScoreData.sellScore,
+    signalLabel: signalScoreData.label,
+    signalStrength: signalScoreData.strength,
     signalScoreDetails: signalScoreData,
     enhanced: false,
   };
@@ -825,7 +800,8 @@ export default async function handler(req) {
         ...token,
         signals,
         signalScore: signalScoreData.score,
-        sellScore: signalScoreData.sellScore,
+        signalLabel: signalScoreData.label,
+        signalStrength: signalScoreData.strength,
         signalScoreDetails: signalScoreData,
         enhanced: false,
       };
