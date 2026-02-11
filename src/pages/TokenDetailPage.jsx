@@ -5,7 +5,7 @@
 import { formatPrice, formatNumber, getRsiStyle } from '../utils';
 import { ThemeToggle } from '../components/ThemeToggle';
 import { Footer } from '../components/Footer';
-import { RSIMeter, FullPageChart, CandlestickChart } from '../components/Charts';
+import { RSIMeter, FullPageChart, CandlestickChart, ChartTypeToggle, CHART_TYPES } from '../components/Charts';
 import { FullSignalAnalysis } from '../components/SignalAnalysis';
 import { RSIThresholdAnalysis } from '../components/RSIThresholdChart';
 import { analyzeToken } from '../utils/signals';
@@ -47,10 +47,10 @@ const getTimeLabels = (timeframe) => {
   }
 };
 
-// Chart Timeframe Component
+// Chart Timeframe Component with Candlestick Support
 const ChartWithTimeframe = ({ token, darkMode }) => {
   const [timeframe, setTimeframe] = useState('7d');
-  const [chartType, setChartType] = useState('line'); // 'line' or 'candle'
+  const [chartType, setChartType] = useState(CHART_TYPES.LINE);
   const [chartData, setChartData] = useState(null);
   const [ohlcData, setOhlcData] = useState(null);
   const [loading, setLoading] = useState(false);
@@ -60,43 +60,40 @@ const ChartWithTimeframe = ({ token, darkMode }) => {
   // Fetch data when timeframe or chart type changes
   useEffect(() => {
     const fetchChartData = async () => {
-      // Always fetch fresh data from CoinGecko for better resolution
       setLoading(true);
       setError(null);
       
       try {
         const tf = TIMEFRAMES.find(t => t.id === timeframe);
-        const days = tf?.days || 7;
+        const days = tf?.days || 30;
         
-        if (chartType === 'candle') {
+        if (chartType === CHART_TYPES.CANDLESTICK) {
           // Fetch OHLC data for candlestick chart
-          const url = `/api/chart?id=${token.id}&days=${days}&type=ohlc`;
-          const response = await fetch(url);
+          const ohlcUrl = `/api/ohlc?id=${token.id}&days=${days}`;
+          const ohlcResponse = await fetch(ohlcUrl);
           
-          if (!response.ok) {
-            throw new Error(`Failed to fetch OHLC data: ${response.status}`);
+          if (!ohlcResponse.ok) {
+            throw new Error(`Failed to fetch OHLC data: ${ohlcResponse.status}`);
           }
           
-          const data = await response.json();
+          const ohlcResult = await ohlcResponse.json();
           
-          if (Array.isArray(data) && data.length > 0) {
-            setOhlcData(data);
+          if (ohlcResult.ohlc && ohlcResult.ohlc.length > 0) {
+            setOhlcData(ohlcResult.ohlc);
+            setChartData(null);
             
-            // Calculate price change from OHLC data
-            const firstCandle = data[0];
-            const lastCandle = data[data.length - 1];
-            const startPrice = firstCandle[1]; // open
-            const endPrice = lastCandle[4]; // close
-            const change = ((endPrice - startPrice) / startPrice) * 100;
+            // Calculate price change from OHLC
+            const firstCandle = ohlcResult.ohlc[0];
+            const lastCandle = ohlcResult.ohlc[ohlcResult.ohlc.length - 1];
+            const change = ((lastCandle[4] - firstCandle[1]) / firstCandle[1]) * 100;
             setPriceChange(change);
           } else {
-            setError('No OHLC data available');
+            setError('No candlestick data available');
           }
         } else {
-          // Fetch regular price data for line chart
-          // CoinGecko provides ~288 data points for 1 day (5-min intervals)
-          // and ~168 data points for 7 days (1-hour intervals)
-          const url = `/api/chart?id=${token.id}&days=${days}&type=line`;
+          // Fetch line chart data from API for all timeframes
+          // This ensures consistency with candlestick data
+          const url = `/api/chart?id=${token.id}&days=${days}`;
           const response = await fetch(url);
           
           if (!response.ok) {
@@ -108,7 +105,7 @@ const ChartWithTimeframe = ({ token, darkMode }) => {
           if (data.prices && data.prices.length > 0) {
             const prices = data.prices.map(p => p[1]);
             
-            // Normalize to percentage (like sparkline)
+            // Normalize to percentage (for chart display)
             const startPrice = prices[0];
             const normalizedPrices = prices.map(p => (p / startPrice) * 100);
             
@@ -117,6 +114,7 @@ const ChartWithTimeframe = ({ token, darkMode }) => {
             const change = ((endPrice - startPrice) / startPrice) * 100;
             
             setChartData(normalizedPrices);
+            setOhlcData(null);
             setPriceChange(change);
           } else {
             setError('No data available');
@@ -131,63 +129,23 @@ const ChartWithTimeframe = ({ token, darkMode }) => {
     };
 
     fetchChartData();
-  }, [timeframe, chartType, token.id, token.sparkline, token.change24h, token.change7d]);
+  }, [timeframe, chartType, token.id]);
 
   const timeLabels = getTimeLabels(timeframe);
 
-  // Line/Candle toggle icons
-  const LineIcon = () => (
-    <svg className="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-      <polyline points="4,18 8,12 12,16 16,8 20,14" strokeLinecap="round" strokeLinejoin="round" />
-    </svg>
-  );
-
-  const CandleIcon = () => (
-    <svg className="w-4 h-4" viewBox="0 0 24 24" fill="currentColor">
-      <rect x="4" y="8" width="4" height="8" rx="0.5" />
-      <line x1="6" y1="4" x2="6" y2="8" stroke="currentColor" strokeWidth="1.5" />
-      <line x1="6" y1="16" x2="6" y2="20" stroke="currentColor" strokeWidth="1.5" />
-      <rect x="10" y="6" width="4" height="10" rx="0.5" />
-      <line x1="12" y1="2" x2="12" y2="6" stroke="currentColor" strokeWidth="1.5" />
-      <line x1="12" y1="16" x2="12" y2="22" stroke="currentColor" strokeWidth="1.5" />
-      <rect x="16" y="10" width="4" height="6" rx="0.5" />
-      <line x1="18" y1="6" x2="18" y2="10" stroke="currentColor" strokeWidth="1.5" />
-      <line x1="18" y1="16" x2="18" y2="18" stroke="currentColor" strokeWidth="1.5" />
-    </svg>
-  );
-
   return (
     <div className={`${darkMode ? 'bg-white/5 border-white/10' : 'bg-white border-gray-200'} rounded-2xl p-6 border`}>
-      <div className="flex justify-between items-center mb-6">
-        <h2 className={`text-xl font-semibold ${darkMode ? 'text-white' : 'text-gray-900'}`}>Price Chart</h2>
-        <div className="flex items-center gap-3">
+      <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-6">
+        <h2 className="text-xl font-semibold">Price Chart</h2>
+        <div className="flex flex-wrap items-center gap-3">
           {/* Chart Type Toggle */}
-          <div className={`inline-flex rounded-lg p-1 ${darkMode ? 'bg-white/5' : 'bg-gray-100'}`}>
-            <button
-              onClick={() => setChartType('line')}
-              className={`p-2 rounded-md transition-all ${
-                chartType === 'line'
-                  ? 'bg-orange-500 text-white shadow'
-                  : darkMode ? 'text-gray-400 hover:text-white' : 'text-gray-600 hover:text-gray-900'
-              }`}
-              title="Line Chart"
-            >
-              <LineIcon />
-            </button>
-            <button
-              onClick={() => setChartType('candle')}
-              className={`p-2 rounded-md transition-all ${
-                chartType === 'candle'
-                  ? 'bg-orange-500 text-white shadow'
-                  : darkMode ? 'text-gray-400 hover:text-white' : 'text-gray-600 hover:text-gray-900'
-              }`}
-              title="Candlestick Chart"
-            >
-              <CandleIcon />
-            </button>
-          </div>
-
-          {/* Timeframe Selector */}
+          <ChartTypeToggle 
+            chartType={chartType} 
+            setChartType={setChartType} 
+            darkMode={darkMode} 
+          />
+          
+          {/* Timeframe Buttons */}
           <div className={`inline-flex rounded-lg p-1 ${darkMode ? 'bg-white/5' : 'bg-gray-100'}`}>
             {TIMEFRAMES.map((tf) => (
               <button
@@ -216,14 +174,14 @@ const ChartWithTimeframe = ({ token, darkMode }) => {
       </div>
       
       {loading ? (
-        <div className="w-full h-96 flex items-center justify-center">
+        <div className="w-full h-80 flex items-center justify-center">
           <div className="text-center">
             <div className="w-10 h-10 border-4 border-orange-500 border-t-transparent rounded-full animate-spin mx-auto mb-3" />
             <p className={darkMode ? 'text-gray-400' : 'text-gray-500'}>Loading chart data...</p>
           </div>
         </div>
       ) : error ? (
-        <div className="w-full h-96 flex items-center justify-center">
+        <div className="w-full h-80 flex items-center justify-center">
           <div className="text-center">
             <p className="text-red-400 mb-2">⚠️ {error}</p>
             <p className={`text-sm ${darkMode ? 'text-gray-500' : 'text-gray-400'}`}>
@@ -231,9 +189,9 @@ const ChartWithTimeframe = ({ token, darkMode }) => {
             </p>
           </div>
         </div>
-      ) : chartType === 'candle' && ohlcData ? (
+      ) : chartType === CHART_TYPES.CANDLESTICK && ohlcData ? (
         <CandlestickChart 
-          ohlcData={ohlcData}
+          ohlcData={ohlcData} 
           timeLabels={timeLabels}
           darkMode={darkMode}
         />
@@ -243,7 +201,6 @@ const ChartWithTimeframe = ({ token, darkMode }) => {
           basePrice={token.price} 
           change7d={priceChange} 
           timeLabels={timeLabels}
-          darkMode={darkMode}
         />
       )}
     </div>
@@ -399,7 +356,7 @@ export const TokenDetailPage = ({ token, onBack, darkMode, setDarkMode }) => {
     <div className={`min-h-screen transition-colors duration-200 ${
       darkMode ? 'bg-[#0a0a0f] text-white' : 'bg-gray-100 text-gray-900'
     }`}>
-      <div className="max-w-7xl mx-auto px-6 py-8">
+      <div className="max-w-6xl mx-auto px-6 py-8">
         {/* Header */}
         <div className="flex items-center justify-between mb-8">
           <div className="flex items-center gap-4">

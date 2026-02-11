@@ -4,6 +4,12 @@
 
 import { formatPrice } from '../utils';
 
+// Chart type constants
+export const CHART_TYPES = {
+  LINE: 'line',
+  CANDLESTICK: 'candlestick',
+};
+
 export const Spark = ({ data, color, h = 24 }) => {
   if (!data?.length || data.length < 2) {
     return <div className="w-24 h-6 bg-gray-800/30 rounded animate-pulse" />;
@@ -54,46 +60,93 @@ export const RSIMeter = ({ value }) => {
   );
 };
 
-// Candlestick Chart Component - CoinGecko style
-export const CandlestickChart = ({ ohlcData, timeLabels, darkMode = true }) => {
+// Chart Type Toggle Component (Line/Candlestick icons like CoinGecko)
+export const ChartTypeToggle = ({ chartType, setChartType, darkMode }) => {
+  return (
+    <div className={`inline-flex rounded-lg p-1 ${darkMode ? 'bg-white/5' : 'bg-gray-100'}`}>
+      {/* Line Chart Button */}
+      <button
+        onClick={() => setChartType(CHART_TYPES.LINE)}
+        className={`p-2 rounded-md transition-all ${
+          chartType === CHART_TYPES.LINE
+            ? 'bg-orange-500 text-white shadow'
+            : darkMode
+              ? 'text-gray-400 hover:text-white hover:bg-white/10'
+              : 'text-gray-600 hover:text-gray-900 hover:bg-gray-200'
+        }`}
+        title="Line Chart"
+      >
+        <svg className="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+          <polyline points="22 12 18 12 15 21 9 3 6 12 2 12" />
+        </svg>
+      </button>
+      
+      {/* Candlestick Chart Button */}
+      <button
+        onClick={() => setChartType(CHART_TYPES.CANDLESTICK)}
+        className={`p-2 rounded-md transition-all ${
+          chartType === CHART_TYPES.CANDLESTICK
+            ? 'bg-orange-500 text-white shadow'
+            : darkMode
+              ? 'text-gray-400 hover:text-white hover:bg-white/10'
+              : 'text-gray-600 hover:text-gray-900 hover:bg-gray-200'
+        }`}
+        title="Candlestick Chart"
+      >
+        <svg className="w-4 h-4" viewBox="0 0 24 24" fill="currentColor">
+          <rect x="3" y="8" width="4" height="8" rx="0.5" />
+          <line x1="5" y1="4" x2="5" y2="8" stroke="currentColor" strokeWidth="1.5" />
+          <line x1="5" y1="16" x2="5" y2="20" stroke="currentColor" strokeWidth="1.5" />
+          <rect x="10" y="6" width="4" height="10" rx="0.5" />
+          <line x1="12" y1="2" x2="12" y2="6" stroke="currentColor" strokeWidth="1.5" />
+          <line x1="12" y1="16" x2="12" y2="22" stroke="currentColor" strokeWidth="1.5" />
+          <rect x="17" y="9" width="4" height="6" rx="0.5" />
+          <line x1="19" y1="5" x2="19" y2="9" stroke="currentColor" strokeWidth="1.5" />
+          <line x1="19" y1="15" x2="19" y2="19" stroke="currentColor" strokeWidth="1.5" />
+        </svg>
+      </button>
+    </div>
+  );
+};
+
+// Candlestick Chart Component
+export const CandlestickChart = ({ ohlcData, timeLabels: customTimeLabels, darkMode = true }) => {
   if (!ohlcData?.length || ohlcData.length < 2) {
     return (
-      <div className="w-full h-96 bg-gray-800/30 rounded-xl animate-pulse flex items-center justify-center text-gray-500">
-        No OHLC data available
+      <div className={`w-full h-80 rounded-xl flex items-center justify-center ${darkMode ? 'bg-gray-800/30 text-gray-500' : 'bg-gray-100 text-gray-400'}`}>
+        No candlestick data available
       </div>
     );
   }
 
-  const W = 900;
-  const H = 450;
+  const W = 800;
+  const H = 400;
   const PAD = { top: 30, right: 80, bottom: 50, left: 20 };
   const chartW = W - PAD.left - PAD.right;
   const chartH = H - PAD.top - PAD.bottom;
 
-  // ohlcData format from CoinGecko: [timestamp, open, high, low, close]
-  const allHighs = ohlcData.map(d => d[2]);
-  const allLows = ohlcData.map(d => d[3]);
-  const minPrice = Math.min(...allLows);
-  const maxPrice = Math.max(...allHighs);
-  const priceRange = maxPrice - minPrice || minPrice * 0.01;
-  const paddedMin = minPrice - priceRange * 0.05;
-  const paddedMax = maxPrice + priceRange * 0.05;
+  // OHLC format: [timestamp, open, high, low, close]
+  const allHighs = ohlcData.map(c => c[2]);
+  const allLows = ohlcData.map(c => c[3]);
+  const min = Math.min(...allLows);
+  const max = Math.max(...allHighs);
+  const priceRange = max - min || min * 0.01;
+  const paddedMin = min - priceRange * 0.05;
+  const paddedMax = max + priceRange * 0.05;
   const paddedRange = paddedMax - paddedMin;
 
-  // Calculate candle width - candles should be wide and close together
-  const numCandles = ohlcData.length;
-  const candleWidth = Math.max(4, Math.min(24, (chartW / numCandles) * 0.95));
-  const wickWidth = Math.max(1, candleWidth * 0.1);
-
-  // Price levels for grid
   const priceLevels = [0, 0.2, 0.4, 0.6, 0.8, 1].map((t) => paddedMax - paddedRange * t);
+  const timeLabels = customTimeLabels || ['Start', '', '', '', '', '', 'Now'];
 
-  // Calculate price change
-  const firstCandle = ohlcData[0];
-  const lastCandle = ohlcData[ohlcData.length - 1];
-  const startPrice = firstCandle[1]; // open of first candle
-  const endPrice = lastCandle[4]; // close of last candle
-  const isUp = endPrice >= startPrice;
+  // Calculate candle width - 90% gives tight gaps like CoinGecko
+  const candleSpacing = chartW / ohlcData.length;
+  const candleWidth = Math.max(4, candleSpacing * 0.9);
+  const wickWidth = candleWidth > 8 ? 2 : 1;
+
+  const firstClose = ohlcData[0][4];
+  const lastClose = ohlcData[ohlcData.length - 1][4];
+  const isUp = lastClose >= firstClose;
+  const changePercent = ((lastClose - firstClose) / firstClose * 100);
 
   const fmtAxis = (p) => {
     if (p >= 1000) return '$' + (p / 1000).toFixed(1) + 'k';
@@ -102,18 +155,10 @@ export const CandlestickChart = ({ ohlcData, timeLabels, darkMode = true }) => {
     return '$' + p.toFixed(6);
   };
 
-  // Y coordinate helper
-  const priceToY = (price) => {
-    return PAD.top + chartH - ((price - paddedMin) / paddedRange) * chartH;
-  };
-
-  // Current price line Y
-  const currentY = priceToY(endPrice);
-
   return (
     <div className="w-full">
       <svg viewBox={`0 0 ${W} ${H}`} className="w-full h-auto">
-        {/* Grid lines */}
+        {/* Horizontal grid lines and price labels */}
         {priceLevels.map((price, i) => {
           const y = PAD.top + (i / 5) * chartH;
           return (
@@ -139,8 +184,8 @@ export const CandlestickChart = ({ ohlcData, timeLabels, darkMode = true }) => {
           );
         })}
 
-        {/* Time labels */}
-        {timeLabels && timeLabels.map((label, i) => {
+        {/* Vertical grid lines and time labels */}
+        {timeLabels.map((label, i) => {
           const x = PAD.left + (i / (timeLabels.length - 1)) * chartW;
           return (
             <g key={i}>
@@ -167,82 +212,76 @@ export const CandlestickChart = ({ ohlcData, timeLabels, darkMode = true }) => {
         {/* Candlesticks */}
         {ohlcData.map((candle, i) => {
           const [timestamp, open, high, low, close] = candle;
-          // Position candles adjacently with small gap
-          const candleTotalWidth = chartW / numCandles;
-          const x = PAD.left + (i * candleTotalWidth) + (candleTotalWidth / 2);
           
-          const isGreen = close >= open;
-          const bodyTop = priceToY(Math.max(open, close));
-          const bodyBottom = priceToY(Math.min(open, close));
-          const bodyHeight = Math.max(1, bodyBottom - bodyTop);
-          
-          const wickTop = priceToY(high);
-          const wickBottom = priceToY(low);
+          // Position candles evenly by index
+          const x = PAD.left + ((i + 0.5) / ohlcData.length) * chartW;
 
-          // CoinGecko style colors
-          const fillColor = isGreen ? '#16c784' : '#ea3943';
-          const strokeColor = isGreen ? '#16c784' : '#ea3943';
+          const highY = PAD.top + chartH - ((high - paddedMin) / paddedRange) * chartH;
+          const lowY = PAD.top + chartH - ((low - paddedMin) / paddedRange) * chartH;
+          const openY = PAD.top + chartH - ((open - paddedMin) / paddedRange) * chartH;
+          const closeY = PAD.top + chartH - ((close - paddedMin) / paddedRange) * chartH;
+
+          const isBullish = close >= open;
+          const candleColor = isBullish ? '#22c55e' : '#ef4444';
+          
+          // Body calculations - minimum 4px height for visibility
+          const bodyTop = Math.min(openY, closeY);
+          const bodyHeight = Math.max(4, Math.abs(closeY - openY));
+          
+          // Wick calculations - ensure minimum 4px height
+          const wickTop = Math.min(highY, lowY);
+          const wickHeight = Math.max(4, Math.abs(highY - lowY));
 
           return (
             <g key={i}>
-              {/* Wick (high-low line) */}
-              <line
-                x1={x}
-                y1={wickTop}
-                x2={x}
-                y2={wickBottom}
-                stroke={strokeColor}
-                strokeWidth={wickWidth}
+              {/* Wick (high to low) - draw as thin rect for reliability */}
+              <rect
+                x={x - wickWidth / 2}
+                y={wickTop}
+                width={wickWidth}
+                height={wickHeight}
+                fill={candleColor}
               />
-              {/* Body (open-close rectangle) */}
+              {/* Body (open to close) */}
               <rect
                 x={x - candleWidth / 2}
                 y={bodyTop}
                 width={candleWidth}
                 height={bodyHeight}
-                fill={fillColor}
-                stroke={strokeColor}
-                strokeWidth={0.5}
+                fill={candleColor}
               />
             </g>
           );
         })}
 
-        {/* Current price dashed line */}
+        {/* Current price line */}
         <line
           x1={PAD.left}
-          y1={currentY}
+          y1={PAD.top + chartH - ((lastClose - paddedMin) / paddedRange) * chartH}
           x2={PAD.left + chartW}
-          y2={currentY}
-          stroke={isUp ? '#16c784' : '#ea3943'}
+          y2={PAD.top + chartH - ((lastClose - paddedMin) / paddedRange) * chartH}
+          stroke={isUp ? '#22c55e' : '#ef4444'}
           strokeWidth="1"
           strokeDasharray="6,3"
           opacity="0.6"
         />
       </svg>
 
-      {/* Stats footer */}
+      {/* Chart footer */}
       <div className="flex justify-between items-center mt-4 px-2">
         <div className="flex gap-6 text-sm">
           <span className={darkMode ? "text-gray-400" : "text-gray-600"}>
-            <span className="inline-block w-2.5 h-2.5 rounded-full bg-[#16c784] mr-2"></span>
-            High:{' '}
-            <span className={`font-semibold ${darkMode ? 'text-white' : 'text-gray-900'}`}>
-              {fmtAxis(maxPrice)}
-            </span>
+            <span className="inline-block w-2.5 h-2.5 rounded-full bg-green-500 mr-2"></span>
+            High: <span className={`font-semibold ${darkMode ? 'text-white' : 'text-gray-900'}`}>{fmtAxis(max)}</span>
           </span>
           <span className={darkMode ? "text-gray-400" : "text-gray-600"}>
-            <span className="inline-block w-2.5 h-2.5 rounded-full bg-[#ea3943] mr-2"></span>
-            Low:{' '}
-            <span className={`font-semibold ${darkMode ? 'text-white' : 'text-gray-900'}`}>
-              {fmtAxis(minPrice)}
-            </span>
+            <span className="inline-block w-2.5 h-2.5 rounded-full bg-red-500 mr-2"></span>
+            Low: <span className={`font-semibold ${darkMode ? 'text-white' : 'text-gray-900'}`}>{fmtAxis(min)}</span>
           </span>
         </div>
-        <span className={`text-sm ${darkMode ? "text-gray-400" : "text-gray-600"}`}>
-          Spread:{' '}
-          <span className={`font-semibold ${isUp ? 'text-[#16c784]' : 'text-[#ea3943]'}`}>
-            {(((maxPrice - minPrice) / minPrice) * 100).toFixed(2)}%
+        <span className={`text-sm ${darkMode ? 'text-gray-400' : 'text-gray-600'}`}>
+          Change: <span className={`font-semibold ${isUp ? 'text-green-400' : 'text-red-400'}`}>
+            {isUp ? '+' : ''}{changePercent.toFixed(2)}%
           </span>
         </span>
       </div>
@@ -395,17 +434,17 @@ export const DetailChart = ({ data, basePrice, change7d }) => {
   );
 };
 
-export const FullPageChart = ({ data, basePrice, change7d, timeLabels: customTimeLabels, darkMode = true }) => {
+export const FullPageChart = ({ data, basePrice, change7d, timeLabels: customTimeLabels }) => {
   if (!data?.length || data.length < 2) {
     return (
-      <div className={`w-full h-96 ${darkMode ? 'bg-gray-800/30' : 'bg-gray-100'} rounded-xl animate-pulse flex items-center justify-center ${darkMode ? 'text-gray-500' : 'text-gray-400'}`}>
+      <div className="w-full h-80 bg-gray-800/30 rounded-xl animate-pulse flex items-center justify-center text-gray-500">
         No chart data
       </div>
     );
   }
 
-  const W = 900;
-  const H = 450;
+  const W = 800;
+  const H = 400;
   const PAD = { top: 30, right: 80, bottom: 50, left: 20 };
   const chartW = W - PAD.left - PAD.right;
   const chartH = H - PAD.top - PAD.bottom;
@@ -448,11 +487,6 @@ export const FullPageChart = ({ data, basePrice, change7d, timeLabels: customTim
 
   const currentY = PAD.top + chartH - ((endPrice - paddedMin) / paddedRange) * chartH;
 
-  // Theme-aware colors
-  const gridColor = darkMode ? "rgba(255,255,255,0.08)" : "rgba(0,0,0,0.08)";
-  const gridColorLight = darkMode ? "rgba(255,255,255,0.05)" : "rgba(0,0,0,0.05)";
-  const textColor = darkMode ? "rgba(255,255,255,0.5)" : "rgba(0,0,0,0.5)";
-
   return (
     <div className="w-full">
       <svg viewBox={`0 0 ${W} ${H}`} className="w-full h-auto">
@@ -471,14 +505,14 @@ export const FullPageChart = ({ data, basePrice, change7d, timeLabels: customTim
                 y1={y}
                 x2={PAD.left + chartW}
                 y2={y}
-                stroke={gridColor}
+                stroke="rgba(255,255,255,0.08)"
                 strokeDasharray="4,4"
               />
               <text
                 x={W - 10}
                 y={y + 4}
                 textAnchor="end"
-                fill={textColor}
+                fill="rgba(255,255,255,0.5)"
                 fontSize="12"
               >
                 {fmtAxis(price)}
@@ -495,9 +529,9 @@ export const FullPageChart = ({ data, basePrice, change7d, timeLabels: customTim
                 y1={PAD.top}
                 x2={x}
                 y2={PAD.top + chartH}
-                stroke={gridColorLight}
+                stroke="rgba(255,255,255,0.05)"
               />
-              <text x={x} y={H - 15} textAnchor="middle" fill={textColor} fontSize="12">
+              <text x={x} y={H - 15} textAnchor="middle" fill="rgba(255,255,255,0.5)" fontSize="12">
                 {label}
               </text>
             </g>
@@ -525,18 +559,18 @@ export const FullPageChart = ({ data, basePrice, change7d, timeLabels: customTim
       </svg>
       <div className="flex justify-between items-center mt-4 px-2">
         <div className="flex gap-6 text-sm">
-          <span className={darkMode ? "text-gray-400" : "text-gray-600"}>
+          <span className="text-gray-400">
             <span className="inline-block w-2.5 h-2.5 rounded-full bg-green-500 mr-2"></span>
             High:{' '}
-            <span className={`font-semibold ${darkMode ? 'text-white' : 'text-gray-900'}`}>{fmtAxis(startPrice * (max / 100))}</span>
+            <span className="text-white font-semibold">{fmtAxis(startPrice * (max / 100))}</span>
           </span>
-          <span className={darkMode ? "text-gray-400" : "text-gray-600"}>
+          <span className="text-gray-400">
             <span className="inline-block w-2.5 h-2.5 rounded-full bg-red-500 mr-2"></span>
             Low:{' '}
-            <span className={`font-semibold ${darkMode ? 'text-white' : 'text-gray-900'}`}>{fmtAxis(startPrice * (min / 100))}</span>
+            <span className="text-white font-semibold">{fmtAxis(startPrice * (min / 100))}</span>
           </span>
         </div>
-        <span className={`text-sm ${darkMode ? "text-gray-400" : "text-gray-600"}`}>
+        <span className="text-sm text-gray-400">
           Spread:{' '}
           <span className={`font-semibold ${isUp ? 'text-green-400' : 'text-red-400'}`}>
             {(((max - min) / min) * 100).toFixed(2)}%
