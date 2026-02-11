@@ -131,16 +131,17 @@ export const CandlestickChart = ({ ohlcData, timeLabels: customTimeLabels, darkM
   const min = Math.min(...allLows);
   const max = Math.max(...allHighs);
   const priceRange = max - min || min * 0.01;
-  const paddedMin = min - priceRange * 0.1;
-  const paddedMax = max + priceRange * 0.1;
+  const paddedMin = min - priceRange * 0.05;
+  const paddedMax = max + priceRange * 0.05;
   const paddedRange = paddedMax - paddedMin;
 
   const priceLevels = [0, 0.2, 0.4, 0.6, 0.8, 1].map((t) => paddedMax - paddedRange * t);
   const timeLabels = customTimeLabels || ['Start', '', '', '', '', '', 'Now'];
 
-  // Calculate candle width based on data length
+  // Calculate candle width based on data length - thinner like CoinGecko
   const candleSpacing = chartW / ohlcData.length;
-  const candleWidth = Math.max(2, Math.min(12, candleSpacing * 0.7));
+  const candleWidth = Math.max(1, Math.min(8, candleSpacing * 0.5));
+  const wickWidth = Math.max(1, Math.min(2, candleWidth * 0.2));
 
   const firstClose = ohlcData[0][4];
   const lastClose = ohlcData[ohlcData.length - 1][4];
@@ -232,7 +233,7 @@ export const CandlestickChart = ({ ohlcData, timeLabels: customTimeLabels, darkM
                 x2={x}
                 y2={lowY}
                 stroke={candleColor}
-                strokeWidth="1"
+                strokeWidth={wickWidth}
               />
               {/* Body (open to close) */}
               <rect
@@ -241,8 +242,6 @@ export const CandlestickChart = ({ ohlcData, timeLabels: customTimeLabels, darkM
                 width={candleWidth}
                 height={bodyHeight}
                 fill={candleColor}
-                stroke={candleColor}
-                strokeWidth="1"
               />
             </g>
           );
