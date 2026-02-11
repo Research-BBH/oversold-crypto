@@ -60,31 +60,13 @@ const ChartWithTimeframe = ({ token, darkMode }) => {
   // Fetch data when timeframe or chart type changes
   useEffect(() => {
     const fetchChartData = async () => {
-      // For line chart with 24h and 7d, use existing sparkline data
-      if (chartType === 'line' && timeframe === '24h') {
-        if (token.sparkline && token.sparkline.length > 0) {
-          const dataPoints = Math.floor(token.sparkline.length / 7);
-          setChartData(token.sparkline.slice(-dataPoints));
-          setPriceChange(token.change24h);
-        }
-        return;
-      }
-      
-      if (chartType === 'line' && timeframe === '7d') {
-        if (token.sparkline && token.sparkline.length > 0) {
-          setChartData(token.sparkline);
-          setPriceChange(token.change7d);
-        }
-        return;
-      }
-
-      // For longer timeframes or candle chart, fetch from CoinGecko
+      // Always fetch fresh data from CoinGecko for better resolution
       setLoading(true);
       setError(null);
       
       try {
         const tf = TIMEFRAMES.find(t => t.id === timeframe);
-        const days = tf?.days || 30;
+        const days = tf?.days || 7;
         
         if (chartType === 'candle') {
           // Fetch OHLC data for candlestick chart
@@ -112,6 +94,8 @@ const ChartWithTimeframe = ({ token, darkMode }) => {
           }
         } else {
           // Fetch regular price data for line chart
+          // CoinGecko provides ~288 data points for 1 day (5-min intervals)
+          // and ~168 data points for 7 days (1-hour intervals)
           const url = `/api/chart?id=${token.id}&days=${days}&type=line`;
           const response = await fetch(url);
           
