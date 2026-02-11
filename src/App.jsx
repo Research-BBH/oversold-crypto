@@ -444,7 +444,7 @@ if (signalFilters.size > 0) {
         </div>
       )}
 
-      <div className="relative z-10 max-w-7xl mx-auto px-4 py-6">
+      <div className="relative z-10 mx-auto px-4 py-6" style={{ maxWidth: '1600px' }}>
         {/* Header */}
         <header className="flex flex-col lg:flex-row lg:items-center justify-between gap-4 mb-6">
           <div>
