@@ -138,12 +138,12 @@ export const CandlestickChart = ({ ohlcData, timeLabels: customTimeLabels, darkM
   const priceLevels = [0, 0.2, 0.4, 0.6, 0.8, 1].map((t) => paddedMax - paddedRange * t);
   const timeLabels = customTimeLabels || ['Start', '', '', '', '', '', 'Now'];
 
-  // Calculate candle width - match CoinGecko style
-  // CoinGecko uses consistent candle widths based on data density
+  // Calculate candle width - adaptive based on number of candles
+  // More candles = smaller gap ratio for a denser look
   const candleSpacing = chartW / ohlcData.length;
-  const gapRatio = 0.3; // 30% gap between candles
-  const candleWidth = Math.max(3, candleSpacing * (1 - gapRatio));
-  const wickWidth = Math.max(1, 2); // Fixed thin wick
+  const gapRatio = ohlcData.length > 60 ? 0.15 : ohlcData.length > 30 ? 0.2 : 0.25;
+  const candleWidth = Math.max(2, candleSpacing * (1 - gapRatio));
+  const wickWidth = Math.max(1, candleWidth > 6 ? 2 : 1);
 
   const firstClose = ohlcData[0][4];
   const lastClose = ohlcData[ohlcData.length - 1][4];
