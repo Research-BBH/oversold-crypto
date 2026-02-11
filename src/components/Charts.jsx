@@ -213,7 +213,7 @@ export const CandlestickChart = ({ ohlcData, timeLabels: customTimeLabels, darkM
         {ohlcData.map((candle, i) => {
           const [timestamp, open, high, low, close] = candle;
           
-          // Position candles evenly by index - backend already handles time distribution
+          // Position candles evenly by index
           const x = PAD.left + ((i + 0.5) / ohlcData.length) * chartW;
 
           const highY = PAD.top + chartH - ((high - paddedMin) / paddedRange) * chartH;
@@ -223,29 +223,29 @@ export const CandlestickChart = ({ ohlcData, timeLabels: customTimeLabels, darkM
 
           const isBullish = close >= open;
           const candleColor = isBullish ? '#22c55e' : '#ef4444';
+          
+          // Body calculations - minimum 4px height for visibility
           const bodyTop = Math.min(openY, closeY);
-          // Ensure minimum body height of 3px so flat/doji candles are visible
-          const bodyHeight = Math.max(3, Math.abs(closeY - openY));
-          // For flat candles, adjust bodyTop to center the minimum height
-          const adjustedBodyTop = Math.abs(closeY - openY) < 3 
-            ? openY - 1.5 
-            : bodyTop;
+          const bodyHeight = Math.max(4, Math.abs(closeY - openY));
+          
+          // Wick calculations - ensure minimum 4px height
+          const wickTop = Math.min(highY, lowY);
+          const wickHeight = Math.max(4, Math.abs(highY - lowY));
 
           return (
             <g key={i}>
-              {/* Wick (high to low) */}
-              <line
-                x1={x}
-                y1={highY}
-                x2={x}
-                y2={lowY}
-                stroke={candleColor}
-                strokeWidth={wickWidth}
+              {/* Wick (high to low) - draw as thin rect for reliability */}
+              <rect
+                x={x - wickWidth / 2}
+                y={wickTop}
+                width={wickWidth}
+                height={wickHeight}
+                fill={candleColor}
               />
               {/* Body (open to close) */}
               <rect
                 x={x - candleWidth / 2}
-                y={adjustedBodyTop}
+                y={bodyTop}
                 width={candleWidth}
                 height={bodyHeight}
                 fill={candleColor}
