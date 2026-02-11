@@ -399,7 +399,7 @@ export const TokenDetailPage = ({ token, onBack, darkMode, setDarkMode }) => {
     <div className={`min-h-screen transition-colors duration-200 ${
       darkMode ? 'bg-[#0a0a0f] text-white' : 'bg-gray-100 text-gray-900'
     }`}>
-      <div className="mx-auto px-6 py-8" style={{ maxWidth: '1600px' }}>
+      <div className="max-w-7xl mx-auto px-6 py-8">
         {/* Header */}
         <div className="flex items-center justify-between mb-8">
           <div className="flex items-center gap-4">
@@ -434,8 +434,8 @@ export const TokenDetailPage = ({ token, onBack, darkMode, setDarkMode }) => {
         </div>
 
         {/* Main Grid */}
-        <div className="grid grid-cols-1 xl:grid-cols-4 gap-6">
-          <div className="xl:col-span-3">
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+          <div className="lg:col-span-2">
             <ChartWithTimeframe token={token} darkMode={darkMode} />
           </div>
 

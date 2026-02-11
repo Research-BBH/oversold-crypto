@@ -82,7 +82,7 @@ export const CandlestickChart = ({ ohlcData, timeLabels, darkMode = true }) => {
 
   // Calculate candle width - candles should be wide and close together
   const numCandles = ohlcData.length;
-  const candleWidth = Math.max(4, Math.min(30, (chartW / numCandles) * 0.98));
+  const candleWidth = Math.max(4, Math.min(24, (chartW / numCandles) * 0.95));
   const wickWidth = Math.max(1, candleWidth * 0.1);
 
   // Price levels for grid
