@@ -12,9 +12,8 @@ export const config = {
 const generateOHLCFromPrices = (prices, targetCandles = 90) => {
   if (!prices || prices.length < 2) return [];
   
-  // Determine candle interval based on data points and target candles
-  const totalDuration = prices[prices.length - 1][0] - prices[0][0];
-  const candleInterval = Math.ceil(prices.length / targetCandles);
+  // Calculate how many price points per candle
+  const candleInterval = Math.max(1, Math.floor(prices.length / targetCandles));
   
   const ohlc = [];
   
@@ -37,13 +36,15 @@ const generateOHLCFromPrices = (prices, targetCandles = 90) => {
 };
 
 // Determine target candle count based on timeframe
+// More candles = better detail
 const getTargetCandles = (days) => {
-  if (days <= 1) return 48;      // 30-min candles for 1 day
-  if (days <= 7) return 84;      // 2-hour candles for 7 days
-  if (days <= 30) return 60;     // 12-hour candles for 30 days
-  if (days <= 90) return 90;     // Daily candles for 90 days
-  if (days <= 180) return 90;    // 2-day candles for 180 days
-  return 120;                     // ~3-day candles for 1 year+
+  if (days <= 1) return 48;       // 30-min candles for 1 day
+  if (days <= 7) return 84;       // 2-hour candles for 7 days  
+  if (days <= 30) return 120;     // 6-hour candles for 30 days (was 60)
+  if (days <= 90) return 90;      // Daily candles for 90 days
+  if (days <= 180) return 180;    // Daily candles for 180 days (was 90)
+  if (days <= 365) return 180;    // 2-day candles for 1 year (was 120)
+  return 200;                      // ~3-day candles for max
 };
 
 export default async function handler(req) {
@@ -73,31 +74,8 @@ export default async function handler(req) {
       headers['x-cg-pro-api-key'] = CG_API_KEY;
     }
 
-    // Try native OHLC with daily interval for paid API
-    if (CG_API_KEY && parseInt(days) <= 180) {
-      const ohlcUrl = `${baseUrl}/coins/${tokenId}/ohlc?vs_currency=usd&days=${days}&interval=daily`;
-      const ohlcResponse = await fetch(ohlcUrl, { headers });
-      
-      if (ohlcResponse.ok) {
-        const ohlcData = await ohlcResponse.json();
-        if (ohlcData && ohlcData.length >= 10) {
-          return new Response(
-            JSON.stringify({ ohlc: ohlcData, source: 'native-daily' }),
-            {
-              status: 200,
-              headers: {
-                'Content-Type': 'application/json',
-                'Cache-Control': 's-maxage=300, stale-while-revalidate=600',
-                'Access-Control-Allow-Origin': '*',
-              },
-            }
-          );
-        }
-      }
-    }
-
-    // Fallback: Use market_chart endpoint and generate OHLC
-    // This provides much better granularity for free API users
+    // Always use market_chart endpoint for consistent results
+    // The native OHLC endpoint has poor granularity on free tier
     const chartUrl = `${baseUrl}/coins/${tokenId}/market_chart?vs_currency=usd&days=${days}`;
     const chartResponse = await fetch(chartUrl, { headers });
 
@@ -116,7 +94,13 @@ export default async function handler(req) {
     const ohlc = generateOHLCFromPrices(chartData.prices, targetCandles);
 
     return new Response(
-      JSON.stringify({ ohlc, source: 'generated', dataPoints: chartData.prices.length }),
+      JSON.stringify({ 
+        ohlc, 
+        source: 'generated', 
+        dataPoints: chartData.prices.length,
+        targetCandles,
+        actualCandles: ohlc.length
+      }),
       {
         status: 200,
         headers: {
