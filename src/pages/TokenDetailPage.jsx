@@ -5,7 +5,7 @@
 import { formatPrice, formatNumber, getRsiStyle } from '../utils';
 import { ThemeToggle } from '../components/ThemeToggle';
 import { Footer } from '../components/Footer';
-import { RSIMeter, FullPageChart } from '../components/Charts';
+import { RSIMeter, FullPageChart, CandlestickChart } from '../components/Charts';
 import { FullSignalAnalysis } from '../components/SignalAnalysis';
 import { RSIThresholdAnalysis } from '../components/RSIThresholdChart';
 import { analyzeToken } from '../utils/signals';
@@ -50,16 +50,18 @@ const getTimeLabels = (timeframe) => {
 // Chart Timeframe Component
 const ChartWithTimeframe = ({ token, darkMode }) => {
   const [timeframe, setTimeframe] = useState('7d');
+  const [chartType, setChartType] = useState('line'); // 'line' or 'candle'
   const [chartData, setChartData] = useState(null);
+  const [ohlcData, setOhlcData] = useState(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
   const [priceChange, setPriceChange] = useState(null);
 
-  // Fetch data when timeframe changes
+  // Fetch data when timeframe or chart type changes
   useEffect(() => {
     const fetchChartData = async () => {
-      // For 24h and 7d, use existing sparkline data
-      if (timeframe === '24h') {
+      // For line chart with 24h and 7d, use existing sparkline data
+      if (chartType === 'line' && timeframe === '24h') {
         if (token.sparkline && token.sparkline.length > 0) {
           const dataPoints = Math.floor(token.sparkline.length / 7);
           setChartData(token.sparkline.slice(-dataPoints));
@@ -68,7 +70,7 @@ const ChartWithTimeframe = ({ token, darkMode }) => {
         return;
       }
       
-      if (timeframe === '7d') {
+      if (chartType === 'line' && timeframe === '7d') {
         if (token.sparkline && token.sparkline.length > 0) {
           setChartData(token.sparkline);
           setPriceChange(token.change7d);
@@ -76,7 +78,7 @@ const ChartWithTimeframe = ({ token, darkMode }) => {
         return;
       }
 
-      // For longer timeframes, fetch from CoinGecko via our API proxy
+      // For longer timeframes or candle chart, fetch from CoinGecko
       setLoading(true);
       setError(null);
       
@@ -84,31 +86,57 @@ const ChartWithTimeframe = ({ token, darkMode }) => {
         const tf = TIMEFRAMES.find(t => t.id === timeframe);
         const days = tf?.days || 30;
         
-        // Use our proxy API to avoid CORS issues
-        const url = `/api/chart?id=${token.id}&days=${days}`;
-        const response = await fetch(url);
-        
-        if (!response.ok) {
-          throw new Error(`Failed to fetch data: ${response.status}`);
-        }
-        
-        const data = await response.json();
-        
-        if (data.prices && data.prices.length > 0) {
-          const prices = data.prices.map(p => p[1]);
+        if (chartType === 'candle') {
+          // Fetch OHLC data for candlestick chart
+          const url = `/api/chart?id=${token.id}&days=${days}&type=ohlc`;
+          const response = await fetch(url);
           
-          // Normalize to percentage (like sparkline)
-          const startPrice = prices[0];
-          const normalizedPrices = prices.map(p => (p / startPrice) * 100);
+          if (!response.ok) {
+            throw new Error(`Failed to fetch OHLC data: ${response.status}`);
+          }
           
-          // Calculate price change
-          const endPrice = prices[prices.length - 1];
-          const change = ((endPrice - startPrice) / startPrice) * 100;
+          const data = await response.json();
           
-          setChartData(normalizedPrices);
-          setPriceChange(change);
+          if (Array.isArray(data) && data.length > 0) {
+            setOhlcData(data);
+            
+            // Calculate price change from OHLC data
+            const firstCandle = data[0];
+            const lastCandle = data[data.length - 1];
+            const startPrice = firstCandle[1]; // open
+            const endPrice = lastCandle[4]; // close
+            const change = ((endPrice - startPrice) / startPrice) * 100;
+            setPriceChange(change);
+          } else {
+            setError('No OHLC data available');
+          }
         } else {
-          setError('No data available');
+          // Fetch regular price data for line chart
+          const url = `/api/chart?id=${token.id}&days=${days}&type=line`;
+          const response = await fetch(url);
+          
+          if (!response.ok) {
+            throw new Error(`Failed to fetch data: ${response.status}`);
+          }
+          
+          const data = await response.json();
+          
+          if (data.prices && data.prices.length > 0) {
+            const prices = data.prices.map(p => p[1]);
+            
+            // Normalize to percentage (like sparkline)
+            const startPrice = prices[0];
+            const normalizedPrices = prices.map(p => (p / startPrice) * 100);
+            
+            // Calculate price change
+            const endPrice = prices[prices.length - 1];
+            const change = ((endPrice - startPrice) / startPrice) * 100;
+            
+            setChartData(normalizedPrices);
+            setPriceChange(change);
+          } else {
+            setError('No data available');
+          }
         }
       } catch (err) {
         console.error('Error fetching chart data:', err);
@@ -119,15 +147,63 @@ const ChartWithTimeframe = ({ token, darkMode }) => {
     };
 
     fetchChartData();
-  }, [timeframe, token.id, token.sparkline, token.change24h, token.change7d]);
+  }, [timeframe, chartType, token.id, token.sparkline, token.change24h, token.change7d]);
 
   const timeLabels = getTimeLabels(timeframe);
+
+  // Line/Candle toggle icons
+  const LineIcon = () => (
+    <svg className="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+      <polyline points="4,18 8,12 12,16 16,8 20,14" strokeLinecap="round" strokeLinejoin="round" />
+    </svg>
+  );
+
+  const CandleIcon = () => (
+    <svg className="w-4 h-4" viewBox="0 0 24 24" fill="currentColor">
+      <rect x="4" y="8" width="4" height="8" rx="0.5" />
+      <line x1="6" y1="4" x2="6" y2="8" stroke="currentColor" strokeWidth="1.5" />
+      <line x1="6" y1="16" x2="6" y2="20" stroke="currentColor" strokeWidth="1.5" />
+      <rect x="10" y="6" width="4" height="10" rx="0.5" />
+      <line x1="12" y1="2" x2="12" y2="6" stroke="currentColor" strokeWidth="1.5" />
+      <line x1="12" y1="16" x2="12" y2="22" stroke="currentColor" strokeWidth="1.5" />
+      <rect x="16" y="10" width="4" height="6" rx="0.5" />
+      <line x1="18" y1="6" x2="18" y2="10" stroke="currentColor" strokeWidth="1.5" />
+      <line x1="18" y1="16" x2="18" y2="18" stroke="currentColor" strokeWidth="1.5" />
+    </svg>
+  );
 
   return (
     <div className={`${darkMode ? 'bg-white/5 border-white/10' : 'bg-white border-gray-200'} rounded-2xl p-6 border`}>
       <div className="flex justify-between items-center mb-6">
-        <h2 className="text-xl font-semibold">Price Chart</h2>
+        <h2 className={`text-xl font-semibold ${darkMode ? 'text-white' : 'text-gray-900'}`}>Price Chart</h2>
         <div className="flex items-center gap-3">
+          {/* Chart Type Toggle */}
+          <div className={`inline-flex rounded-lg p-1 ${darkMode ? 'bg-white/5' : 'bg-gray-100'}`}>
+            <button
+              onClick={() => setChartType('line')}
+              className={`p-2 rounded-md transition-all ${
+                chartType === 'line'
+                  ? 'bg-orange-500 text-white shadow'
+                  : darkMode ? 'text-gray-400 hover:text-white' : 'text-gray-600 hover:text-gray-900'
+              }`}
+              title="Line Chart"
+            >
+              <LineIcon />
+            </button>
+            <button
+              onClick={() => setChartType('candle')}
+              className={`p-2 rounded-md transition-all ${
+                chartType === 'candle'
+                  ? 'bg-orange-500 text-white shadow'
+                  : darkMode ? 'text-gray-400 hover:text-white' : 'text-gray-600 hover:text-gray-900'
+              }`}
+              title="Candlestick Chart"
+            >
+              <CandleIcon />
+            </button>
+          </div>
+
+          {/* Timeframe Selector */}
           <div className={`inline-flex rounded-lg p-1 ${darkMode ? 'bg-white/5' : 'bg-gray-100'}`}>
             {TIMEFRAMES.map((tf) => (
               <button
@@ -143,6 +219,8 @@ const ChartWithTimeframe = ({ token, darkMode }) => {
               </button>
             ))}
           </div>
+          
+          {/* Price Change Badge */}
           {priceChange !== null && (
             <span className={`px-3 py-1 rounded-lg text-sm font-medium ${
               priceChange >= 0 ? 'bg-green-500/20 text-green-400' : 'bg-red-500/20 text-red-400'
@@ -165,16 +243,23 @@ const ChartWithTimeframe = ({ token, darkMode }) => {
           <div className="text-center">
             <p className="text-red-400 mb-2">⚠️ {error}</p>
             <p className={`text-sm ${darkMode ? 'text-gray-500' : 'text-gray-400'}`}>
-              Try a different timeframe
+              Try a different timeframe or chart type
             </p>
           </div>
         </div>
+      ) : chartType === 'candle' && ohlcData ? (
+        <CandlestickChart 
+          ohlcData={ohlcData}
+          timeLabels={timeLabels}
+          darkMode={darkMode}
+        />
       ) : (
         <FullPageChart 
           data={chartData} 
           basePrice={token.price} 
           change7d={priceChange} 
           timeLabels={timeLabels}
+          darkMode={darkMode}
         />
       )}
     </div>
