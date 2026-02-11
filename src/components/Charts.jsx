@@ -80,11 +80,10 @@ export const CandlestickChart = ({ ohlcData, timeLabels, darkMode = true }) => {
   const paddedMax = maxPrice + priceRange * 0.05;
   const paddedRange = paddedMax - paddedMin;
 
-  // Calculate candle width - candles should be adjacent with small gap
+  // Calculate candle width - candles should be wide and close together
   const numCandles = ohlcData.length;
-  const candleWidth = Math.max(2, Math.min(15, (chartW / numCandles) * 0.8));
-  const candleGap = (chartW / numCandles) - candleWidth;
-  const wickWidth = Math.max(1, candleWidth * 0.15);
+  const candleWidth = Math.max(4, Math.min(24, (chartW / numCandles) * 0.95));
+  const wickWidth = Math.max(1, candleWidth * 0.1);
 
   // Price levels for grid
   const priceLevels = [0, 0.2, 0.4, 0.6, 0.8, 1].map((t) => paddedMax - paddedRange * t);
