@@ -184,137 +184,193 @@ const detectEngulfingPattern = (prices, opens) => {
 // Calculate unified momentum score (-100 to +100)
 // Positive = Bullish, Negative = Bearish, Near zero = Neutral
 // ============================================================
-// SYMMETRICAL SIGNAL SCORING SYSTEM
-// 8 signal pairs, each with equal bullish/bearish weights
+// GRADUATED SIGNAL SCORING SYSTEM
+// Scores scale based on signal strength, not just binary on/off
 // Max possible: +100 bullish / -100 bearish (perfectly balanced)
 // ============================================================
 
 const SIGNAL_WEIGHTS = {
-  RSI: 25,           // RSI oversold/overbought
-  RSI_EXTREME: 10,   // Bonus for extreme RSI (<20 or >80)
-  TREND: 20,         // Above/below SMA50
-  BOLLINGER: 15,     // Below lower / above upper BB
-  FUNDING: 15,       // Negative/positive funding rate
-  DIVERGENCE: 15,    // Bullish/bearish divergence
-  ENGULFING: 10,     // Bullish/bearish engulfing pattern
-  PRICE_POSITION: 10,// Near ATL / near ATH
-  VOLUME: 10,        // Volume accumulation/distribution
+  RSI: { min: 10, max: 35 },           // RSI scales from 10-35 based on depth
+  TREND: { min: 5, max: 20 },          // Trend scales based on % from SMA
+  BOLLINGER: { min: 5, max: 15 },      // BB scales based on % outside band
+  FUNDING: { min: 5, max: 15 },        // Funding scales based on rate magnitude
+  DIVERGENCE: 15,                       // Binary - pattern detected or not
+  ENGULFING: 10,                        // Binary - pattern detected or not
+  PRICE_POSITION: { min: 3, max: 10 }, // ATL/ATH scales based on proximity
+  VOLUME: { min: 3, max: 10 },         // Volume scales based on spike magnitude
 };
-// Total max per side: 25+10+20+15+15+15+10+10+10 = 130 (clamped to 100)
 
-const calculateSignalScore = (token, signals, fundingRate) => {
+// Helper: Linear interpolation between min and max
+const lerp = (min, max, t) => Math.round(min + (max - min) * Math.min(1, Math.max(0, t)));
+
+const calculateSignalScore = (token, signals, fundingRate, rawData = {}) => {
   let score = 0;
   const activeSignals = [];
-  const signalPairs = []; // For symmetrical UI display
+  const signalPairs = [];
   
-  // ============ 1. RSI Level (±25 base, ±10 extreme bonus) ============
+  const { sma50, bollingerBands, volumeRatio } = rawData;
+  
+  // ============ 1. RSI Level (graduated: 10-35 points) ============
   const rsiPair = {
     name: 'RSI Level',
-    bullish: { label: 'Oversold (<25)', weight: SIGNAL_WEIGHTS.RSI, active: false, value: null },
-    bearish: { label: 'Overbought (>75)', weight: SIGNAL_WEIGHTS.RSI, active: false, value: null },
+    bullish: { label: 'Oversold (<25)', weight: SIGNAL_WEIGHTS.RSI.max, active: false, value: null },
+    bearish: { label: 'Overbought (>75)', weight: SIGNAL_WEIGHTS.RSI.max, active: false, value: null },
   };
   
   if (token.rsi !== null && token.rsi !== undefined) {
     if (token.rsi < 25) {
-      const isExtreme = token.rsi < 20;
-      const points = SIGNAL_WEIGHTS.RSI + (isExtreme ? SIGNAL_WEIGHTS.RSI_EXTREME : 0);
+      // Scale: RSI 25 = 10pts, RSI 15 = 25pts, RSI 10 = 30pts, RSI <5 = 35pts
+      // Lower RSI = stronger signal
+      const strength = (25 - token.rsi) / 20; // 0 at RSI 25, 1 at RSI 5
+      const points = lerp(SIGNAL_WEIGHTS.RSI.min, SIGNAL_WEIGHTS.RSI.max, strength);
       score += points;
-      activeSignals.push({ 
-        name: isExtreme ? 'RSI Extreme Oversold' : 'RSI Oversold', 
-        value: token.rsi, 
-        points: +points,
-        category: 'rsi'
-      });
+      
+      const label = token.rsi < 15 ? 'RSI Extreme Oversold' : token.rsi < 20 ? 'RSI Very Oversold' : 'RSI Oversold';
+      activeSignals.push({ name: label, value: token.rsi, points: +points, category: 'rsi' });
       rsiPair.bullish.active = true;
       rsiPair.bullish.value = token.rsi;
       rsiPair.bullish.points = points;
-      if (isExtreme) rsiPair.bullish.label = 'Extreme (<20)';
+      rsiPair.bullish.label = `Oversold (${token.rsi.toFixed(0)})`;
     } else if (token.rsi > 75) {
-      const isExtreme = token.rsi > 80;
-      const points = SIGNAL_WEIGHTS.RSI + (isExtreme ? SIGNAL_WEIGHTS.RSI_EXTREME : 0);
+      // Scale: RSI 75 = 10pts, RSI 85 = 25pts, RSI 90 = 30pts, RSI >95 = 35pts
+      const strength = (token.rsi - 75) / 20; // 0 at RSI 75, 1 at RSI 95
+      const points = lerp(SIGNAL_WEIGHTS.RSI.min, SIGNAL_WEIGHTS.RSI.max, strength);
       score -= points;
-      activeSignals.push({ 
-        name: isExtreme ? 'RSI Extreme Overbought' : 'RSI Overbought', 
-        value: token.rsi, 
-        points: -points,
-        category: 'rsi'
-      });
+      
+      const label = token.rsi > 85 ? 'RSI Extreme Overbought' : token.rsi > 80 ? 'RSI Very Overbought' : 'RSI Overbought';
+      activeSignals.push({ name: label, value: token.rsi, points: -points, category: 'rsi' });
       rsiPair.bearish.active = true;
       rsiPair.bearish.value = token.rsi;
       rsiPair.bearish.points = points;
-      if (isExtreme) rsiPair.bearish.label = 'Extreme (>80)';
+      rsiPair.bearish.label = `Overbought (${token.rsi.toFixed(0)})`;
     }
   }
   signalPairs.push(rsiPair);
   
-  // ============ 2. Trend - SMA50 (±20) ============
+  // ============ 2. Trend - SMA50 (graduated: 5-20 points based on % distance) ============
   const trendPair = {
     name: 'Trend (SMA50)',
-    bullish: { label: 'Uptrend', weight: SIGNAL_WEIGHTS.TREND, active: false },
-    bearish: { label: 'Downtrend', weight: SIGNAL_WEIGHTS.TREND, active: false },
+    bullish: { label: 'Uptrend', weight: SIGNAL_WEIGHTS.TREND.max, active: false },
+    bearish: { label: 'Downtrend', weight: SIGNAL_WEIGHTS.TREND.max, active: false },
     unavailable: signals.aboveSMA50 === null && signals.belowSMA50 === null,
   };
   
-  if (signals.aboveSMA50 === true) {
-    score += SIGNAL_WEIGHTS.TREND;
-    activeSignals.push({ name: 'Above SMA50 (Uptrend)', points: +SIGNAL_WEIGHTS.TREND, category: 'trend' });
+  if (sma50 && token.price) {
+    const pctFromSMA = ((token.price - sma50) / sma50) * 100;
+    
+    if (pctFromSMA > 0) {
+      // Above SMA50 (bullish) - scale: 0-1% = 5pts, 5% = 12pts, 10%+ = 20pts
+      const strength = Math.abs(pctFromSMA) / 10;
+      const points = lerp(SIGNAL_WEIGHTS.TREND.min, SIGNAL_WEIGHTS.TREND.max, strength);
+      score += points;
+      activeSignals.push({ name: 'Above SMA50 (Uptrend)', value: `+${pctFromSMA.toFixed(1)}%`, points: +points, category: 'trend' });
+      trendPair.bullish.active = true;
+      trendPair.bullish.points = points;
+      trendPair.bullish.label = `Uptrend (+${pctFromSMA.toFixed(1)}%)`;
+    } else {
+      // Below SMA50 (bearish)
+      const strength = Math.abs(pctFromSMA) / 10;
+      const points = lerp(SIGNAL_WEIGHTS.TREND.min, SIGNAL_WEIGHTS.TREND.max, strength);
+      score -= points;
+      activeSignals.push({ name: 'Below SMA50 (Downtrend)', value: `${pctFromSMA.toFixed(1)}%`, points: -points, category: 'trend' });
+      trendPair.bearish.active = true;
+      trendPair.bearish.points = points;
+      trendPair.bearish.label = `Downtrend (${pctFromSMA.toFixed(1)}%)`;
+    }
+  } else if (signals.aboveSMA50 === true) {
+    // Fallback to binary if no raw data
+    score += SIGNAL_WEIGHTS.TREND.min;
+    activeSignals.push({ name: 'Above SMA50 (Uptrend)', points: +SIGNAL_WEIGHTS.TREND.min, category: 'trend' });
     trendPair.bullish.active = true;
-    trendPair.bullish.points = SIGNAL_WEIGHTS.TREND;
+    trendPair.bullish.points = SIGNAL_WEIGHTS.TREND.min;
   } else if (signals.belowSMA50 === true) {
-    score -= SIGNAL_WEIGHTS.TREND;
-    activeSignals.push({ name: 'Below SMA50 (Downtrend)', points: -SIGNAL_WEIGHTS.TREND, category: 'trend' });
+    score -= SIGNAL_WEIGHTS.TREND.min;
+    activeSignals.push({ name: 'Below SMA50 (Downtrend)', points: -SIGNAL_WEIGHTS.TREND.min, category: 'trend' });
     trendPair.bearish.active = true;
-    trendPair.bearish.points = SIGNAL_WEIGHTS.TREND;
+    trendPair.bearish.points = SIGNAL_WEIGHTS.TREND.min;
   }
   signalPairs.push(trendPair);
   
-  // ============ 3. Bollinger Bands (±15) ============
+  // ============ 3. Bollinger Bands (graduated: 5-15 points based on % outside) ============
   const bbPair = {
     name: 'Bollinger Bands',
-    bullish: { label: 'Below Lower', weight: SIGNAL_WEIGHTS.BOLLINGER, active: false },
-    bearish: { label: 'Above Upper', weight: SIGNAL_WEIGHTS.BOLLINGER, active: false },
+    bullish: { label: 'Below Lower', weight: SIGNAL_WEIGHTS.BOLLINGER.max, active: false },
+    bearish: { label: 'Above Upper', weight: SIGNAL_WEIGHTS.BOLLINGER.max, active: false },
     unavailable: signals.belowBB === null && signals.aboveBB === null,
   };
   
-  if (signals.belowBB === true) {
-    score += SIGNAL_WEIGHTS.BOLLINGER;
-    activeSignals.push({ name: 'Below Lower BB', points: +SIGNAL_WEIGHTS.BOLLINGER, category: 'bb' });
+  if (bollingerBands && token.price) {
+    const { upper, lower, middle } = bollingerBands;
+    const bandWidth = upper - lower;
+    
+    if (token.price < lower) {
+      // Below lower BB - scale based on how far below
+      const pctBelow = ((lower - token.price) / bandWidth) * 100;
+      const strength = pctBelow / 20; // 20% below = max strength
+      const points = lerp(SIGNAL_WEIGHTS.BOLLINGER.min, SIGNAL_WEIGHTS.BOLLINGER.max, strength);
+      score += points;
+      activeSignals.push({ name: 'Below Lower BB', value: `-${pctBelow.toFixed(1)}%`, points: +points, category: 'bb' });
+      bbPair.bullish.active = true;
+      bbPair.bullish.points = points;
+      bbPair.bullish.label = `Below (-${pctBelow.toFixed(1)}%)`;
+    } else if (token.price > upper) {
+      // Above upper BB
+      const pctAbove = ((token.price - upper) / bandWidth) * 100;
+      const strength = pctAbove / 20;
+      const points = lerp(SIGNAL_WEIGHTS.BOLLINGER.min, SIGNAL_WEIGHTS.BOLLINGER.max, strength);
+      score -= points;
+      activeSignals.push({ name: 'Above Upper BB', value: `+${pctAbove.toFixed(1)}%`, points: -points, category: 'bb' });
+      bbPair.bearish.active = true;
+      bbPair.bearish.points = points;
+      bbPair.bearish.label = `Above (+${pctAbove.toFixed(1)}%)`;
+    }
+  } else if (signals.belowBB === true) {
+    score += SIGNAL_WEIGHTS.BOLLINGER.min;
+    activeSignals.push({ name: 'Below Lower BB', points: +SIGNAL_WEIGHTS.BOLLINGER.min, category: 'bb' });
     bbPair.bullish.active = true;
-    bbPair.bullish.points = SIGNAL_WEIGHTS.BOLLINGER;
+    bbPair.bullish.points = SIGNAL_WEIGHTS.BOLLINGER.min;
   } else if (signals.aboveBB === true) {
-    score -= SIGNAL_WEIGHTS.BOLLINGER;
-    activeSignals.push({ name: 'Above Upper BB', points: -SIGNAL_WEIGHTS.BOLLINGER, category: 'bb' });
+    score -= SIGNAL_WEIGHTS.BOLLINGER.min;
+    activeSignals.push({ name: 'Above Upper BB', points: -SIGNAL_WEIGHTS.BOLLINGER.min, category: 'bb' });
     bbPair.bearish.active = true;
-    bbPair.bearish.points = SIGNAL_WEIGHTS.BOLLINGER;
+    bbPair.bearish.points = SIGNAL_WEIGHTS.BOLLINGER.min;
   }
   signalPairs.push(bbPair);
   
-  // ============ 4. Funding Rate (±15) ============
+  // ============ 4. Funding Rate (graduated: 5-15 points based on magnitude) ============
   const fundingPair = {
     name: 'Funding Rate',
-    bullish: { label: 'Negative', weight: SIGNAL_WEIGHTS.FUNDING, active: false },
-    bearish: { label: 'Positive', weight: SIGNAL_WEIGHTS.FUNDING, active: false },
+    bullish: { label: 'Negative', weight: SIGNAL_WEIGHTS.FUNDING.max, active: false },
+    bearish: { label: 'Positive', weight: SIGNAL_WEIGHTS.FUNDING.max, active: false },
     unavailable: fundingRate === null || fundingRate === undefined,
   };
   
   if (fundingRate !== null && fundingRate !== undefined) {
     if (fundingRate < -0.005) {
-      score += SIGNAL_WEIGHTS.FUNDING;
-      activeSignals.push({ name: 'Negative Funding', value: fundingRate, points: +SIGNAL_WEIGHTS.FUNDING, category: 'funding' });
+      // Negative funding (bullish) - scale: -0.005 = 5pts, -0.02 = 10pts, -0.05+ = 15pts
+      const strength = Math.abs(fundingRate) / 0.05;
+      const points = lerp(SIGNAL_WEIGHTS.FUNDING.min, SIGNAL_WEIGHTS.FUNDING.max, strength);
+      score += points;
+      activeSignals.push({ name: 'Negative Funding', value: fundingRate, points: +points, category: 'funding' });
       fundingPair.bullish.active = true;
       fundingPair.bullish.value = fundingRate;
-      fundingPair.bullish.points = SIGNAL_WEIGHTS.FUNDING;
+      fundingPair.bullish.points = points;
+      fundingPair.bullish.label = `Negative (${(fundingRate * 100).toFixed(3)}%)`;
     } else if (fundingRate > 0.01) {
-      score -= SIGNAL_WEIGHTS.FUNDING;
-      activeSignals.push({ name: 'Positive Funding', value: fundingRate, points: -SIGNAL_WEIGHTS.FUNDING, category: 'funding' });
+      // Positive funding (bearish)
+      const strength = fundingRate / 0.05;
+      const points = lerp(SIGNAL_WEIGHTS.FUNDING.min, SIGNAL_WEIGHTS.FUNDING.max, strength);
+      score -= points;
+      activeSignals.push({ name: 'Positive Funding', value: fundingRate, points: -points, category: 'funding' });
       fundingPair.bearish.active = true;
       fundingPair.bearish.value = fundingRate;
-      fundingPair.bearish.points = SIGNAL_WEIGHTS.FUNDING;
+      fundingPair.bearish.points = points;
+      fundingPair.bearish.label = `Positive (${(fundingRate * 100).toFixed(3)}%)`;
     }
   }
   signalPairs.push(fundingPair);
   
-  // ============ 5. RSI Divergence (±15) ============
+  // ============ 5. RSI Divergence (binary: ±15) ============
   const divPair = {
     name: 'RSI Divergence',
     bullish: { label: 'Bullish', weight: SIGNAL_WEIGHTS.DIVERGENCE, active: false },
@@ -336,7 +392,7 @@ const calculateSignalScore = (token, signals, fundingRate) => {
   }
   signalPairs.push(divPair);
   
-  // ============ 6. Candlestick Patterns (±10) ============
+  // ============ 6. Candlestick Patterns (binary: ±10) ============
   const candlePair = {
     name: 'Candlestick',
     bullish: { label: 'Bullish Engulfing', weight: SIGNAL_WEIGHTS.ENGULFING, active: false },
@@ -358,51 +414,77 @@ const calculateSignalScore = (token, signals, fundingRate) => {
   }
   signalPairs.push(candlePair);
   
-  // ============ 7. Price Position - ATL/ATH (±10) ============
+  // ============ 7. Price Position - ATL/ATH (graduated: 3-10 points) ============
   const positionPair = {
     name: 'Price Position',
-    bullish: { label: 'Near ATL', weight: SIGNAL_WEIGHTS.PRICE_POSITION, active: false },
-    bearish: { label: 'Near ATH', weight: SIGNAL_WEIGHTS.PRICE_POSITION, active: false },
+    bullish: { label: 'Near ATL', weight: SIGNAL_WEIGHTS.PRICE_POSITION.max, active: false },
+    bearish: { label: 'Near ATH', weight: SIGNAL_WEIGHTS.PRICE_POSITION.max, active: false },
   };
   
-  // Near ATL: within 20% of all-time low
   const nearATL = token.atlChange !== undefined && token.atlChange !== null && token.atlChange <= 20;
   const nearATH = signals.nearATH === true;
   
   if (nearATL && !nearATH) {
-    score += SIGNAL_WEIGHTS.PRICE_POSITION;
-    activeSignals.push({ name: 'Near All-Time Low', value: `+${token.atlChange?.toFixed(1)}%`, points: +SIGNAL_WEIGHTS.PRICE_POSITION, category: 'position' });
+    // Scale: 20% from ATL = 3pts, 10% = 6pts, 5% = 8pts, <2% = 10pts
+    const strength = (20 - token.atlChange) / 18; // 0 at 20%, 1 at 2%
+    const points = lerp(SIGNAL_WEIGHTS.PRICE_POSITION.min, SIGNAL_WEIGHTS.PRICE_POSITION.max, strength);
+    score += points;
+    activeSignals.push({ name: 'Near All-Time Low', value: `+${token.atlChange?.toFixed(1)}%`, points: +points, category: 'position' });
     positionPair.bullish.active = true;
     positionPair.bullish.value = token.atlChange;
-    positionPair.bullish.points = SIGNAL_WEIGHTS.PRICE_POSITION;
+    positionPair.bullish.points = points;
+    positionPair.bullish.label = `Near ATL (+${token.atlChange?.toFixed(1)}%)`;
   } else if (nearATH && !nearATL) {
-    score -= SIGNAL_WEIGHTS.PRICE_POSITION;
-    activeSignals.push({ name: 'Near All-Time High', points: -SIGNAL_WEIGHTS.PRICE_POSITION, category: 'position' });
+    // For ATH, we use the athChange if available, else give minimum points
+    const athPct = token.athChange !== undefined ? Math.abs(token.athChange) : 10;
+    const strength = (10 - athPct) / 8; // 0 at 10%, 1 at 2%
+    const points = lerp(SIGNAL_WEIGHTS.PRICE_POSITION.min, SIGNAL_WEIGHTS.PRICE_POSITION.max, Math.max(0, strength));
+    score -= points;
+    activeSignals.push({ name: 'Near All-Time High', value: athPct < 10 ? `-${athPct.toFixed(1)}%` : undefined, points: -points, category: 'position' });
     positionPair.bearish.active = true;
-    positionPair.bearish.points = SIGNAL_WEIGHTS.PRICE_POSITION;
+    positionPair.bearish.points = points;
+    positionPair.bearish.label = `Near ATH${athPct < 10 ? ` (-${athPct.toFixed(1)}%)` : ''}`;
   }
   signalPairs.push(positionPair);
   
-  // ============ 8. Volume Analysis (±10) ============
+  // ============ 8. Volume Analysis (graduated: 3-10 points) ============
   const volumePair = {
     name: 'Volume',
-    bullish: { label: 'Accumulation', weight: SIGNAL_WEIGHTS.VOLUME, active: false },
-    bearish: { label: 'Distribution', weight: SIGNAL_WEIGHTS.VOLUME, active: false },
+    bullish: { label: 'Accumulation', weight: SIGNAL_WEIGHTS.VOLUME.max, active: false },
+    bearish: { label: 'Distribution', weight: SIGNAL_WEIGHTS.VOLUME.max, active: false },
     unavailable: signals.volumeSpike === null,
   };
   
-  if (signals.volumeSpike === true) {
-    // Interpret based on RSI context
+  if (signals.volumeSpike === true && volumeRatio) {
+    // Scale: 1.5x = 3pts, 2x = 5pts, 3x = 8pts, 4x+ = 10pts
+    const strength = (volumeRatio - 1.5) / 2.5; // 0 at 1.5x, 1 at 4x
+    const points = lerp(SIGNAL_WEIGHTS.VOLUME.min, SIGNAL_WEIGHTS.VOLUME.max, strength);
+    
     if (token.rsi !== null && token.rsi < 35) {
-      score += SIGNAL_WEIGHTS.VOLUME;
-      activeSignals.push({ name: 'Volume Accumulation', points: +SIGNAL_WEIGHTS.VOLUME, category: 'volume' });
+      score += points;
+      activeSignals.push({ name: 'Volume Accumulation', value: `${volumeRatio.toFixed(1)}x`, points: +points, category: 'volume' });
       volumePair.bullish.active = true;
-      volumePair.bullish.points = SIGNAL_WEIGHTS.VOLUME;
+      volumePair.bullish.points = points;
+      volumePair.bullish.label = `Accumulation (${volumeRatio.toFixed(1)}x)`;
     } else if (token.rsi !== null && token.rsi > 65) {
-      score -= SIGNAL_WEIGHTS.VOLUME;
-      activeSignals.push({ name: 'Volume Distribution', points: -SIGNAL_WEIGHTS.VOLUME, category: 'volume' });
+      score -= points;
+      activeSignals.push({ name: 'Volume Distribution', value: `${volumeRatio.toFixed(1)}x`, points: -points, category: 'volume' });
       volumePair.bearish.active = true;
-      volumePair.bearish.points = SIGNAL_WEIGHTS.VOLUME;
+      volumePair.bearish.points = points;
+      volumePair.bearish.label = `Distribution (${volumeRatio.toFixed(1)}x)`;
+    }
+  } else if (signals.volumeSpike === true) {
+    // Fallback without ratio
+    if (token.rsi !== null && token.rsi < 35) {
+      score += SIGNAL_WEIGHTS.VOLUME.min;
+      activeSignals.push({ name: 'Volume Accumulation', points: +SIGNAL_WEIGHTS.VOLUME.min, category: 'volume' });
+      volumePair.bullish.active = true;
+      volumePair.bullish.points = SIGNAL_WEIGHTS.VOLUME.min;
+    } else if (token.rsi !== null && token.rsi > 65) {
+      score -= SIGNAL_WEIGHTS.VOLUME.min;
+      activeSignals.push({ name: 'Volume Distribution', points: -SIGNAL_WEIGHTS.VOLUME.min, category: 'volume' });
+      volumePair.bearish.active = true;
+      volumePair.bearish.points = SIGNAL_WEIGHTS.VOLUME.min;
     }
   }
   signalPairs.push(volumePair);
@@ -438,13 +520,13 @@ const calculateSignalScore = (token, signals, fundingRate) => {
     label,
     strength,
     activeSignals,
-    signalPairs,        // For symmetrical UI display
+    signalPairs,
     signalCount: activeSignals.length,
     bullishCount: activeSignals.filter(s => s.points > 0).length,
     bearishCount: activeSignals.filter(s => s.points < 0).length,
     bullishTotal,
     bearishTotal,
-    maxPossible: 100,   // Max score in either direction
+    maxPossible: 100,
   };
 };
 
@@ -610,7 +692,11 @@ const enhanceToken = async (token) => {
       highVolMcap: highVolMcap,
     };
     
-    const signalScoreData = calculateSignalScore(token, signals, exchangeData.fundingRate);
+    const signalScoreData = calculateSignalScore(token, signals, exchangeData.fundingRate, {
+      sma50,
+      bollingerBands: bb,
+      volumeRatio,
+    });
     
     return {
       ...token,
@@ -673,7 +759,11 @@ const enhanceToken = async (token) => {
     highVolMcap: volMcapRatio !== null && volMcapRatio > 10,
   };
   
-  const signalScoreData = calculateSignalScore(token, signals, null);
+  const signalScoreData = calculateSignalScore(token, signals, null, {
+    sma50,
+    bollingerBands: bb,
+    volumeRatio: null,
+  });
   
   return {
     ...token,
@@ -1161,7 +1251,11 @@ export default async function handler(req) {
         highVolMcap: volMcapRatio !== null && volMcapRatio > 10,
       };
       
-      const signalScoreData = calculateSignalScore(token, signals, null);
+      const signalScoreData = calculateSignalScore(token, signals, null, {
+        sma50,
+        bollingerBands: bb,
+        volumeRatio: null,
+      });
       
       return {
         ...token,
