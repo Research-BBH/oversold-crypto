@@ -138,9 +138,9 @@ export const CandlestickChart = ({ ohlcData, timeLabels: customTimeLabels, darkM
   const priceLevels = [0, 0.2, 0.4, 0.6, 0.8, 1].map((t) => paddedMax - paddedRange * t);
   const timeLabels = customTimeLabels || ['Start', '', '', '', '', '', 'Now'];
 
-  // Calculate candle width - 80% gives small consistent gaps
+  // Calculate candle width - 85% gives minimal consistent gaps
   const candleSpacing = chartW / ohlcData.length;
-  const candleWidth = Math.max(3, candleSpacing * 0.8);
+  const candleWidth = Math.max(3, candleSpacing * 0.85);
   const wickWidth = candleWidth > 10 ? 2 : 1;
 
   const firstClose = ohlcData[0][4];
@@ -224,7 +224,12 @@ export const CandlestickChart = ({ ohlcData, timeLabels: customTimeLabels, darkM
           const isBullish = close >= open;
           const candleColor = isBullish ? '#22c55e' : '#ef4444';
           const bodyTop = Math.min(openY, closeY);
-          const bodyHeight = Math.max(1, Math.abs(closeY - openY));
+          // Ensure minimum body height of 3px so flat/doji candles are visible
+          const bodyHeight = Math.max(3, Math.abs(closeY - openY));
+          // For flat candles, adjust bodyTop to center the minimum height
+          const adjustedBodyTop = Math.abs(closeY - openY) < 3 
+            ? openY - 1.5 
+            : bodyTop;
 
           return (
             <g key={i}>
@@ -240,7 +245,7 @@ export const CandlestickChart = ({ ohlcData, timeLabels: customTimeLabels, darkM
               {/* Body (open to close) */}
               <rect
                 x={x - candleWidth / 2}
-                y={bodyTop}
+                y={adjustedBodyTop}
                 width={candleWidth}
                 height={bodyHeight}
                 fill={candleColor}
