@@ -138,11 +138,11 @@ export const CandlestickChart = ({ ohlcData, timeLabels: customTimeLabels, darkM
   const priceLevels = [0, 0.2, 0.4, 0.6, 0.8, 1].map((t) => paddedMax - paddedRange * t);
   const timeLabels = customTimeLabels || ['Start', '', '', '', '', '', 'Now'];
 
-  // Calculate candle width - use nearly all available space
-  // Each candle gets (chartW / numCandles) pixels, use 90% of that for the body
+  // Calculate candle width - candles should nearly touch
   const candleSpacing = chartW / ohlcData.length;
-  const candleWidth = Math.max(2, candleSpacing * 0.85); // 85% width, 15% gap
-  const wickWidth = Math.max(1, candleWidth > 8 ? 2 : 1);
+  // Use 92% of space for candle, 8% gap - ensures candles nearly touch
+  const candleWidth = Math.max(3, Math.min(candleSpacing * 0.92, 20)); // Min 3px, max 20px
+  const wickWidth = candleWidth > 10 ? 2 : 1;
 
   const firstClose = ohlcData[0][4];
   const lastClose = ohlcData[ohlcData.length - 1][4];
