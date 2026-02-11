@@ -8,39 +8,33 @@ export const config = {
   runtime: 'edge',
 };
 
-// Aggregate price data into OHLC candles using TIME-BASED intervals
-// This ensures even candle distribution regardless of data gaps
+// Aggregate price data into OHLC candles by dividing data evenly
+// This guarantees uniform candle widths regardless of time gaps
 const generateOHLCFromPrices = (prices, targetCandles = 60) => {
   if (!prices || prices.length < 2) return [];
   
-  const startTime = prices[0][0];
-  const endTime = prices[prices.length - 1][0];
-  const totalDuration = endTime - startTime;
-  const candleDuration = totalDuration / targetCandles;
-  
+  // Simply divide the data points evenly among candles
+  const pointsPerCandle = Math.max(1, Math.floor(prices.length / targetCandles));
   const ohlc = [];
-  let lastKnownPrice = prices[0][1]; // Track last known price for filling gaps
   
   for (let i = 0; i < targetCandles; i++) {
-    const candleStart = startTime + (i * candleDuration);
-    const candleEnd = startTime + ((i + 1) * candleDuration);
+    const startIdx = i * pointsPerCandle;
+    const endIdx = Math.min(startIdx + pointsPerCandle, prices.length);
     
-    // Find all prices within this time window
-    const candlePrices = prices.filter(p => p[0] >= candleStart && p[0] < candleEnd);
+    if (startIdx >= prices.length) break;
     
-    if (candlePrices.length === 0) {
-      // No data for this period - create a flat candle with last known price
-      ohlc.push([candleStart, lastKnownPrice, lastKnownPrice, lastKnownPrice, lastKnownPrice]);
-    } else {
-      const priceValues = candlePrices.map(p => p[1]);
-      const open = priceValues[0];
-      const close = priceValues[priceValues.length - 1];
-      const high = Math.max(...priceValues);
-      const low = Math.min(...priceValues);
-      
-      ohlc.push([candleStart, open, high, low, close]);
-      lastKnownPrice = close; // Update last known price
-    }
+    const chunk = prices.slice(startIdx, endIdx);
+    if (chunk.length === 0) break;
+    
+    const timestamp = chunk[0][0];
+    const priceValues = chunk.map(p => p[1]);
+    
+    const open = priceValues[0];
+    const close = priceValues[priceValues.length - 1];
+    const high = Math.max(...priceValues);
+    const low = Math.min(...priceValues);
+    
+    ohlc.push([timestamp, open, high, low, close]);
   }
   
   return ohlc;
@@ -97,7 +91,7 @@ export default async function handler(req) {
       throw new Error('Insufficient price data');
     }
 
-    // Generate OHLC candles from price data using time-based intervals
+    // Generate OHLC candles from price data
     const targetCandles = getTargetCandles(parseInt(days));
     const ohlc = generateOHLCFromPrices(chartData.prices, targetCandles);
 
