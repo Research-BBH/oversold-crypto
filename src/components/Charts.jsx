@@ -214,11 +214,8 @@ export const CandlestickChart = ({ ohlcData, timeLabels: customTimeLabels, darkM
         {ohlcData.map((candle, i) => {
           const [timestamp, open, high, low, close] = candle;
           
-          // Position candles by timestamp for accurate time representation
-          const firstTimestamp = ohlcData[0][0];
-          const lastTimestamp = ohlcData[ohlcData.length - 1][0];
-          const timeRange = lastTimestamp - firstTimestamp || 1;
-          const x = PAD.left + ((timestamp - firstTimestamp) / timeRange) * chartW + (candleWidth / 2);
+          // Position candles evenly by index - backend already handles time distribution
+          const x = PAD.left + ((i + 0.5) / ohlcData.length) * chartW;
 
           const highY = PAD.top + chartH - ((high - paddedMin) / paddedRange) * chartH;
           const lowY = PAD.top + chartH - ((low - paddedMin) / paddedRange) * chartH;
