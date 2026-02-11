@@ -48,9 +48,9 @@ const getTargetCandles = (days) => {
   if (days <= 1) return 48;
   if (days <= 7) return 56;
   if (days <= 30) return 60;
-  if (days <= 90) return 90;
-  if (days <= 365) return 90;
-  return 100;  // Max - keep it manageable
+  if (days <= 90) return 75;
+  if (days <= 365) return 80;
+  return 80;  // Max - same as 1Y for good visibility
 };
 
 export default async function handler(req) {
