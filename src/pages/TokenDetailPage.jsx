@@ -216,14 +216,14 @@ const ChartWithTimeframe = ({ token, darkMode }) => {
       </div>
       
       {loading ? (
-        <div className="w-full h-80 flex items-center justify-center">
+        <div className="w-full h-96 flex items-center justify-center">
           <div className="text-center">
             <div className="w-10 h-10 border-4 border-orange-500 border-t-transparent rounded-full animate-spin mx-auto mb-3" />
             <p className={darkMode ? 'text-gray-400' : 'text-gray-500'}>Loading chart data...</p>
           </div>
         </div>
       ) : error ? (
-        <div className="w-full h-80 flex items-center justify-center">
+        <div className="w-full h-96 flex items-center justify-center">
           <div className="text-center">
             <p className="text-red-400 mb-2">⚠️ {error}</p>
             <p className={`text-sm ${darkMode ? 'text-gray-500' : 'text-gray-400'}`}>
@@ -399,7 +399,7 @@ export const TokenDetailPage = ({ token, onBack, darkMode, setDarkMode }) => {
     <div className={`min-h-screen transition-colors duration-200 ${
       darkMode ? 'bg-[#0a0a0f] text-white' : 'bg-gray-100 text-gray-900'
     }`}>
-      <div className="max-w-6xl mx-auto px-6 py-8">
+      <div className="mx-auto px-6 py-8" style={{ maxWidth: '1600px' }}>
         {/* Header */}
         <div className="flex items-center justify-between mb-8">
           <div className="flex items-center gap-4">
@@ -434,8 +434,8 @@ export const TokenDetailPage = ({ token, onBack, darkMode, setDarkMode }) => {
         </div>
 
         {/* Main Grid */}
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-          <div className="lg:col-span-2">
+        <div className="grid grid-cols-1 xl:grid-cols-4 gap-6">
+          <div className="xl:col-span-3">
             <ChartWithTimeframe token={token} darkMode={darkMode} />
           </div>
 

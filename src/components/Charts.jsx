@@ -58,14 +58,14 @@ export const RSIMeter = ({ value }) => {
 export const CandlestickChart = ({ ohlcData, timeLabels, darkMode = true }) => {
   if (!ohlcData?.length || ohlcData.length < 2) {
     return (
-      <div className="w-full h-80 bg-gray-800/30 rounded-xl animate-pulse flex items-center justify-center text-gray-500">
+      <div className="w-full h-96 bg-gray-800/30 rounded-xl animate-pulse flex items-center justify-center text-gray-500">
         No OHLC data available
       </div>
     );
   }
 
-  const W = 800;
-  const H = 400;
+  const W = 900;
+  const H = 450;
   const PAD = { top: 30, right: 80, bottom: 50, left: 20 };
   const chartW = W - PAD.left - PAD.right;
   const chartH = H - PAD.top - PAD.bottom;
@@ -398,14 +398,14 @@ export const DetailChart = ({ data, basePrice, change7d }) => {
 export const FullPageChart = ({ data, basePrice, change7d, timeLabels: customTimeLabels, darkMode = true }) => {
   if (!data?.length || data.length < 2) {
     return (
-      <div className={`w-full h-80 ${darkMode ? 'bg-gray-800/30' : 'bg-gray-100'} rounded-xl animate-pulse flex items-center justify-center ${darkMode ? 'text-gray-500' : 'text-gray-400'}`}>
+      <div className={`w-full h-96 ${darkMode ? 'bg-gray-800/30' : 'bg-gray-100'} rounded-xl animate-pulse flex items-center justify-center ${darkMode ? 'text-gray-500' : 'text-gray-400'}`}>
         No chart data
       </div>
     );
   }
 
-  const W = 800;
-  const H = 400;
+  const W = 900;
+  const H = 450;
   const PAD = { top: 30, right: 80, bottom: 50, left: 20 };
   const chartW = W - PAD.left - PAD.right;
   const chartH = H - PAD.top - PAD.bottom;
