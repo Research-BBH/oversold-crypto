@@ -11,7 +11,6 @@ export default async function handler(req) {
   const url = new URL(req.url);
   const tokenId = url.searchParams.get('id');
   const days = url.searchParams.get('days') || '30';
-  const type = url.searchParams.get('type') || 'line'; // 'line' or 'ohlc'
 
   if (!tokenId) {
     return new Response(
@@ -28,19 +27,7 @@ export default async function handler(req) {
       ? 'https://pro-api.coingecko.com/api/v3'
       : 'https://api.coingecko.com/api/v3';
     
-    let chartUrl;
-    if (type === 'ohlc') {
-      // OHLC endpoint - CoinGecko returns candlestick data
-      // days parameter determines candle granularity:
-      // 1-2 days: 30 min candles
-      // 3-30 days: 4 hour candles
-      // 31-90 days: 4 hour candles
-      // 91+ days: 4 day candles
-      chartUrl = `${baseUrl}/coins/${tokenId}/ohlc?vs_currency=usd&days=${days}`;
-    } else {
-      // Regular market chart for line charts
-      chartUrl = `${baseUrl}/coins/${tokenId}/market_chart?vs_currency=usd&days=${days}`;
-    }
+    const chartUrl = `${baseUrl}/coins/${tokenId}/market_chart?vs_currency=usd&days=${days}`;
     
     const headers = {
       'Accept': 'application/json',
