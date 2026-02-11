@@ -8,46 +8,49 @@ export const config = {
   runtime: 'edge',
 };
 
-// Aggregate price data into OHLC candles by dividing data evenly
-// This guarantees uniform candle widths regardless of time gaps
+// Generate exactly N candles covering equal time intervals
 const generateOHLCFromPrices = (prices, targetCandles = 60) => {
   if (!prices || prices.length < 2) return [];
   
-  // Simply divide the data points evenly among candles
-  const pointsPerCandle = Math.max(1, Math.floor(prices.length / targetCandles));
+  const startTime = prices[0][0];
+  const endTime = prices[prices.length - 1][0];
+  const candleDuration = (endTime - startTime) / targetCandles;
+  
   const ohlc = [];
+  let lastPrice = prices[0][1];
   
   for (let i = 0; i < targetCandles; i++) {
-    const startIdx = i * pointsPerCandle;
-    const endIdx = Math.min(startIdx + pointsPerCandle, prices.length);
+    const candleStart = startTime + (i * candleDuration);
+    const candleEnd = candleStart + candleDuration;
     
-    if (startIdx >= prices.length) break;
+    // Filter prices for this candle's time window
+    const candlePrices = prices.filter(p => p[0] >= candleStart && p[0] < candleEnd);
     
-    const chunk = prices.slice(startIdx, endIdx);
-    if (chunk.length === 0) break;
-    
-    const timestamp = chunk[0][0];
-    const priceValues = chunk.map(p => p[1]);
-    
-    const open = priceValues[0];
-    const close = priceValues[priceValues.length - 1];
-    const high = Math.max(...priceValues);
-    const low = Math.min(...priceValues);
-    
-    ohlc.push([timestamp, open, high, low, close]);
+    if (candlePrices.length === 0) {
+      // No data - flat candle with last known price
+      ohlc.push([candleStart, lastPrice, lastPrice, lastPrice, lastPrice]);
+    } else {
+      const priceValues = candlePrices.map(p => p[1]);
+      const open = priceValues[0];
+      const close = priceValues[priceValues.length - 1];
+      const high = Math.max(...priceValues);
+      const low = Math.min(...priceValues);
+      ohlc.push([candleStart, open, high, low, close]);
+      lastPrice = close;
+    }
   }
   
   return ohlc;
 };
 
-// Determine target candle count based on timeframe
+// Target candle counts - more candles for longer timeframes
 const getTargetCandles = (days) => {
-  if (days <= 1) return 48;       // 30-min candles for 1 day
-  if (days <= 7) return 56;       // 3-hour candles for 7 days  
-  if (days <= 30) return 60;      // 12-hour candles for 30 days
-  if (days <= 90) return 90;      // Daily candles for 90 days
-  if (days <= 365) return 90;     // ~4-day candles for 1 year
-  return 100;                      // ~weekly candles for max
+  if (days <= 1) return 48;
+  if (days <= 7) return 84;      // More for 7d
+  if (days <= 30) return 90;     // More for 1M
+  if (days <= 90) return 120;    // More for 3M
+  if (days <= 365) return 180;   // More for 1Y
+  return 200;                     // More for Max
 };
 
 export default async function handler(req) {
@@ -69,15 +72,9 @@ export default async function handler(req) {
       ? 'https://pro-api.coingecko.com/api/v3'
       : 'https://api.coingecko.com/api/v3';
     
-    const headers = {
-      'Accept': 'application/json',
-    };
-    
-    if (CG_API_KEY) {
-      headers['x-cg-pro-api-key'] = CG_API_KEY;
-    }
+    const headers = { 'Accept': 'application/json' };
+    if (CG_API_KEY) headers['x-cg-pro-api-key'] = CG_API_KEY;
 
-    // Use market_chart endpoint for consistent results
     const chartUrl = `${baseUrl}/coins/${tokenId}/market_chart?vs_currency=usd&days=${days}`;
     const chartResponse = await fetch(chartUrl, { headers });
 
@@ -91,14 +88,12 @@ export default async function handler(req) {
       throw new Error('Insufficient price data');
     }
 
-    // Generate OHLC candles from price data
     const targetCandles = getTargetCandles(parseInt(days));
     const ohlc = generateOHLCFromPrices(chartData.prices, targetCandles);
 
     return new Response(
       JSON.stringify({ 
         ohlc, 
-        source: 'generated', 
         dataPoints: chartData.prices.length,
         actualCandles: ohlc.length
       }),
@@ -106,7 +101,7 @@ export default async function handler(req) {
         status: 200,
         headers: {
           'Content-Type': 'application/json',
-          'Cache-Control': 's-maxage=300, stale-while-revalidate=600',
+          'Cache-Control': 'no-cache, no-store, must-revalidate',
           'Access-Control-Allow-Origin': '*',
         },
       }
