@@ -1,10 +1,49 @@
 // ==================================================
 // FILE: api/ohlc.js
 // Proxy endpoint for CoinGecko OHLC data (for candlestick charts)
+// Uses market_chart endpoint to generate better granularity candles
 // ==================================================
 
 export const config = {
   runtime: 'edge',
+};
+
+// Aggregate price data into OHLC candles
+const generateOHLCFromPrices = (prices, targetCandles = 90) => {
+  if (!prices || prices.length < 2) return [];
+  
+  // Determine candle interval based on data points and target candles
+  const totalDuration = prices[prices.length - 1][0] - prices[0][0];
+  const candleInterval = Math.ceil(prices.length / targetCandles);
+  
+  const ohlc = [];
+  
+  for (let i = 0; i < prices.length; i += candleInterval) {
+    const chunk = prices.slice(i, Math.min(i + candleInterval, prices.length));
+    if (chunk.length === 0) continue;
+    
+    const timestamp = chunk[0][0];
+    const chunkPrices = chunk.map(p => p[1]);
+    
+    const open = chunkPrices[0];
+    const close = chunkPrices[chunkPrices.length - 1];
+    const high = Math.max(...chunkPrices);
+    const low = Math.min(...chunkPrices);
+    
+    ohlc.push([timestamp, open, high, low, close]);
+  }
+  
+  return ohlc;
+};
+
+// Determine target candle count based on timeframe
+const getTargetCandles = (days) => {
+  if (days <= 1) return 48;      // 30-min candles for 1 day
+  if (days <= 7) return 84;      // 2-hour candles for 7 days
+  if (days <= 30) return 60;     // 12-hour candles for 30 days
+  if (days <= 90) return 90;     // Daily candles for 90 days
+  if (days <= 180) return 90;    // 2-day candles for 180 days
+  return 120;                     // ~3-day candles for 1 year+
 };
 
 export default async function handler(req) {
@@ -22,14 +61,9 @@ export default async function handler(req) {
   const CG_API_KEY = process.env.COINGECKO_API_KEY;
 
   try {
-    // Use Pro API if key is available, otherwise use free API
     const baseUrl = CG_API_KEY 
       ? 'https://pro-api.coingecko.com/api/v3'
       : 'https://api.coingecko.com/api/v3';
-    
-    // CoinGecko OHLC endpoint
-    // Valid days values: 1, 7, 14, 30, 90, 180, 365, max
-    const ohlcUrl = `${baseUrl}/coins/${tokenId}/ohlc?vs_currency=usd&days=${days}`;
     
     const headers = {
       'Accept': 'application/json',
@@ -39,22 +73,55 @@ export default async function handler(req) {
       headers['x-cg-pro-api-key'] = CG_API_KEY;
     }
 
-    const response = await fetch(ohlcUrl, { headers });
-
-    if (!response.ok) {
-      throw new Error(`CoinGecko API error: ${response.status}`);
+    // Try native OHLC with daily interval for paid API
+    if (CG_API_KEY && parseInt(days) <= 180) {
+      const ohlcUrl = `${baseUrl}/coins/${tokenId}/ohlc?vs_currency=usd&days=${days}&interval=daily`;
+      const ohlcResponse = await fetch(ohlcUrl, { headers });
+      
+      if (ohlcResponse.ok) {
+        const ohlcData = await ohlcResponse.json();
+        if (ohlcData && ohlcData.length >= 10) {
+          return new Response(
+            JSON.stringify({ ohlc: ohlcData, source: 'native-daily' }),
+            {
+              status: 200,
+              headers: {
+                'Content-Type': 'application/json',
+                'Cache-Control': 's-maxage=300, stale-while-revalidate=600',
+                'Access-Control-Allow-Origin': '*',
+              },
+            }
+          );
+        }
+      }
     }
 
-    const data = await response.json();
+    // Fallback: Use market_chart endpoint and generate OHLC
+    // This provides much better granularity for free API users
+    const chartUrl = `${baseUrl}/coins/${tokenId}/market_chart?vs_currency=usd&days=${days}`;
+    const chartResponse = await fetch(chartUrl, { headers });
 
-    // OHLC data format: [[timestamp, open, high, low, close], ...]
+    if (!chartResponse.ok) {
+      throw new Error(`CoinGecko API error: ${chartResponse.status}`);
+    }
+
+    const chartData = await chartResponse.json();
+
+    if (!chartData.prices || chartData.prices.length < 2) {
+      throw new Error('Insufficient price data');
+    }
+
+    // Generate OHLC candles from price data
+    const targetCandles = getTargetCandles(parseInt(days));
+    const ohlc = generateOHLCFromPrices(chartData.prices, targetCandles);
+
     return new Response(
-      JSON.stringify({ ohlc: data }),
+      JSON.stringify({ ohlc, source: 'generated', dataPoints: chartData.prices.length }),
       {
         status: 200,
         headers: {
           'Content-Type': 'application/json',
-          'Cache-Control': 's-maxage=300, stale-while-revalidate=600', // Cache 5 min
+          'Cache-Control': 's-maxage=300, stale-while-revalidate=600',
           'Access-Control-Allow-Origin': '*',
         },
       }
