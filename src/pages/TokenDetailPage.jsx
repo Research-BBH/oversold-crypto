@@ -60,23 +60,6 @@ const ChartWithTimeframe = ({ token, darkMode }) => {
   // Fetch data when timeframe or chart type changes
   useEffect(() => {
     const fetchChartData = async () => {
-      // For 24h and 7d with LINE chart, use existing sparkline data
-      if (chartType === CHART_TYPES.LINE && (timeframe === '24h' || timeframe === '7d')) {
-        if (token.sparkline && token.sparkline.length > 0) {
-          if (timeframe === '24h') {
-            const dataPoints = Math.floor(token.sparkline.length / 7);
-            setChartData(token.sparkline.slice(-dataPoints));
-            setPriceChange(token.change24h);
-          } else {
-            setChartData(token.sparkline);
-            setPriceChange(token.change7d);
-          }
-          setOhlcData(null);
-        }
-        return;
-      }
-
-      // For all other cases, fetch from API
       setLoading(true);
       setError(null);
       
@@ -108,7 +91,8 @@ const ChartWithTimeframe = ({ token, darkMode }) => {
             setError('No candlestick data available');
           }
         } else {
-          // Fetch line chart data
+          // Fetch line chart data from API for all timeframes
+          // This ensures consistency with candlestick data
           const url = `/api/chart?id=${token.id}&days=${days}`;
           const response = await fetch(url);
           
@@ -121,7 +105,7 @@ const ChartWithTimeframe = ({ token, darkMode }) => {
           if (data.prices && data.prices.length > 0) {
             const prices = data.prices.map(p => p[1]);
             
-            // Normalize to percentage (like sparkline)
+            // Normalize to percentage (for chart display)
             const startPrice = prices[0];
             const normalizedPrices = prices.map(p => (p / startPrice) * 100);
             
@@ -145,7 +129,7 @@ const ChartWithTimeframe = ({ token, darkMode }) => {
     };
 
     fetchChartData();
-  }, [timeframe, chartType, token.id, token.sparkline, token.change24h, token.change7d]);
+  }, [timeframe, chartType, token.id]);
 
   const timeLabels = getTimeLabels(timeframe);
 
