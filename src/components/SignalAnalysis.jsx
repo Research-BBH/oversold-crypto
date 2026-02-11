@@ -281,9 +281,6 @@ export const FullSignalAnalysis = ({ analysis, darkMode }) => {
   const score = analysis.score || 0;
   const signalDetails = analysis.signalScoreDetails || analysis.signalDetails || {};
   const activeSignals = signalDetails.activeSignals || [];
-  const signalPairs = signalDetails.signalPairs || [];
-  const bullishTotal = signalDetails.bullishTotal || 0;
-  const bearishTotal = signalDetails.bearishTotal || 0;
   
   // Determine the label and color based on score
   let label, bgClass, textClass, dotClass;
@@ -345,8 +342,8 @@ export const FullSignalAnalysis = ({ analysis, darkMode }) => {
               {score <= -50 && 'Multiple bearish signals aligned. High conviction sell setup.'}
             </p>
             <div className="flex gap-4 mt-3 text-xs">
-              <span className="text-green-500">▲ +{bullishTotal} bullish</span>
-              <span className="text-red-500">▼ -{bearishTotal} bearish</span>
+              <span className="text-green-500">▲ {bullishSignals.length} bullish</span>
+              <span className="text-red-500">▼ {bearishSignals.length} bearish</span>
             </div>
           </div>
         </div>
@@ -357,125 +354,8 @@ export const FullSignalAnalysis = ({ analysis, darkMode }) => {
         <MarketCapReliability reliability={analysis.reliability} darkMode={darkMode} />
       )}
 
-      {/* Signal Pairs - Symmetrical Display */}
-      {signalPairs && signalPairs.length > 0 && (
-        <div className={`${darkMode ? 'bg-white/5 border-white/10' : 'bg-white border-gray-200'} border rounded-xl p-6`}>
-          <div className="flex items-center justify-between mb-4">
-            <div className="flex items-center gap-2">
-              <span className="text-lg">⚖️</span>
-              <h3 className="font-semibold">Signal Analysis</h3>
-            </div>
-            <div className="text-xs text-gray-500">
-              Max ±100 per side
-            </div>
-          </div>
-          
-          {/* Column Headers */}
-          <div className="grid grid-cols-[1fr_100px_1fr] gap-2 mb-3 px-1">
-            <div className="text-xs font-semibold text-green-500 text-center">BULLISH</div>
-            <div className="text-xs font-semibold text-gray-500 text-center">SIGNAL</div>
-            <div className="text-xs font-semibold text-red-500 text-center">BEARISH</div>
-          </div>
-          
-          {/* Signal Pairs */}
-          <div className="space-y-2">
-            {signalPairs.map((pair, index) => (
-              <div 
-                key={index}
-                className={`grid grid-cols-[1fr_100px_1fr] gap-2 items-center p-2 rounded-lg ${
-                  darkMode ? 'bg-white/5' : 'bg-gray-50'
-                }`}
-              >
-                {/* Bullish Side */}
-                <div className={`flex items-center justify-between p-2 rounded-md text-xs transition-all ${
-                  pair.bullish?.active 
-                    ? (darkMode ? 'bg-green-500/25 border border-green-500/50' : 'bg-green-100 border border-green-400')
-                    : pair.unavailable
-                    ? (darkMode ? 'bg-white/5 opacity-40' : 'bg-gray-100 opacity-50')
-                    : (darkMode ? 'bg-white/5 border border-transparent' : 'bg-white border border-gray-200')
-                }`}>
-                  <span className={`truncate ${
-                    pair.bullish?.active 
-                      ? 'text-green-400 font-semibold' 
-                      : darkMode ? 'text-gray-500' : 'text-gray-400'
-                  }`}>
-                    {pair.bullish?.label || '—'}
-                  </span>
-                  <span className={`font-bold ml-2 ${
-                    pair.bullish?.active ? 'text-green-400' : 'text-gray-500'
-                  }`}>
-                    +{pair.bullish?.points || pair.bullish?.weight || 0}
-                  </span>
-                </div>
-                
-                {/* Center - Signal Name */}
-                <div className={`text-center text-xs font-medium px-1 ${
-                  darkMode ? 'text-gray-400' : 'text-gray-600'
-                }`}>
-                  {pair.name}
-                </div>
-                
-                {/* Bearish Side */}
-                <div className={`flex items-center justify-between p-2 rounded-md text-xs transition-all ${
-                  pair.bearish?.active 
-                    ? (darkMode ? 'bg-red-500/25 border border-red-500/50' : 'bg-red-100 border border-red-400')
-                    : pair.unavailable
-                    ? (darkMode ? 'bg-white/5 opacity-40' : 'bg-gray-100 opacity-50')
-                    : (darkMode ? 'bg-white/5 border border-transparent' : 'bg-white border border-gray-200')
-                }`}>
-                  <span className={`font-bold mr-2 ${
-                    pair.bearish?.active ? 'text-red-400' : 'text-gray-500'
-                  }`}>
-                    -{pair.bearish?.points || pair.bearish?.weight || 0}
-                  </span>
-                  <span className={`truncate text-right ${
-                    pair.bearish?.active 
-                      ? 'text-red-400 font-semibold' 
-                      : darkMode ? 'text-gray-500' : 'text-gray-400'
-                  }`}>
-                    {pair.bearish?.label || '—'}
-                  </span>
-                </div>
-              </div>
-            ))}
-          </div>
-          
-          {/* Score Summary Bar */}
-          <div className="mt-4 pt-4 border-t border-white/10">
-            <div className="flex items-center justify-between text-xs mb-2">
-              <span className="text-green-500 font-medium">+{bullishTotal}</span>
-              <span className={`font-bold ${
-                score > 0 ? 'text-green-500' : score < 0 ? 'text-red-500' : 'text-gray-400'
-              }`}>
-                Net: {score > 0 ? '+' : ''}{score}
-              </span>
-              <span className="text-red-500 font-medium">-{bearishTotal}</span>
-            </div>
-            <div className="relative h-3 bg-gray-700 rounded-full overflow-hidden">
-              {/* Center line */}
-              <div className="absolute left-1/2 top-0 bottom-0 w-0.5 bg-gray-500 z-10"></div>
-              {/* Score indicator */}
-              <div 
-                className={`absolute top-0 bottom-0 transition-all ${
-                  score >= 0 ? 'bg-green-500' : 'bg-red-500'
-                }`}
-                style={{
-                  left: score >= 0 ? '50%' : `${50 + (score / 2)}%`,
-                  width: `${Math.abs(score) / 2}%`,
-                }}
-              />
-            </div>
-            <div className="flex justify-between text-xs mt-1 text-gray-500">
-              <span>-100</span>
-              <span>0</span>
-              <span>+100</span>
-            </div>
-          </div>
-        </div>
-      )}
-
-      {/* Fallback: Legacy Active Signals (if no pairs available) */}
-      {(!signalPairs || signalPairs.length === 0) && activeSignals.length > 0 && (
+      {/* Active Signals Breakdown */}
+      {activeSignals.length > 0 && (
         <div className={`${darkMode ? 'bg-white/5 border-white/10' : 'bg-white border-gray-200'} border rounded-xl p-6`}>
           <div className="flex items-center gap-2 mb-4">
             <span className="text-lg">📊</span>
