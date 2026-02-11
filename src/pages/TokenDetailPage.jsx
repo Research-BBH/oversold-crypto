@@ -5,7 +5,7 @@
 import { formatPrice, formatNumber, getRsiStyle } from '../utils';
 import { ThemeToggle } from '../components/ThemeToggle';
 import { Footer } from '../components/Footer';
-import { RSIMeter, FullPageChart } from '../components/Charts';
+import { RSIMeter, FullPageChart, CandlestickChart, ChartTypeToggle, CHART_TYPES } from '../components/Charts';
 import { FullSignalAnalysis } from '../components/SignalAnalysis';
 import { RSIThresholdAnalysis } from '../components/RSIThresholdChart';
 import { analyzeToken } from '../utils/signals';
@@ -47,36 +47,36 @@ const getTimeLabels = (timeframe) => {
   }
 };
 
-// Chart Timeframe Component
+// Chart Timeframe Component with Candlestick Support
 const ChartWithTimeframe = ({ token, darkMode }) => {
   const [timeframe, setTimeframe] = useState('7d');
+  const [chartType, setChartType] = useState(CHART_TYPES.LINE);
   const [chartData, setChartData] = useState(null);
+  const [ohlcData, setOhlcData] = useState(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
   const [priceChange, setPriceChange] = useState(null);
 
-  // Fetch data when timeframe changes
+  // Fetch data when timeframe or chart type changes
   useEffect(() => {
     const fetchChartData = async () => {
-      // For 24h and 7d, use existing sparkline data
-      if (timeframe === '24h') {
+      // For 24h and 7d with LINE chart, use existing sparkline data
+      if (chartType === CHART_TYPES.LINE && (timeframe === '24h' || timeframe === '7d')) {
         if (token.sparkline && token.sparkline.length > 0) {
-          const dataPoints = Math.floor(token.sparkline.length / 7);
-          setChartData(token.sparkline.slice(-dataPoints));
-          setPriceChange(token.change24h);
-        }
-        return;
-      }
-      
-      if (timeframe === '7d') {
-        if (token.sparkline && token.sparkline.length > 0) {
-          setChartData(token.sparkline);
-          setPriceChange(token.change7d);
+          if (timeframe === '24h') {
+            const dataPoints = Math.floor(token.sparkline.length / 7);
+            setChartData(token.sparkline.slice(-dataPoints));
+            setPriceChange(token.change24h);
+          } else {
+            setChartData(token.sparkline);
+            setPriceChange(token.change7d);
+          }
+          setOhlcData(null);
         }
         return;
       }
 
-      // For longer timeframes, fetch from CoinGecko via our API proxy
+      // For all other cases, fetch from API
       setLoading(true);
       setError(null);
       
@@ -84,31 +84,57 @@ const ChartWithTimeframe = ({ token, darkMode }) => {
         const tf = TIMEFRAMES.find(t => t.id === timeframe);
         const days = tf?.days || 30;
         
-        // Use our proxy API to avoid CORS issues
-        const url = `/api/chart?id=${token.id}&days=${days}`;
-        const response = await fetch(url);
-        
-        if (!response.ok) {
-          throw new Error(`Failed to fetch data: ${response.status}`);
-        }
-        
-        const data = await response.json();
-        
-        if (data.prices && data.prices.length > 0) {
-          const prices = data.prices.map(p => p[1]);
+        if (chartType === CHART_TYPES.CANDLESTICK) {
+          // Fetch OHLC data for candlestick chart
+          const ohlcUrl = `/api/ohlc?id=${token.id}&days=${days}`;
+          const ohlcResponse = await fetch(ohlcUrl);
           
-          // Normalize to percentage (like sparkline)
-          const startPrice = prices[0];
-          const normalizedPrices = prices.map(p => (p / startPrice) * 100);
+          if (!ohlcResponse.ok) {
+            throw new Error(`Failed to fetch OHLC data: ${ohlcResponse.status}`);
+          }
           
-          // Calculate price change
-          const endPrice = prices[prices.length - 1];
-          const change = ((endPrice - startPrice) / startPrice) * 100;
+          const ohlcResult = await ohlcResponse.json();
           
-          setChartData(normalizedPrices);
-          setPriceChange(change);
+          if (ohlcResult.ohlc && ohlcResult.ohlc.length > 0) {
+            setOhlcData(ohlcResult.ohlc);
+            setChartData(null);
+            
+            // Calculate price change from OHLC
+            const firstCandle = ohlcResult.ohlc[0];
+            const lastCandle = ohlcResult.ohlc[ohlcResult.ohlc.length - 1];
+            const change = ((lastCandle[4] - firstCandle[1]) / firstCandle[1]) * 100;
+            setPriceChange(change);
+          } else {
+            setError('No candlestick data available');
+          }
         } else {
-          setError('No data available');
+          // Fetch line chart data
+          const url = `/api/chart?id=${token.id}&days=${days}`;
+          const response = await fetch(url);
+          
+          if (!response.ok) {
+            throw new Error(`Failed to fetch data: ${response.status}`);
+          }
+          
+          const data = await response.json();
+          
+          if (data.prices && data.prices.length > 0) {
+            const prices = data.prices.map(p => p[1]);
+            
+            // Normalize to percentage (like sparkline)
+            const startPrice = prices[0];
+            const normalizedPrices = prices.map(p => (p / startPrice) * 100);
+            
+            // Calculate price change
+            const endPrice = prices[prices.length - 1];
+            const change = ((endPrice - startPrice) / startPrice) * 100;
+            
+            setChartData(normalizedPrices);
+            setOhlcData(null);
+            setPriceChange(change);
+          } else {
+            setError('No data available');
+          }
         }
       } catch (err) {
         console.error('Error fetching chart data:', err);
@@ -119,15 +145,23 @@ const ChartWithTimeframe = ({ token, darkMode }) => {
     };
 
     fetchChartData();
-  }, [timeframe, token.id, token.sparkline, token.change24h, token.change7d]);
+  }, [timeframe, chartType, token.id, token.sparkline, token.change24h, token.change7d]);
 
   const timeLabels = getTimeLabels(timeframe);
 
   return (
     <div className={`${darkMode ? 'bg-white/5 border-white/10' : 'bg-white border-gray-200'} rounded-2xl p-6 border`}>
-      <div className="flex justify-between items-center mb-6">
+      <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-6">
         <h2 className="text-xl font-semibold">Price Chart</h2>
-        <div className="flex items-center gap-3">
+        <div className="flex flex-wrap items-center gap-3">
+          {/* Chart Type Toggle */}
+          <ChartTypeToggle 
+            chartType={chartType} 
+            setChartType={setChartType} 
+            darkMode={darkMode} 
+          />
+          
+          {/* Timeframe Buttons */}
           <div className={`inline-flex rounded-lg p-1 ${darkMode ? 'bg-white/5' : 'bg-gray-100'}`}>
             {TIMEFRAMES.map((tf) => (
               <button
@@ -143,6 +177,8 @@ const ChartWithTimeframe = ({ token, darkMode }) => {
               </button>
             ))}
           </div>
+          
+          {/* Price Change Badge */}
           {priceChange !== null && (
             <span className={`px-3 py-1 rounded-lg text-sm font-medium ${
               priceChange >= 0 ? 'bg-green-500/20 text-green-400' : 'bg-red-500/20 text-red-400'
@@ -165,10 +201,16 @@ const ChartWithTimeframe = ({ token, darkMode }) => {
           <div className="text-center">
             <p className="text-red-400 mb-2">⚠️ {error}</p>
             <p className={`text-sm ${darkMode ? 'text-gray-500' : 'text-gray-400'}`}>
-              Try a different timeframe
+              Try a different timeframe or chart type
             </p>
           </div>
         </div>
+      ) : chartType === CHART_TYPES.CANDLESTICK && ohlcData ? (
+        <CandlestickChart 
+          ohlcData={ohlcData} 
+          timeLabels={timeLabels}
+          darkMode={darkMode}
+        />
       ) : (
         <FullPageChart 
           data={chartData} 
