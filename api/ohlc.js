@@ -9,7 +9,7 @@ export const config = {
 };
 
 // Aggregate price data into OHLC candles
-const generateOHLCFromPrices = (prices, targetCandles = 90) => {
+const generateOHLCFromPrices = (prices, targetCandles = 60) => {
   if (!prices || prices.length < 2) return [];
   
   // Calculate how many price points per candle
@@ -36,15 +36,14 @@ const generateOHLCFromPrices = (prices, targetCandles = 90) => {
 };
 
 // Determine target candle count based on timeframe
-// More candles = better detail
+// Fewer candles = larger, more readable candles
 const getTargetCandles = (days) => {
   if (days <= 1) return 48;       // 30-min candles for 1 day
-  if (days <= 7) return 84;       // 2-hour candles for 7 days  
-  if (days <= 30) return 120;     // 6-hour candles for 30 days (was 60)
+  if (days <= 7) return 56;       // 3-hour candles for 7 days  
+  if (days <= 30) return 60;      // 12-hour candles for 30 days
   if (days <= 90) return 90;      // Daily candles for 90 days
-  if (days <= 180) return 180;    // Daily candles for 180 days (was 90)
-  if (days <= 365) return 180;    // 2-day candles for 1 year (was 120)
-  return 200;                      // ~3-day candles for max
+  if (days <= 365) return 90;     // ~4-day candles for 1 year
+  return 100;                      // ~weekly candles for max
 };
 
 export default async function handler(req) {
@@ -74,8 +73,7 @@ export default async function handler(req) {
       headers['x-cg-pro-api-key'] = CG_API_KEY;
     }
 
-    // Always use market_chart endpoint for consistent results
-    // The native OHLC endpoint has poor granularity on free tier
+    // Use market_chart endpoint for consistent results
     const chartUrl = `${baseUrl}/coins/${tokenId}/market_chart?vs_currency=usd&days=${days}`;
     const chartResponse = await fetch(chartUrl, { headers });
 
@@ -98,7 +96,6 @@ export default async function handler(req) {
         ohlc, 
         source: 'generated', 
         dataPoints: chartData.prices.length,
-        targetCandles,
         actualCandles: ohlc.length
       }),
       {
