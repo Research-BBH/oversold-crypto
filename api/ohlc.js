@@ -8,35 +8,45 @@ export const config = {
   runtime: 'edge',
 };
 
-// Aggregate price data into OHLC candles
+// Aggregate price data into OHLC candles using TIME-BASED intervals
+// This ensures even candle distribution regardless of data gaps
 const generateOHLCFromPrices = (prices, targetCandles = 60) => {
   if (!prices || prices.length < 2) return [];
   
-  // Calculate how many price points per candle
-  const candleInterval = Math.max(1, Math.floor(prices.length / targetCandles));
+  const startTime = prices[0][0];
+  const endTime = prices[prices.length - 1][0];
+  const totalDuration = endTime - startTime;
+  const candleDuration = totalDuration / targetCandles;
   
   const ohlc = [];
+  let lastKnownPrice = prices[0][1]; // Track last known price for filling gaps
   
-  for (let i = 0; i < prices.length; i += candleInterval) {
-    const chunk = prices.slice(i, Math.min(i + candleInterval, prices.length));
-    if (chunk.length === 0) continue;
+  for (let i = 0; i < targetCandles; i++) {
+    const candleStart = startTime + (i * candleDuration);
+    const candleEnd = startTime + ((i + 1) * candleDuration);
     
-    const timestamp = chunk[0][0];
-    const chunkPrices = chunk.map(p => p[1]);
+    // Find all prices within this time window
+    const candlePrices = prices.filter(p => p[0] >= candleStart && p[0] < candleEnd);
     
-    const open = chunkPrices[0];
-    const close = chunkPrices[chunkPrices.length - 1];
-    const high = Math.max(...chunkPrices);
-    const low = Math.min(...chunkPrices);
-    
-    ohlc.push([timestamp, open, high, low, close]);
+    if (candlePrices.length === 0) {
+      // No data for this period - create a flat candle with last known price
+      ohlc.push([candleStart, lastKnownPrice, lastKnownPrice, lastKnownPrice, lastKnownPrice]);
+    } else {
+      const priceValues = candlePrices.map(p => p[1]);
+      const open = priceValues[0];
+      const close = priceValues[priceValues.length - 1];
+      const high = Math.max(...priceValues);
+      const low = Math.min(...priceValues);
+      
+      ohlc.push([candleStart, open, high, low, close]);
+      lastKnownPrice = close; // Update last known price
+    }
   }
   
   return ohlc;
 };
 
 // Determine target candle count based on timeframe
-// Fewer candles = larger, more readable candles
 const getTargetCandles = (days) => {
   if (days <= 1) return 48;       // 30-min candles for 1 day
   if (days <= 7) return 56;       // 3-hour candles for 7 days  
@@ -87,7 +97,7 @@ export default async function handler(req) {
       throw new Error('Insufficient price data');
     }
 
-    // Generate OHLC candles from price data
+    // Generate OHLC candles from price data using time-based intervals
     const targetCandles = getTargetCandles(parseInt(days));
     const ohlc = generateOHLCFromPrices(chartData.prices, targetCandles);
 
