@@ -793,8 +793,8 @@ if (signalFilters.size > 0) {
         </div>
         
         {/* Search and Filters */}
-        <div className="flex flex-col gap-2 sm:gap-3 mb-4 sm:mb-5">
-          <div className="relative flex-1">
+        <div className="flex flex-col lg:flex-row gap-2 sm:gap-3 mb-4 sm:mb-5">
+          <div className="relative flex-1 min-w-0">
             <input
               type="text"
               placeholder="Search tokens..."
@@ -808,7 +808,7 @@ if (signalFilters.size > 0) {
             />
             <span className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-500">🔍</span>
           </div>
-          <div className="flex gap-2 overflow-x-auto pb-1 scrollbar-hide">
+          <div className="flex gap-2 overflow-x-auto pb-1 lg:pb-0 scrollbar-hide">
             {CATEGORIES.map((c) => (
               <button
                 key={c.id}
