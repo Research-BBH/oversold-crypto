@@ -130,10 +130,11 @@ const ChartWithTimeframe = ({ token, darkMode }) => {
     const fetchOhlcData = async () => {
       setLoading(true);
       setError(null);
+      setOhlcData(null); // Clear stale data so loading spinner shows
 
       try {
         const tf = TIMEFRAMES.find(t => t.id === timeframe);
-        const days = tf?.days === 'max' ? 365 : (tf?.days || 30);
+        const days = tf?.days === 'max' ? 1825 : (tf?.days || 30); // Max = ~5 years
 
         const url = `/api/ohlc?id=${token.id}&days=${days}`;
         const response = await fetch(url);

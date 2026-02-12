@@ -3,6 +3,7 @@
 // ==================================================
 
 import { formatPrice } from '../utils';
+import { useState, useRef, useCallback } from 'react';
 
 export const Spark = ({ data, color, h = 24 }) => {
   if (!data?.length || data.length < 2) {
@@ -199,8 +200,11 @@ export const DetailChart = ({ data, basePrice, change7d }) => {
   );
 };
 
-// CoinGecko-style Candlestick Chart
-export const CandlestickChart = ({ ohlcData, timeLabels: customTimeLabels, darkMode = true }) => {
+// CoinGecko-style Candlestick Chart with hover tooltip
+export const CandlestickChart = ({ ohlcData, darkMode = true }) => {
+  const [hoverInfo, setHoverInfo] = useState(null);
+  const svgRef = useRef(null);
+
   if (!ohlcData?.length || ohlcData.length < 2) {
     return (
       <div className="w-full h-80 bg-gray-800/30 rounded-xl animate-pulse flex items-center justify-center text-gray-500">
@@ -209,9 +213,9 @@ export const CandlestickChart = ({ ohlcData, timeLabels: customTimeLabels, darkM
     );
   }
 
-  const W = 800;
-  const H = 400;
-  const PAD = { top: 20, right: 70, bottom: 50, left: 10 };
+  const W = 900;
+  const H = 450;
+  const PAD = { top: 15, right: 65, bottom: 40, left: 5 };
   const chartW = W - PAD.left - PAD.right;
   const chartH = H - PAD.top - PAD.bottom;
 
@@ -222,96 +226,170 @@ export const CandlestickChart = ({ ohlcData, timeLabels: customTimeLabels, darkM
   const dataMin = Math.min(...allLows);
   const dataRange = dataMax - dataMin || dataMin * 0.01;
 
-  // Compute nice round grid levels (like CoinGecko: $60K, $62K, $64K...)
+  // Nice round grid levels matching CoinGecko ($55K, $60K, $65K, $70K...)
   const getNiceGridLevels = (min, max) => {
     const range = max - min;
-    // Pick a "nice" step: 1, 2, 5, 10, 20, 50, 100, 200, 500, 1000, 2000, 5000, 10000...
-    const rawStep = range / 5;
+    const rawStep = range / 8; // target ~8-10 grid lines like CoinGecko
     const magnitude = Math.pow(10, Math.floor(Math.log10(rawStep)));
     const residual = rawStep / magnitude;
     let niceStep;
     if (residual <= 1.5) niceStep = 1 * magnitude;
-    else if (residual <= 3.5) niceStep = 2 * magnitude;
-    else if (residual <= 7.5) niceStep = 5 * magnitude;
+    else if (residual <= 3) niceStep = 2 * magnitude;
+    else if (residual <= 7) niceStep = 5 * magnitude;
     else niceStep = 10 * magnitude;
 
     const gridMin = Math.floor(min / niceStep) * niceStep;
     const gridMax = Math.ceil(max / niceStep) * niceStep;
     const levels = [];
-    for (let v = gridMin; v <= gridMax; v += niceStep) {
+    for (let v = gridMin; v <= gridMax + niceStep * 0.5; v += niceStep) {
       levels.push(v);
     }
     return levels;
   };
 
-  const gridLevels = getNiceGridLevels(dataMin - dataRange * 0.05, dataMax + dataRange * 0.05);
+  const gridLevels = getNiceGridLevels(dataMin - dataRange * 0.08, dataMax + dataRange * 0.08);
   const paddedMin = gridLevels[0];
   const paddedMax = gridLevels[gridLevels.length - 1];
   const paddedRange = paddedMax - paddedMin || 1;
 
   const candleCount = ohlcData.length;
-  // Wider candles, tighter gaps — like CoinGecko
   const slotW = chartW / candleCount;
-  const candleW = slotW * 0.75;
-  const gapW = slotW * 0.25;
+  // CoinGecko proportions: body ~60% of slot, rest is gap
+  const candleW = Math.max(3, slotW * 0.6);
 
   const priceToY = (price) => PAD.top + chartH - ((price - paddedMin) / paddedRange) * chartH;
+  const getCandleX = (i) => PAD.left + i * slotW + (slotW - candleW) / 2;
+  const getCandleCenterX = (i) => PAD.left + i * slotW + slotW / 2;
 
-  // Time labels from data — CoinGecko style: "6. Feb", "7. Feb" etc.
-  const timeLabels = (() => {
-    const totalDurationMs = ohlcData[ohlcData.length - 1][0] - ohlcData[0][0];
-    const totalDays = totalDurationMs / (1000 * 60 * 60 * 24);
+  // Time labels — CoinGecko shows every 1-2 days for 1M, every few hours for 24H, etc.
+  const totalDurationMs = ohlcData[ohlcData.length - 1][0] - ohlcData[0][0];
+  const totalDays = totalDurationMs / (86400000);
 
-    // Pick ~5-7 evenly spaced labels
-    const targetLabels = totalDays <= 2 ? 6 : Math.min(7, Math.max(4, Math.ceil(totalDays)));
-    const step = Math.max(1, Math.floor(candleCount / (targetLabels - 1)));
+  const getTimeLabels = () => {
     const labels = [];
+    const minPixelGap = 55; // minimum pixels between labels
+    let lastLabelX = -999;
 
-    for (let i = 0; i < candleCount; i += step) {
-      const idx = Math.min(i, candleCount - 1);
-      const ts = ohlcData[idx][0];
+    for (let i = 0; i < candleCount; i++) {
+      const ts = ohlcData[i][0];
       const d = new Date(ts);
-      const x = PAD.left + (idx / candleCount) * chartW + slotW / 2;
+      const x = getCandleCenterX(i);
+
+      if (x - lastLabelX < minPixelGap) continue;
 
       let label;
-      if (totalDays <= 2) {
-        // For 24h: show time like "18:00"
+      if (totalDays <= 1.5) {
+        // 24H: show every ~3 hours
+        const h = d.getHours();
+        if (h % 3 !== 0 && i !== 0) continue;
         label = d.getHours().toString().padStart(2, '0') + ':' + d.getMinutes().toString().padStart(2, '0');
-      } else {
-        // For multi-day: "6. Feb" style
+      } else if (totalDays <= 8) {
+        // 7D: show "6. Feb" with time
         label = d.getDate() + '. ' + d.toLocaleString('en', { month: 'short' });
+      } else if (totalDays <= 35) {
+        // 1M: show every 2 days "14. Jan", "16. Jan"...
+        const day = d.getDate();
+        if (day % 2 !== 0 && i > 0 && i < candleCount - 1) continue;
+        label = d.getDate() + '. ' + d.toLocaleString('en', { month: 'short' });
+      } else if (totalDays <= 100) {
+        // 3M: show ~weekly
+        label = d.getDate() + '. ' + d.toLocaleString('en', { month: 'short' });
+      } else {
+        // 1Y/Max: show monthly
+        label = d.toLocaleString('en', { month: 'short' }) + ' ' + d.getFullYear().toString().slice(2);
       }
 
       labels.push({ label, x });
+      lastLabelX = x;
     }
     return labels;
-  })();
+  };
 
-  // Format axis price — clean round numbers
+  const timeLabels = getTimeLabels();
+
+  // Format price for axis — clean round numbers
   const fmtAxis = (p) => {
     if (p >= 100000) return '$' + (p / 1000).toFixed(0) + 'K';
     if (p >= 10000) return '$' + (p / 1000).toFixed(0) + 'K';
-    if (p >= 1000) return '$' + (p / 1000).toFixed(1) + 'K';
+    if (p >= 1000) {
+      const k = p / 1000;
+      return '$' + (k === Math.floor(k) ? k.toFixed(0) : k.toFixed(1)) + 'K';
+    }
     if (p >= 100) return '$' + p.toFixed(0);
     if (p >= 1) return '$' + p.toFixed(2);
     if (p >= 0.01) return '$' + p.toFixed(4);
-    return '$' + p.toFixed(6);
+    if (p >= 0.0001) return '$' + p.toFixed(6);
+    return '$' + p.toFixed(8);
+  };
+
+  // Format price for tooltip — full precision
+  const fmtTooltip = (p) => {
+    if (p >= 1) return '$' + p.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+    if (p >= 0.01) return '$' + p.toFixed(4);
+    if (p >= 0.0001) return '$' + p.toFixed(6);
+    return '$' + p.toFixed(8);
   };
 
   // CoinGecko colors
   const bullColor = '#16c784';
   const bearColor = '#ea3943';
+  const gridColor = darkMode ? 'rgba(255,255,255,0.06)' : 'rgba(0,0,0,0.06)';
+  const textColor = darkMode ? 'rgba(255,255,255,0.5)' : 'rgba(0,0,0,0.45)';
 
-  const gridColor = darkMode ? 'rgba(255,255,255,0.06)' : 'rgba(0,0,0,0.07)';
-  const textColor = darkMode ? 'rgba(255,255,255,0.45)' : 'rgba(0,0,0,0.45)';
+  // Mouse handlers for hover tooltip
+  const handleMouseMove = useCallback((e) => {
+    const svg = svgRef.current;
+    if (!svg) return;
+    const rect = svg.getBoundingClientRect();
+    const scaleX = W / rect.width;
+    const mouseX = (e.clientX - rect.left) * scaleX;
+
+    // Find nearest candle
+    const candleIdx = Math.floor((mouseX - PAD.left) / slotW);
+    if (candleIdx < 0 || candleIdx >= candleCount) {
+      setHoverInfo(null);
+      return;
+    }
+
+    const candle = ohlcData[candleIdx];
+    const x = getCandleCenterX(candleIdx);
+    setHoverInfo({
+      idx: candleIdx,
+      x,
+      timestamp: candle[0],
+      open: candle[1],
+      high: candle[2],
+      low: candle[3],
+      close: candle[4],
+    });
+  }, [ohlcData, candleCount, slotW]);
+
+  const handleMouseLeave = useCallback(() => {
+    setHoverInfo(null);
+  }, []);
+
+  // Tooltip positioning
+  const tooltipW = 220;
+  const tooltipH = 110;
+  const getTooltipX = (hx) => {
+    if (hx + tooltipW / 2 + 10 > W - PAD.right) return hx - tooltipW - 10;
+    if (hx - tooltipW / 2 - 10 < PAD.left) return hx + 10;
+    return hx - tooltipW / 2;
+  };
 
   return (
-    <div className="w-full">
-      <svg viewBox={`0 0 ${W} ${H}`} className="w-full h-auto">
-        {/* Horizontal grid lines at nice round prices */}
+    <div className="w-full relative">
+      <svg
+        ref={svgRef}
+        viewBox={`0 0 ${W} ${H}`}
+        className="w-full h-auto cursor-crosshair"
+        onMouseMove={handleMouseMove}
+        onMouseLeave={handleMouseLeave}
+      >
+        {/* Horizontal grid lines */}
         {gridLevels.map((price, i) => {
           const y = priceToY(price);
-          if (y < PAD.top - 5 || y > PAD.top + chartH + 5) return null;
+          if (y < PAD.top - 2 || y > PAD.top + chartH + 2) return null;
           return (
             <g key={`grid-${i}`}>
               <line
@@ -320,15 +398,15 @@ export const CandlestickChart = ({ ohlcData, timeLabels: customTimeLabels, darkM
                 x2={PAD.left + chartW}
                 y2={y}
                 stroke={gridColor}
-                strokeWidth="1"
+                strokeWidth="0.8"
               />
               <text
-                x={W - 6}
+                x={W - 4}
                 y={y + 4}
                 textAnchor="end"
                 fill={textColor}
-                fontSize="11.5"
-                fontFamily="system-ui, -apple-system, sans-serif"
+                fontSize="11"
+                fontFamily="-apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif"
               >
                 {fmtAxis(price)}
               </text>
@@ -339,21 +417,13 @@ export const CandlestickChart = ({ ohlcData, timeLabels: customTimeLabels, darkM
         {/* Vertical time lines + labels */}
         {timeLabels.map((t, i) => (
           <g key={`time-${i}`}>
-            <line
-              x1={t.x}
-              y1={PAD.top}
-              x2={t.x}
-              y2={PAD.top + chartH}
-              stroke={gridColor}
-              strokeWidth="1"
-            />
             <text
               x={t.x}
-              y={H - 15}
+              y={H - 12}
               textAnchor="middle"
               fill={textColor}
-              fontSize="11"
-              fontFamily="system-ui, -apple-system, sans-serif"
+              fontSize="10.5"
+              fontFamily="-apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif"
             >
               {t.label}
             </text>
@@ -366,22 +436,22 @@ export const CandlestickChart = ({ ohlcData, timeLabels: customTimeLabels, darkM
           const isBull = close >= open;
           const color = isBull ? bullColor : bearColor;
 
-          const x = PAD.left + i * slotW + gapW / 2;
+          const x = getCandleX(i);
           const bodyTop = priceToY(Math.max(open, close));
           const bodyBottom = priceToY(Math.min(open, close));
-          const bodyHeight = Math.max(1, bodyBottom - bodyTop);
-          const wickX = x + candleW / 2;
+          const bodyHeight = Math.max(1.2, bodyBottom - bodyTop);
+          const wickX = getCandleCenterX(i);
 
           return (
             <g key={`candle-${i}`}>
-              {/* Wick — thin 1px line like CoinGecko */}
+              {/* Wick — single thin line from high to low */}
               <line
                 x1={wickX}
                 y1={priceToY(high)}
                 x2={wickX}
                 y2={priceToY(low)}
                 stroke={color}
-                strokeWidth="1.2"
+                strokeWidth="1"
               />
               {/* Candle body */}
               <rect
@@ -394,10 +464,85 @@ export const CandlestickChart = ({ ohlcData, timeLabels: customTimeLabels, darkM
             </g>
           );
         })}
+
+        {/* Hover crosshair + tooltip */}
+        {hoverInfo && (
+          <>
+            {/* Vertical crosshair line */}
+            <line
+              x1={hoverInfo.x}
+              y1={PAD.top}
+              x2={hoverInfo.x}
+              y2={PAD.top + chartH}
+              stroke={darkMode ? 'rgba(255,255,255,0.3)' : 'rgba(0,0,0,0.2)'}
+              strokeWidth="0.8"
+              strokeDasharray="4,3"
+            />
+            {/* Highlight the hovered candle */}
+            <rect
+              x={PAD.left + hoverInfo.idx * slotW}
+              y={PAD.top}
+              width={slotW}
+              height={chartH}
+              fill={darkMode ? 'rgba(255,255,255,0.03)' : 'rgba(0,0,0,0.03)'}
+            />
+            {/* Tooltip background */}
+            <rect
+              x={getTooltipX(hoverInfo.x)}
+              y={PAD.top + 5}
+              width={tooltipW}
+              height={tooltipH}
+              rx="6"
+              fill={darkMode ? 'rgba(30,32,38,0.95)' : 'rgba(255,255,255,0.97)'}
+              stroke={darkMode ? 'rgba(255,255,255,0.12)' : 'rgba(0,0,0,0.1)'}
+              strokeWidth="1"
+              filter="url(#tooltipShadow)"
+            />
+            {/* Tooltip text */}
+            {(() => {
+              const tx = getTooltipX(hoverInfo.x) + 12;
+              const d = new Date(hoverInfo.timestamp);
+              const dateStr = d.toLocaleDateString('en-US', {
+                month: 'short', day: 'numeric', year: 'numeric'
+              }) + ', ' + d.toLocaleTimeString('en-US', {
+                hour: '2-digit', minute: '2-digit', second: '2-digit', hour12: false
+              });
+              const isBull = hoverInfo.close >= hoverInfo.open;
+              const ohlcColor = isBull ? bullColor : bearColor;
+
+              return (
+                <>
+                  <text x={tx} y={PAD.top + 23} fill={textColor} fontSize="10" fontFamily="-apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif">
+                    {dateStr}
+                  </text>
+                  <text x={tx} y={PAD.top + 42} fill={darkMode ? '#ddd' : '#333'} fontSize="11.5" fontFamily="-apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif" fontWeight="500">
+                    {'O: '}{fmtTooltip(hoverInfo.open)}
+                  </text>
+                  <text x={tx} y={PAD.top + 58} fill={darkMode ? '#ddd' : '#333'} fontSize="11.5" fontFamily="-apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif" fontWeight="500">
+                    {'H: '}{fmtTooltip(hoverInfo.high)}
+                  </text>
+                  <text x={tx} y={PAD.top + 74} fill={darkMode ? '#ddd' : '#333'} fontSize="11.5" fontFamily="-apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif" fontWeight="500">
+                    {'L: '}{fmtTooltip(hoverInfo.low)}
+                  </text>
+                  <text x={tx} y={PAD.top + 90} fill={darkMode ? '#ddd' : '#333'} fontSize="11.5" fontFamily="-apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif" fontWeight="500">
+                    {'C: '}{fmtTooltip(hoverInfo.close)}
+                  </text>
+                </>
+              );
+            })()}
+          </>
+        )}
+
+        {/* Drop shadow filter for tooltip */}
+        <defs>
+          <filter id="tooltipShadow" x="-10%" y="-10%" width="130%" height="130%">
+            <feDropShadow dx="0" dy="2" stdDeviation="4" floodOpacity={darkMode ? '0.5' : '0.15'} />
+          </filter>
+        </defs>
       </svg>
 
       {/* Bottom info bar */}
-      <div className="flex justify-between items-center mt-4 px-2">
+      <div className="flex justify-between items-center mt-3 px-2">
         <div className="flex gap-6 text-sm">
           <span className={darkMode ? 'text-gray-400' : 'text-gray-500'}>
             <span className="inline-block w-2.5 h-2.5 rounded-full mr-2" style={{ backgroundColor: bullColor }}></span>
