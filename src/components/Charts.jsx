@@ -277,8 +277,8 @@ export const CandlestickChart = ({ ohlcData, darkMode = true }) => {
 
   const candleCount = processedData.length;
   const slotW = chartW / candleCount;
-  // CoinGecko proportions: body ~60% of slot, rest is gap
-  const candleW = Math.max(3, slotW * 0.6);
+  // CoinGecko proportions: body ~70% of slot, rest is gap
+  const candleW = Math.max(3, slotW * 0.7);
 
   const priceToY = (price) => PAD.top + chartH - ((price - paddedMin) / paddedRange) * chartH;
   const getCandleX = (i) => PAD.left + i * slotW + (slotW - candleW) / 2;
