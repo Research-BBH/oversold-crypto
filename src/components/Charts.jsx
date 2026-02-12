@@ -211,50 +211,88 @@ export const CandlestickChart = ({ ohlcData, timeLabels: customTimeLabels, darkM
 
   const W = 800;
   const H = 400;
-  const PAD = { top: 20, right: 80, bottom: 50, left: 20 };
+  const PAD = { top: 20, right: 70, bottom: 50, left: 10 };
   const chartW = W - PAD.left - PAD.right;
   const chartH = H - PAD.top - PAD.bottom;
 
   // ohlcData format: [[timestamp, open, high, low, close], ...]
   const allHighs = ohlcData.map(c => c[2]);
   const allLows = ohlcData.map(c => c[3]);
-  const priceMax = Math.max(...allHighs);
-  const priceMin = Math.min(...allLows);
-  const priceRange = priceMax - priceMin || priceMin * 0.01;
-  const paddedMin = priceMin - priceRange * 0.08;
-  const paddedMax = priceMax + priceRange * 0.08;
-  const paddedRange = paddedMax - paddedMin;
+  const dataMax = Math.max(...allHighs);
+  const dataMin = Math.min(...allLows);
+  const dataRange = dataMax - dataMin || dataMin * 0.01;
+
+  // Compute nice round grid levels (like CoinGecko: $60K, $62K, $64K...)
+  const getNiceGridLevels = (min, max) => {
+    const range = max - min;
+    // Pick a "nice" step: 1, 2, 5, 10, 20, 50, 100, 200, 500, 1000, 2000, 5000, 10000...
+    const rawStep = range / 5;
+    const magnitude = Math.pow(10, Math.floor(Math.log10(rawStep)));
+    const residual = rawStep / magnitude;
+    let niceStep;
+    if (residual <= 1.5) niceStep = 1 * magnitude;
+    else if (residual <= 3.5) niceStep = 2 * magnitude;
+    else if (residual <= 7.5) niceStep = 5 * magnitude;
+    else niceStep = 10 * magnitude;
+
+    const gridMin = Math.floor(min / niceStep) * niceStep;
+    const gridMax = Math.ceil(max / niceStep) * niceStep;
+    const levels = [];
+    for (let v = gridMin; v <= gridMax; v += niceStep) {
+      levels.push(v);
+    }
+    return levels;
+  };
+
+  const gridLevels = getNiceGridLevels(dataMin - dataRange * 0.05, dataMax + dataRange * 0.05);
+  const paddedMin = gridLevels[0];
+  const paddedMax = gridLevels[gridLevels.length - 1];
+  const paddedRange = paddedMax - paddedMin || 1;
 
   const candleCount = ohlcData.length;
-  const totalGapRatio = 0.35;
-  const candleW = (chartW / candleCount) * (1 - totalGapRatio);
-  const gapW = (chartW / candleCount) * totalGapRatio;
-  const wickW = Math.max(1, candleW * 0.12);
+  // Wider candles, tighter gaps — like CoinGecko
+  const slotW = chartW / candleCount;
+  const candleW = slotW * 0.75;
+  const gapW = slotW * 0.25;
 
   const priceToY = (price) => PAD.top + chartH - ((price - paddedMin) / paddedRange) * chartH;
 
-  // Grid lines
-  const gridCount = 7;
-  const priceLevels = Array.from({ length: gridCount }, (_, i) => paddedMax - (paddedRange * i) / (gridCount - 1));
+  // Time labels from data — CoinGecko style: "6. Feb", "7. Feb" etc.
+  const timeLabels = (() => {
+    const totalDurationMs = ohlcData[ohlcData.length - 1][0] - ohlcData[0][0];
+    const totalDays = totalDurationMs / (1000 * 60 * 60 * 24);
 
-  // Time labels from data
-  const timeLabels = customTimeLabels || (() => {
-    const count = 6;
-    const step = Math.floor(candleCount / (count - 1));
-    return Array.from({ length: count }, (_, i) => {
-      const idx = Math.min(i * step, candleCount - 1);
+    // Pick ~5-7 evenly spaced labels
+    const targetLabels = totalDays <= 2 ? 6 : Math.min(7, Math.max(4, Math.ceil(totalDays)));
+    const step = Math.max(1, Math.floor(candleCount / (targetLabels - 1)));
+    const labels = [];
+
+    for (let i = 0; i < candleCount; i += step) {
+      const idx = Math.min(i, candleCount - 1);
       const ts = ohlcData[idx][0];
       const d = new Date(ts);
-      const hours = d.getHours().toString().padStart(2, '0') + ':' + d.getMinutes().toString().padStart(2, '0');
-      const date = d.getDate() + '. ' + d.toLocaleString('en', { month: 'short' });
-      return { label: `${date}`, secondaryLabel: hours, x: PAD.left + (idx / (candleCount - 1)) * chartW };
-    });
+      const x = PAD.left + (idx / candleCount) * chartW + slotW / 2;
+
+      let label;
+      if (totalDays <= 2) {
+        // For 24h: show time like "18:00"
+        label = d.getHours().toString().padStart(2, '0') + ':' + d.getMinutes().toString().padStart(2, '0');
+      } else {
+        // For multi-day: "6. Feb" style
+        label = d.getDate() + '. ' + d.toLocaleString('en', { month: 'short' });
+      }
+
+      labels.push({ label, x });
+    }
+    return labels;
   })();
 
+  // Format axis price — clean round numbers
   const fmtAxis = (p) => {
     if (p >= 100000) return '$' + (p / 1000).toFixed(0) + 'K';
-    if (p >= 10000) return '$' + (p / 1000).toFixed(1) + 'K';
-    if (p >= 1000) return '$' + (p / 1000).toFixed(2) + 'K';
+    if (p >= 10000) return '$' + (p / 1000).toFixed(0) + 'K';
+    if (p >= 1000) return '$' + (p / 1000).toFixed(1) + 'K';
+    if (p >= 100) return '$' + p.toFixed(0);
     if (p >= 1) return '$' + p.toFixed(2);
     if (p >= 0.01) return '$' + p.toFixed(4);
     return '$' + p.toFixed(6);
@@ -264,15 +302,16 @@ export const CandlestickChart = ({ ohlcData, timeLabels: customTimeLabels, darkM
   const bullColor = '#16c784';
   const bearColor = '#ea3943';
 
-  const gridColor = darkMode ? 'rgba(255,255,255,0.06)' : 'rgba(0,0,0,0.08)';
+  const gridColor = darkMode ? 'rgba(255,255,255,0.06)' : 'rgba(0,0,0,0.07)';
   const textColor = darkMode ? 'rgba(255,255,255,0.45)' : 'rgba(0,0,0,0.45)';
 
   return (
     <div className="w-full">
       <svg viewBox={`0 0 ${W} ${H}`} className="w-full h-auto">
-        {/* Horizontal grid lines */}
-        {priceLevels.map((price, i) => {
+        {/* Horizontal grid lines at nice round prices */}
+        {gridLevels.map((price, i) => {
           const y = priceToY(price);
+          if (y < PAD.top - 5 || y > PAD.top + chartH + 5) return null;
           return (
             <g key={`grid-${i}`}>
               <line
@@ -284,11 +323,11 @@ export const CandlestickChart = ({ ohlcData, timeLabels: customTimeLabels, darkM
                 strokeWidth="1"
               />
               <text
-                x={W - 8}
+                x={W - 6}
                 y={y + 4}
                 textAnchor="end"
                 fill={textColor}
-                fontSize="11"
+                fontSize="11.5"
                 fontFamily="system-ui, -apple-system, sans-serif"
               >
                 {fmtAxis(price)}
@@ -297,73 +336,29 @@ export const CandlestickChart = ({ ohlcData, timeLabels: customTimeLabels, darkM
           );
         })}
 
-        {/* Time labels */}
-        {Array.isArray(timeLabels) && timeLabels.length > 0 && (
-          typeof timeLabels[0] === 'object' ? (
-            // Auto-generated time labels with x positions
-            timeLabels.map((t, i) => (
-              <g key={`time-${i}`}>
-                <line
-                  x1={t.x}
-                  y1={PAD.top}
-                  x2={t.x}
-                  y2={PAD.top + chartH}
-                  stroke={gridColor}
-                  strokeWidth="1"
-                />
-                <text
-                  x={t.x}
-                  y={H - 22}
-                  textAnchor="middle"
-                  fill={textColor}
-                  fontSize="11"
-                  fontFamily="system-ui, -apple-system, sans-serif"
-                >
-                  {t.label}
-                </text>
-                {t.secondaryLabel && (
-                  <text
-                    x={t.x}
-                    y={H - 8}
-                    textAnchor="middle"
-                    fill={darkMode ? 'rgba(255,255,255,0.3)' : 'rgba(0,0,0,0.3)'}
-                    fontSize="10"
-                    fontFamily="system-ui, -apple-system, sans-serif"
-                  >
-                    {t.secondaryLabel}
-                  </text>
-                )}
-              </g>
-            ))
-          ) : (
-            // String labels
-            timeLabels.map((label, i) => {
-              const x = PAD.left + (i / (timeLabels.length - 1)) * chartW;
-              return (
-                <g key={`time-${i}`}>
-                  <line
-                    x1={x}
-                    y1={PAD.top}
-                    x2={x}
-                    y2={PAD.top + chartH}
-                    stroke={gridColor}
-                    strokeWidth="1"
-                  />
-                  <text
-                    x={x}
-                    y={H - 15}
-                    textAnchor="middle"
-                    fill={textColor}
-                    fontSize="11"
-                    fontFamily="system-ui, -apple-system, sans-serif"
-                  >
-                    {label}
-                  </text>
-                </g>
-              );
-            })
-          )
-        )}
+        {/* Vertical time lines + labels */}
+        {timeLabels.map((t, i) => (
+          <g key={`time-${i}`}>
+            <line
+              x1={t.x}
+              y1={PAD.top}
+              x2={t.x}
+              y2={PAD.top + chartH}
+              stroke={gridColor}
+              strokeWidth="1"
+            />
+            <text
+              x={t.x}
+              y={H - 15}
+              textAnchor="middle"
+              fill={textColor}
+              fontSize="11"
+              fontFamily="system-ui, -apple-system, sans-serif"
+            >
+              {t.label}
+            </text>
+          </g>
+        ))}
 
         {/* Candlesticks */}
         {ohlcData.map((candle, i) => {
@@ -371,7 +366,7 @@ export const CandlestickChart = ({ ohlcData, timeLabels: customTimeLabels, darkM
           const isBull = close >= open;
           const color = isBull ? bullColor : bearColor;
 
-          const x = PAD.left + (i / candleCount) * chartW + gapW / 2;
+          const x = PAD.left + i * slotW + gapW / 2;
           const bodyTop = priceToY(Math.max(open, close));
           const bodyBottom = priceToY(Math.min(open, close));
           const bodyHeight = Math.max(1, bodyBottom - bodyTop);
@@ -379,25 +374,14 @@ export const CandlestickChart = ({ ohlcData, timeLabels: customTimeLabels, darkM
 
           return (
             <g key={`candle-${i}`}>
-              {/* Upper wick */}
+              {/* Wick — thin 1px line like CoinGecko */}
               <line
                 x1={wickX}
                 y1={priceToY(high)}
                 x2={wickX}
-                y2={bodyTop}
-                stroke={color}
-                strokeWidth={wickW}
-                strokeLinecap="round"
-              />
-              {/* Lower wick */}
-              <line
-                x1={wickX}
-                y1={bodyBottom}
-                x2={wickX}
                 y2={priceToY(low)}
                 stroke={color}
-                strokeWidth={wickW}
-                strokeLinecap="round"
+                strokeWidth="1.2"
               />
               {/* Candle body */}
               <rect
@@ -406,7 +390,6 @@ export const CandlestickChart = ({ ohlcData, timeLabels: customTimeLabels, darkM
                 width={candleW}
                 height={bodyHeight}
                 fill={color}
-                rx={Math.min(1, candleW * 0.1)}
               />
             </g>
           );
@@ -419,18 +402,18 @@ export const CandlestickChart = ({ ohlcData, timeLabels: customTimeLabels, darkM
           <span className={darkMode ? 'text-gray-400' : 'text-gray-500'}>
             <span className="inline-block w-2.5 h-2.5 rounded-full mr-2" style={{ backgroundColor: bullColor }}></span>
             High:{' '}
-            <span className={`font-semibold ${darkMode ? 'text-white' : 'text-gray-900'}`}>{fmtAxis(priceMax)}</span>
+            <span className={`font-semibold ${darkMode ? 'text-white' : 'text-gray-900'}`}>{fmtAxis(dataMax)}</span>
           </span>
           <span className={darkMode ? 'text-gray-400' : 'text-gray-500'}>
             <span className="inline-block w-2.5 h-2.5 rounded-full mr-2" style={{ backgroundColor: bearColor }}></span>
             Low:{' '}
-            <span className={`font-semibold ${darkMode ? 'text-white' : 'text-gray-900'}`}>{fmtAxis(priceMin)}</span>
+            <span className={`font-semibold ${darkMode ? 'text-white' : 'text-gray-900'}`}>{fmtAxis(dataMin)}</span>
           </span>
         </div>
         <span className={`text-sm ${darkMode ? 'text-gray-400' : 'text-gray-500'}`}>
           Spread:{' '}
           <span className={`font-semibold ${ohlcData[ohlcData.length - 1][4] >= ohlcData[0][1] ? 'text-green-400' : 'text-red-400'}`}>
-            {(((priceMax - priceMin) / priceMin) * 100).toFixed(2)}%
+            {(((dataMax - dataMin) / dataMin) * 100).toFixed(2)}%
           </span>
         </span>
       </div>

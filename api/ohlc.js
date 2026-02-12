@@ -45,12 +45,12 @@ const generateOHLCFromPrices = (prices, targetCandles = 60) => {
 
 // Target candle counts - balanced for readability
 const getTargetCandles = (days) => {
-  if (days <= 1) return 48;
-  if (days <= 7) return 56;
-  if (days <= 30) return 60;
-  if (days <= 90) return 75;
-  if (days <= 365) return 80;
-  return 80;  // Max - same as 1Y for good visibility
+  if (days <= 1) return 24;
+  if (days <= 7) return 28;
+  if (days <= 30) return 30;
+  if (days <= 90) return 45;
+  if (days <= 365) return 52;
+  return 52;
 };
 
 export default async function handler(req) {
