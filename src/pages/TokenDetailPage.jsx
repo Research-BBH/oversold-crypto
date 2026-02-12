@@ -5,7 +5,7 @@
 import { formatPrice, formatNumber, getRsiStyle } from '../utils';
 import { ThemeToggle } from '../components/ThemeToggle';
 import { Footer } from '../components/Footer';
-import { RSIMeter, FullPageChart } from '../components/Charts';
+import { RSIMeter, FullPageChart, CandlestickChart } from '../components/Charts';
 import { FullSignalAnalysis } from '../components/SignalAnalysis';
 import { RSIThresholdAnalysis } from '../components/RSIThresholdChart';
 import { analyzeToken } from '../utils/signals';
@@ -50,7 +50,9 @@ const getTimeLabels = (timeframe) => {
 // Chart Timeframe Component
 const ChartWithTimeframe = ({ token, darkMode }) => {
   const [timeframe, setTimeframe] = useState('7d');
+  const [chartType, setChartType] = useState('line'); // 'line' or 'candle'
   const [chartData, setChartData] = useState(null);
+  const [ohlcData, setOhlcData] = useState(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
   const [priceChange, setPriceChange] = useState(null);
@@ -121,12 +123,86 @@ const ChartWithTimeframe = ({ token, darkMode }) => {
     fetchChartData();
   }, [timeframe, token.id, token.sparkline, token.change24h, token.change7d]);
 
+  // Fetch OHLC data for candlestick chart
+  useEffect(() => {
+    if (chartType !== 'candle') return;
+
+    const fetchOhlcData = async () => {
+      setLoading(true);
+      setError(null);
+
+      try {
+        const tf = TIMEFRAMES.find(t => t.id === timeframe);
+        const days = tf?.days === 'max' ? 365 : (tf?.days || 30);
+
+        const url = `/api/ohlc?id=${token.id}&days=${days}`;
+        const response = await fetch(url);
+
+        if (!response.ok) {
+          throw new Error(`Failed to fetch OHLC data: ${response.status}`);
+        }
+
+        const data = await response.json();
+
+        if (data.ohlc && data.ohlc.length > 0) {
+          setOhlcData(data.ohlc);
+          // Calculate price change from OHLC
+          const firstOpen = data.ohlc[0][1];
+          const lastClose = data.ohlc[data.ohlc.length - 1][4];
+          const change = ((lastClose - firstOpen) / firstOpen) * 100;
+          setPriceChange(change);
+        } else {
+          setError('No OHLC data available');
+        }
+      } catch (err) {
+        console.error('Error fetching OHLC data:', err);
+        setError(err.message);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchOhlcData();
+  }, [chartType, timeframe, token.id]);
+
   const timeLabels = getTimeLabels(timeframe);
 
   return (
     <div className={`${darkMode ? 'bg-white/5 border-white/10' : 'bg-white border-gray-200'} rounded-2xl p-4 sm:p-6 border h-full flex flex-col`}>
       <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-2 sm:gap-0 mb-4 sm:mb-6">
-        <h2 className="text-lg sm:text-xl font-semibold">Price Chart</h2>
+        <div className="flex items-center gap-3">
+          <h2 className="text-lg sm:text-xl font-semibold">Price Chart</h2>
+          {/* Chart type toggle - CoinGecko style */}
+          <div className={`inline-flex rounded-lg p-0.5 ${darkMode ? 'bg-white/5' : 'bg-gray-100'}`}>
+            <button
+              onClick={() => setChartType('line')}
+              title="Line Chart"
+              className={`p-1.5 rounded-md transition-all ${
+                chartType === 'line'
+                  ? darkMode ? 'bg-white/10 text-white' : 'bg-white text-gray-900 shadow-sm'
+                  : darkMode ? 'text-gray-500 hover:text-gray-300' : 'text-gray-400 hover:text-gray-600'
+              }`}
+            >
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                <polyline points="22 12 18 12 15 21 9 3 6 12 2 12" />
+              </svg>
+            </button>
+            <button
+              onClick={() => setChartType('candle')}
+              title="Candlestick Chart"
+              className={`p-1.5 rounded-md transition-all ${
+                chartType === 'candle'
+                  ? darkMode ? 'bg-white/10 text-white' : 'bg-white text-gray-900 shadow-sm'
+                  : darkMode ? 'text-gray-500 hover:text-gray-300' : 'text-gray-400 hover:text-gray-600'
+              }`}
+            >
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                <path d="M9 4v2" /><path d="M9 18v2" /><rect x="7" y="6" width="4" height="12" rx="1" />
+                <path d="M17 2v4" /><path d="M17 16v4" /><rect x="15" y="6" width="4" height="10" rx="1" />
+              </svg>
+            </button>
+          </div>
+        </div>
         <div className="flex items-center gap-2 sm:gap-3">
           <div className={`inline-flex rounded-lg p-1 ${darkMode ? 'bg-white/5' : 'bg-gray-100'} overflow-x-auto`}>
             {TIMEFRAMES.map((tf) => (
@@ -170,6 +246,20 @@ const ChartWithTimeframe = ({ token, darkMode }) => {
             </p>
           </div>
         </div>
+      ) : chartType === 'candle' ? (
+        ohlcData ? (
+          <CandlestickChart 
+            ohlcData={ohlcData} 
+            darkMode={darkMode}
+          />
+        ) : (
+          <div className="w-full h-full min-h-[200px] sm:min-h-[320px] flex items-center justify-center">
+            <div className="text-center">
+              <div className="w-10 h-10 border-4 border-orange-500 border-t-transparent rounded-full animate-spin mx-auto mb-3" />
+              <p className={darkMode ? 'text-gray-400' : 'text-gray-500'}>Loading candlestick data...</p>
+            </div>
+          </div>
+        )
       ) : (
         <FullPageChart 
           data={chartData} 

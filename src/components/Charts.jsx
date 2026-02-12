@@ -199,6 +199,245 @@ export const DetailChart = ({ data, basePrice, change7d }) => {
   );
 };
 
+// CoinGecko-style Candlestick Chart
+export const CandlestickChart = ({ ohlcData, timeLabels: customTimeLabels, darkMode = true }) => {
+  if (!ohlcData?.length || ohlcData.length < 2) {
+    return (
+      <div className="w-full h-80 bg-gray-800/30 rounded-xl animate-pulse flex items-center justify-center text-gray-500">
+        No OHLC data available
+      </div>
+    );
+  }
+
+  const W = 800;
+  const H = 400;
+  const PAD = { top: 20, right: 80, bottom: 50, left: 20 };
+  const chartW = W - PAD.left - PAD.right;
+  const chartH = H - PAD.top - PAD.bottom;
+
+  // ohlcData format: [[timestamp, open, high, low, close], ...]
+  const allHighs = ohlcData.map(c => c[2]);
+  const allLows = ohlcData.map(c => c[3]);
+  const priceMax = Math.max(...allHighs);
+  const priceMin = Math.min(...allLows);
+  const priceRange = priceMax - priceMin || priceMin * 0.01;
+  const paddedMin = priceMin - priceRange * 0.08;
+  const paddedMax = priceMax + priceRange * 0.08;
+  const paddedRange = paddedMax - paddedMin;
+
+  const candleCount = ohlcData.length;
+  const totalGapRatio = 0.35;
+  const candleW = (chartW / candleCount) * (1 - totalGapRatio);
+  const gapW = (chartW / candleCount) * totalGapRatio;
+  const wickW = Math.max(1, candleW * 0.12);
+
+  const priceToY = (price) => PAD.top + chartH - ((price - paddedMin) / paddedRange) * chartH;
+
+  // Grid lines
+  const gridCount = 7;
+  const priceLevels = Array.from({ length: gridCount }, (_, i) => paddedMax - (paddedRange * i) / (gridCount - 1));
+
+  // Time labels from data
+  const timeLabels = customTimeLabels || (() => {
+    const count = 6;
+    const step = Math.floor(candleCount / (count - 1));
+    return Array.from({ length: count }, (_, i) => {
+      const idx = Math.min(i * step, candleCount - 1);
+      const ts = ohlcData[idx][0];
+      const d = new Date(ts);
+      const hours = d.getHours().toString().padStart(2, '0') + ':' + d.getMinutes().toString().padStart(2, '0');
+      const date = d.getDate() + '. ' + d.toLocaleString('en', { month: 'short' });
+      return { label: `${date}`, secondaryLabel: hours, x: PAD.left + (idx / (candleCount - 1)) * chartW };
+    });
+  })();
+
+  const fmtAxis = (p) => {
+    if (p >= 100000) return '$' + (p / 1000).toFixed(0) + 'K';
+    if (p >= 10000) return '$' + (p / 1000).toFixed(1) + 'K';
+    if (p >= 1000) return '$' + (p / 1000).toFixed(2) + 'K';
+    if (p >= 1) return '$' + p.toFixed(2);
+    if (p >= 0.01) return '$' + p.toFixed(4);
+    return '$' + p.toFixed(6);
+  };
+
+  // CoinGecko colors
+  const bullColor = '#16c784';
+  const bearColor = '#ea3943';
+
+  const gridColor = darkMode ? 'rgba(255,255,255,0.06)' : 'rgba(0,0,0,0.08)';
+  const textColor = darkMode ? 'rgba(255,255,255,0.45)' : 'rgba(0,0,0,0.45)';
+
+  return (
+    <div className="w-full">
+      <svg viewBox={`0 0 ${W} ${H}`} className="w-full h-auto">
+        {/* Horizontal grid lines */}
+        {priceLevels.map((price, i) => {
+          const y = priceToY(price);
+          return (
+            <g key={`grid-${i}`}>
+              <line
+                x1={PAD.left}
+                y1={y}
+                x2={PAD.left + chartW}
+                y2={y}
+                stroke={gridColor}
+                strokeWidth="1"
+              />
+              <text
+                x={W - 8}
+                y={y + 4}
+                textAnchor="end"
+                fill={textColor}
+                fontSize="11"
+                fontFamily="system-ui, -apple-system, sans-serif"
+              >
+                {fmtAxis(price)}
+              </text>
+            </g>
+          );
+        })}
+
+        {/* Time labels */}
+        {Array.isArray(timeLabels) && timeLabels.length > 0 && (
+          typeof timeLabels[0] === 'object' ? (
+            // Auto-generated time labels with x positions
+            timeLabels.map((t, i) => (
+              <g key={`time-${i}`}>
+                <line
+                  x1={t.x}
+                  y1={PAD.top}
+                  x2={t.x}
+                  y2={PAD.top + chartH}
+                  stroke={gridColor}
+                  strokeWidth="1"
+                />
+                <text
+                  x={t.x}
+                  y={H - 22}
+                  textAnchor="middle"
+                  fill={textColor}
+                  fontSize="11"
+                  fontFamily="system-ui, -apple-system, sans-serif"
+                >
+                  {t.label}
+                </text>
+                {t.secondaryLabel && (
+                  <text
+                    x={t.x}
+                    y={H - 8}
+                    textAnchor="middle"
+                    fill={darkMode ? 'rgba(255,255,255,0.3)' : 'rgba(0,0,0,0.3)'}
+                    fontSize="10"
+                    fontFamily="system-ui, -apple-system, sans-serif"
+                  >
+                    {t.secondaryLabel}
+                  </text>
+                )}
+              </g>
+            ))
+          ) : (
+            // String labels
+            timeLabels.map((label, i) => {
+              const x = PAD.left + (i / (timeLabels.length - 1)) * chartW;
+              return (
+                <g key={`time-${i}`}>
+                  <line
+                    x1={x}
+                    y1={PAD.top}
+                    x2={x}
+                    y2={PAD.top + chartH}
+                    stroke={gridColor}
+                    strokeWidth="1"
+                  />
+                  <text
+                    x={x}
+                    y={H - 15}
+                    textAnchor="middle"
+                    fill={textColor}
+                    fontSize="11"
+                    fontFamily="system-ui, -apple-system, sans-serif"
+                  >
+                    {label}
+                  </text>
+                </g>
+              );
+            })
+          )
+        )}
+
+        {/* Candlesticks */}
+        {ohlcData.map((candle, i) => {
+          const [, open, high, low, close] = candle;
+          const isBull = close >= open;
+          const color = isBull ? bullColor : bearColor;
+
+          const x = PAD.left + (i / candleCount) * chartW + gapW / 2;
+          const bodyTop = priceToY(Math.max(open, close));
+          const bodyBottom = priceToY(Math.min(open, close));
+          const bodyHeight = Math.max(1, bodyBottom - bodyTop);
+          const wickX = x + candleW / 2;
+
+          return (
+            <g key={`candle-${i}`}>
+              {/* Upper wick */}
+              <line
+                x1={wickX}
+                y1={priceToY(high)}
+                x2={wickX}
+                y2={bodyTop}
+                stroke={color}
+                strokeWidth={wickW}
+                strokeLinecap="round"
+              />
+              {/* Lower wick */}
+              <line
+                x1={wickX}
+                y1={bodyBottom}
+                x2={wickX}
+                y2={priceToY(low)}
+                stroke={color}
+                strokeWidth={wickW}
+                strokeLinecap="round"
+              />
+              {/* Candle body */}
+              <rect
+                x={x}
+                y={bodyTop}
+                width={candleW}
+                height={bodyHeight}
+                fill={color}
+                rx={Math.min(1, candleW * 0.1)}
+              />
+            </g>
+          );
+        })}
+      </svg>
+
+      {/* Bottom info bar */}
+      <div className="flex justify-between items-center mt-4 px-2">
+        <div className="flex gap-6 text-sm">
+          <span className={darkMode ? 'text-gray-400' : 'text-gray-500'}>
+            <span className="inline-block w-2.5 h-2.5 rounded-full mr-2" style={{ backgroundColor: bullColor }}></span>
+            High:{' '}
+            <span className={`font-semibold ${darkMode ? 'text-white' : 'text-gray-900'}`}>{fmtAxis(priceMax)}</span>
+          </span>
+          <span className={darkMode ? 'text-gray-400' : 'text-gray-500'}>
+            <span className="inline-block w-2.5 h-2.5 rounded-full mr-2" style={{ backgroundColor: bearColor }}></span>
+            Low:{' '}
+            <span className={`font-semibold ${darkMode ? 'text-white' : 'text-gray-900'}`}>{fmtAxis(priceMin)}</span>
+          </span>
+        </div>
+        <span className={`text-sm ${darkMode ? 'text-gray-400' : 'text-gray-500'}`}>
+          Spread:{' '}
+          <span className={`font-semibold ${ohlcData[ohlcData.length - 1][4] >= ohlcData[0][1] ? 'text-green-400' : 'text-red-400'}`}>
+            {(((priceMax - priceMin) / priceMin) * 100).toFixed(2)}%
+          </span>
+        </span>
+      </div>
+    </div>
+  );
+};
+
 export const FullPageChart = ({ data, basePrice, change7d, timeLabels: customTimeLabels }) => {
   if (!data?.length || data.length < 2) {
     return (
