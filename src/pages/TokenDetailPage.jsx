@@ -124,7 +124,7 @@ const ChartWithTimeframe = ({ token, darkMode }) => {
   const timeLabels = getTimeLabels(timeframe);
 
   return (
-    <div className={`${darkMode ? 'bg-white/5 border-white/10' : 'bg-white border-gray-200'} rounded-2xl p-4 sm:p-6 border`}>
+    <div className={`${darkMode ? 'bg-white/5 border-white/10' : 'bg-white border-gray-200'} rounded-2xl p-4 sm:p-6 border h-full flex flex-col`}>
       <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-2 sm:gap-0 mb-4 sm:mb-6">
         <h2 className="text-lg sm:text-xl font-semibold">Price Chart</h2>
         <div className="flex items-center gap-2 sm:gap-3">
@@ -153,15 +153,16 @@ const ChartWithTimeframe = ({ token, darkMode }) => {
         </div>
       </div>
       
+      <div className="flex-1 min-h-[200px]">
       {loading ? (
-        <div className="w-full h-48 sm:h-80 flex items-center justify-center">
+        <div className="w-full h-full min-h-[200px] sm:min-h-[320px] flex items-center justify-center">
           <div className="text-center">
             <div className="w-10 h-10 border-4 border-orange-500 border-t-transparent rounded-full animate-spin mx-auto mb-3" />
             <p className={darkMode ? 'text-gray-400' : 'text-gray-500'}>Loading chart data...</p>
           </div>
         </div>
       ) : error ? (
-        <div className="w-full h-48 sm:h-80 flex items-center justify-center">
+        <div className="w-full h-full min-h-[200px] sm:min-h-[320px] flex items-center justify-center">
           <div className="text-center">
             <p className="text-red-400 mb-2">⚠️ {error}</p>
             <p className={`text-sm ${darkMode ? 'text-gray-500' : 'text-gray-400'}`}>
@@ -177,6 +178,7 @@ const ChartWithTimeframe = ({ token, darkMode }) => {
           timeLabels={timeLabels}
         />
       )}
+      </div>
     </div>
   );
 };
@@ -366,11 +368,11 @@ export const TokenDetailPage = ({ token, onBack, darkMode, setDarkMode }) => {
 
         {/* Main Grid */}
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-4 sm:gap-6">
-          <div className="lg:col-span-2">
+          <div className="lg:col-span-2 flex flex-col">
             <ChartWithTimeframe token={token} darkMode={darkMode} />
           </div>
 
-          <div className="space-y-4 sm:space-y-6">
+          <div className="flex flex-col gap-4 sm:gap-6">
             <div className={`${darkMode ? 'bg-white/5 border-white/10' : 'bg-white border-gray-200'} rounded-2xl p-4 sm:p-6 border`}>
               <div className="flex justify-between items-center mb-4">
                 <h2 className="text-lg font-semibold">RSI (14)</h2>
@@ -390,9 +392,9 @@ export const TokenDetailPage = ({ token, onBack, darkMode, setDarkMode }) => {
               </div>
             </div>
 
-            <div className={`${darkMode ? 'bg-white/5 border-white/10' : 'bg-white border-gray-200'} rounded-2xl p-4 sm:p-6 border`}>
+            <div className={`${darkMode ? 'bg-white/5 border-white/10' : 'bg-white border-gray-200'} rounded-2xl p-4 sm:p-6 border flex-1 flex flex-col`}>
               <h2 className="text-base sm:text-lg font-semibold mb-3 sm:mb-4">Price Changes</h2>
-              <div className="grid grid-cols-2 gap-2 sm:gap-3">
+              <div className="grid grid-cols-2 gap-2 sm:gap-3 flex-1">
                 {[
                   { l: '1 Hour', v: token.change1h },
                   { l: '24 Hours', v: token.change24h },
