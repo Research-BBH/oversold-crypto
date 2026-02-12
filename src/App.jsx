@@ -448,46 +448,46 @@ if (signalFilters.size > 0) {
         </div>
       )}
 
-      <div className="relative z-10 max-w-7xl mx-auto px-4 py-6">
+      <div className="relative z-10 max-w-[1800px] mx-auto px-3 sm:px-4 md:px-6 lg:px-8 py-4 sm:py-6">
         {/* Header */}
-        <header className="flex flex-col lg:flex-row lg:items-center justify-between gap-4 mb-6">
+        <header className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 mb-4 sm:mb-6">
           <div>
             <h1
               onClick={resetFilters}
-              className="text-4xl font-black tracking-tight cursor-pointer hover:opacity-80 transition-opacity"
+              className="text-2xl sm:text-3xl lg:text-4xl font-black tracking-tight cursor-pointer hover:opacity-80 transition-opacity"
             >
               <span className="bg-gradient-to-r from-red-500 via-orange-500 to-yellow-500 bg-clip-text text-transparent">
                 OVERSOLD
               </span>
               <span className={darkMode ? 'text-gray-600' : 'text-gray-400'}>.crypto</span>
             </h1>
-            <div className="flex items-center gap-3 mt-2">
+            <div className="flex items-center gap-2 sm:gap-3 mt-1 sm:mt-2">
               <div className="flex items-center gap-1.5">
                 <span className="w-2 h-2 bg-green-500 rounded-full animate-pulse" />
-                <span className={`text-sm ${darkMode ? 'text-gray-400' : 'text-gray-500'}`}>
+                <span className={`text-xs sm:text-sm ${darkMode ? 'text-gray-400' : 'text-gray-500'}`}>
                   Live
                 </span>
               </div>
               <span className={darkMode ? 'text-gray-600' : 'text-gray-400'}>•</span>
-              <span className="text-sm text-gray-500">
+              <span className="text-xs sm:text-sm text-gray-500">
                 {lastUpdate?.toLocaleTimeString() || 'Loading...'}
               </span>
               {apiStats && (
                 <>
                   <span className={darkMode ? 'text-gray-600' : 'text-gray-400'}>•</span>
-                  <span className="text-sm text-gray-500">
+                  <span className="text-xs sm:text-sm text-gray-500">
                     {apiStats.withRSI}/{apiStats.total} RSI
                   </span>
                 </>
               )}
             </div>
           </div>
-          <div className="flex items-center gap-3 flex-wrap">
+          <div className="flex items-center gap-2 sm:gap-3 flex-wrap">
             <ThemeToggle darkMode={darkMode} setDarkMode={setDarkMode} />
             <div
               className={`${
                 darkMode ? 'bg-white/5 border-white/10' : 'bg-white border-gray-200'
-              } border px-4 py-2.5 rounded-xl text-sm flex items-center gap-3`}
+              } border px-3 sm:px-4 py-2 sm:py-2.5 rounded-xl text-xs sm:text-sm flex items-center gap-2 sm:gap-3`}
             >
               <div>
                 <span className="text-gray-500">MCap</span>{' '}
@@ -537,7 +537,7 @@ if (signalFilters.size > 0) {
         </header>
 
         {/* Stats Cards */}
-        <div className="grid grid-cols-2 md:grid-cols-4 gap-3 mb-5">
+        <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 sm:gap-3 mb-4 sm:mb-5">
           {[
             { k: 'extreme', color: 'red', label: 'EXTREME', sub: 'RSI < 20' },
             { k: 'oversold', color: 'orange', label: 'OVERSOLD', sub: 'RSI < 30' },
@@ -615,8 +615,8 @@ if (signalFilters.size > 0) {
         )}
 
         {/* Unified Filters */}
-        <div className="mb-5">
-          <div className="flex items-center gap-3 mb-3">
+        <div className="mb-4 sm:mb-5">
+          <div className="flex items-center gap-3 mb-2 sm:mb-3">
             <span className={`text-sm font-semibold ${darkMode ? 'text-gray-300' : 'text-gray-700'}`}>
               🎯 Filters
             </span>
@@ -639,8 +639,8 @@ if (signalFilters.size > 0) {
           
           {/* Row 1: RSI */}
           <div className="flex gap-2 mb-2">
-            <span className={`w-16 flex-shrink-0 text-[10px] font-semibold px-2 py-2 rounded-lg text-center ${darkMode ? 'bg-purple-500/10 text-purple-400' : 'bg-purple-50 text-purple-600'}`}>RSI</span>
-            <div className="flex gap-2 flex-1">
+            <span className={`w-12 sm:w-16 flex-shrink-0 text-[10px] font-semibold px-1 sm:px-2 py-2 rounded-lg text-center ${darkMode ? 'bg-purple-500/10 text-purple-400' : 'bg-purple-50 text-purple-600'}`}>RSI</span>
+            <div className="flex gap-1.5 sm:gap-2 flex-1 overflow-x-auto pb-1 scrollbar-hide">
               {[
                 { id: 'rsi_extreme', label: '🔴 Extreme', desc: 'RSI below 20' },
                 { id: 'rsi_oversold', label: '🟠 Oversold', desc: 'RSI below 25' },
@@ -653,7 +653,7 @@ if (signalFilters.size > 0) {
                   <button
                     key={filter.id}
                     onClick={() => toggleSignalFilter(filter.id)}
-                    className={`flex-1 px-3 py-2 rounded-xl text-xs whitespace-nowrap transition-all font-medium group relative ${
+                    className={`min-w-fit sm:flex-1 px-3 py-2 rounded-xl text-xs whitespace-nowrap transition-all font-medium group relative ${
                       isActive
                         ? 'bg-gradient-to-r from-purple-500 to-indigo-500 text-white shadow-lg shadow-purple-500/20'
                         : darkMode
@@ -675,8 +675,8 @@ if (signalFilters.size > 0) {
           
           {/* Row 2: MOVERS */}
           <div className="flex gap-2 mb-2">
-            <span className={`w-16 flex-shrink-0 text-[10px] font-semibold px-2 py-2 rounded-lg text-center ${darkMode ? 'bg-blue-500/10 text-blue-400' : 'bg-blue-50 text-blue-600'}`}>MOVERS</span>
-            <div className="flex gap-2 flex-1">
+            <span className={`w-12 sm:w-16 flex-shrink-0 text-[10px] font-semibold px-1 sm:px-2 py-2 rounded-lg text-center ${darkMode ? 'bg-blue-500/10 text-blue-400' : 'bg-blue-50 text-blue-600'}`}>MOVERS</span>
+            <div className="flex gap-1.5 sm:gap-2 flex-1 overflow-x-auto pb-1 scrollbar-hide">
               {[
                 { id: 'losers24h', label: '📉 24h Losers', desc: 'Biggest 24h drops' },
                 { id: 'losers7d', label: '📉 7d Losers', desc: 'Biggest 7d drops' },
@@ -691,7 +691,7 @@ if (signalFilters.size > 0) {
                       setPreset(preset === filter.id ? null : filter.id);
                       setRsiFilter(null);
                     }}
-                    className={`flex-1 px-3 py-2 rounded-xl text-xs whitespace-nowrap transition-all font-medium group relative ${
+                    className={`min-w-fit sm:flex-1 px-3 py-2 rounded-xl text-xs whitespace-nowrap transition-all font-medium group relative ${
                       isActive
                         ? 'bg-gradient-to-r from-blue-500 to-cyan-500 text-white shadow-lg shadow-blue-500/20'
                         : darkMode
@@ -713,8 +713,8 @@ if (signalFilters.size > 0) {
           
           {/* Row 3: BUY (Bullish Signals) */}
           <div className="flex gap-2 mb-2">
-            <span className={`w-16 flex-shrink-0 text-[10px] font-semibold px-2 py-2 rounded-lg text-center ${darkMode ? 'bg-green-500/10 text-green-400' : 'bg-green-50 text-green-600'}`}>BUY</span>
-            <div className="flex gap-2 flex-1">
+            <span className={`w-12 sm:w-16 flex-shrink-0 text-[10px] font-semibold px-1 sm:px-2 py-2 rounded-lg text-center ${darkMode ? 'bg-green-500/10 text-green-400' : 'bg-green-50 text-green-600'}`}>BUY</span>
+            <div className="flex gap-1.5 sm:gap-2 flex-1 overflow-x-auto pb-1 scrollbar-hide">
               {[
                 { id: 'above_sma50', label: '▲ Uptrend', desc: 'Price above SMA50', enhanced: true },
                 { id: 'below_bb', label: '▲ Below BB', desc: 'Below lower Bollinger Band', enhanced: true },
@@ -731,7 +731,7 @@ if (signalFilters.size > 0) {
                     key={filter.id}
                     onClick={() => toggleSignalFilter(filter.id)}
                     disabled={isDisabled}
-                    className={`flex-1 px-3 py-2 rounded-xl text-xs whitespace-nowrap transition-all font-medium group relative disabled:opacity-40 disabled:cursor-not-allowed ${
+                    className={`min-w-fit sm:flex-1 px-3 py-2 rounded-xl text-xs whitespace-nowrap transition-all font-medium group relative disabled:opacity-40 disabled:cursor-not-allowed ${
                       isActive
                         ? 'bg-gradient-to-r from-green-500 to-emerald-500 text-white shadow-lg shadow-green-500/20'
                         : darkMode
@@ -753,8 +753,8 @@ if (signalFilters.size > 0) {
           
           {/* Row 4: SELL (Bearish Signals) */}
           <div className="flex gap-2">
-            <span className={`w-16 flex-shrink-0 text-[10px] font-semibold px-2 py-2 rounded-lg text-center ${darkMode ? 'bg-red-500/10 text-red-400' : 'bg-red-50 text-red-600'}`}>SELL</span>
-            <div className="flex gap-2 flex-1">
+            <span className={`w-12 sm:w-16 flex-shrink-0 text-[10px] font-semibold px-1 sm:px-2 py-2 rounded-lg text-center ${darkMode ? 'bg-red-500/10 text-red-400' : 'bg-red-50 text-red-600'}`}>SELL</span>
+            <div className="flex gap-1.5 sm:gap-2 flex-1 overflow-x-auto pb-1 scrollbar-hide">
               {[
                 { id: 'below_sma50', label: '▼ Downtrend', desc: 'Price below SMA50', enhanced: true },
                 { id: 'above_bb', label: '▼ Above BB', desc: 'Above upper Bollinger Band', enhanced: true },
@@ -771,7 +771,7 @@ if (signalFilters.size > 0) {
                     key={filter.id}
                     onClick={() => toggleSignalFilter(filter.id)}
                     disabled={isDisabled}
-                    className={`flex-1 px-3 py-2 rounded-xl text-xs whitespace-nowrap transition-all font-medium group relative disabled:opacity-40 disabled:cursor-not-allowed ${
+                    className={`min-w-fit sm:flex-1 px-3 py-2 rounded-xl text-xs whitespace-nowrap transition-all font-medium group relative disabled:opacity-40 disabled:cursor-not-allowed ${
                       isActive
                         ? 'bg-gradient-to-r from-red-500 to-pink-500 text-white shadow-lg shadow-red-500/20'
                         : darkMode
@@ -793,7 +793,7 @@ if (signalFilters.size > 0) {
         </div>
         
         {/* Search and Filters */}
-        <div className="flex flex-col lg:flex-row gap-3 mb-5">
+        <div className="flex flex-col gap-2 sm:gap-3 mb-4 sm:mb-5">
           <div className="relative flex-1">
             <input
               type="text"
@@ -804,11 +804,11 @@ if (signalFilters.size > 0) {
                 darkMode
                   ? 'bg-white/5 border-white/10 text-white placeholder-gray-500'
                   : 'bg-white border-gray-200 text-gray-900 placeholder-gray-400'
-              } border rounded-xl px-4 py-3 pl-11 focus:outline-none focus:border-orange-500/50 transition-all`}
+              } border rounded-xl px-4 py-2.5 sm:py-3 pl-11 focus:outline-none focus:border-orange-500/50 transition-all text-sm sm:text-base`}
             />
             <span className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-500">🔍</span>
           </div>
-          <div className="flex gap-2 overflow-x-auto">
+          <div className="flex gap-2 overflow-x-auto pb-1 scrollbar-hide">
             {CATEGORIES.map((c) => (
               <button
                 key={c.id}
@@ -1113,148 +1113,217 @@ if (signalFilters.size > 0) {
                     <div
                       key={t.id}
                       onClick={() => window.location.hash = `#/token/${t.id}`}
-                      className={`grid grid-cols-8 lg:grid-cols-12 gap-4 px-5 py-3 border-b ${
+                      className={`cursor-pointer transition-colors ${
                         darkMode
                           ? 'border-white/5 hover:bg-white/[0.03]'
                           : 'border-gray-100 hover:bg-gray-50'
-                      } cursor-pointer transition-colors ${
+                      } border-b ${
                         watched ? (darkMode ? 'bg-yellow-500/[0.04]' : 'bg-yellow-50') : ''
                       }`}
                     >
-                      {/* Token - col-span-2 */}
-                      <div className="col-span-4 lg:col-span-2 flex items-center gap-3">
-                        <span
-                          className={`text-xs w-6 text-right tabular-nums ${
-                            darkMode ? 'text-gray-600' : 'text-gray-400'
-                          }`}
-                        >
-                          {t.rank}
-                        </span>
-                        <img
-                          src={t.image}
-                          alt={t.symbol}
-                          className="w-8 h-8 rounded-full shrink-0 bg-gray-800"
-                        />
-                        <div className="min-w-0">
-                          <div className="flex items-center gap-1.5">
-                            <span className="font-semibold text-sm">{t.symbol}</span>
-                            {t.rsi !== null && t.rsi < 25 && <span className="text-xs">🔴</span>}
-                            {t.rsi !== null && t.rsi > 75 && <span className="text-xs">🟢</span>}
+                      {/* Desktop: grid row */}
+                      <div className="hidden lg:grid grid-cols-12 gap-4 px-5 py-3">
+                        {/* Token - col-span-2 */}
+                        <div className="col-span-2 flex items-center gap-3">
+                          <span
+                            className={`text-xs w-6 text-right tabular-nums ${
+                              darkMode ? 'text-gray-600' : 'text-gray-400'
+                            }`}
+                          >
+                            {t.rank}
+                          </span>
+                          <img
+                            src={t.image}
+                            alt={t.symbol}
+                            className="w-8 h-8 rounded-full shrink-0 bg-gray-800"
+                          />
+                          <div className="min-w-0">
+                            <div className="flex items-center gap-1.5">
+                              <span className="font-semibold text-sm">{t.symbol}</span>
+                              {t.rsi !== null && t.rsi < 25 && <span className="text-xs">🔴</span>}
+                              {t.rsi !== null && t.rsi > 75 && <span className="text-xs">🟢</span>}
+                            </div>
+                            <p className="text-xs text-gray-500 truncate max-w-[120px]">{t.name}</p>
                           </div>
-                          <p className="text-xs text-gray-500 truncate max-w-[120px]">{t.name}</p>
+                        </div>
+                        {/* Price */}
+                        <div className="col-span-1 flex items-center justify-end font-mono text-sm tabular-nums">
+                          {formatPrice(t.price)}
+                        </div>
+                        {/* Volume */}
+                        <div className="col-span-1 flex items-center justify-end text-sm tabular-nums">
+                          <span className={darkMode ? 'text-gray-400' : 'text-gray-600'}>
+                            {formatNumber(t.volume)}
+                          </span>
+                        </div>
+                        {/* MCap */}
+                        <div className="col-span-1 flex items-center justify-end text-sm tabular-nums">
+                          <span className={darkMode ? 'text-gray-400' : 'text-gray-600'}>
+                            {formatNumber(t.mcap)}
+                          </span>
+                        </div>
+                        {/* 24H */}
+                        <div className="col-span-1 flex items-center justify-end text-sm tabular-nums">
+                          <span className={t.change24h >= 0 ? 'text-green-500' : 'text-red-500'}>
+                            {t.change24h >= 0 ? '+' : ''}
+                            {t.change24h?.toFixed(1)}%
+                          </span>
+                        </div>
+                        {/* 7D */}
+                        <div className="col-span-1 flex items-center justify-end text-sm tabular-nums">
+                          <span className={t.change7d >= 0 ? 'text-green-500' : 'text-red-500'}>
+                            {t.change7d >= 0 ? '+' : ''}
+                            {t.change7d?.toFixed(1)}%
+                          </span>
+                        </div>
+                        {/* Signal */}
+                        <div className="col-span-2 flex items-center justify-end pr-4">
+                          {t.signalScore !== undefined && t.signalScore !== null ? (
+                            <div
+                              className={`inline-flex items-center justify-center gap-1.5 px-2.5 py-1 rounded-md text-xs font-semibold tabular-nums min-w-[70px] ${
+                                t.signalScore >= 50
+                                  ? 'bg-green-500/20 text-green-400'
+                                  : t.signalScore >= 25
+                                  ? 'bg-emerald-500/15 text-emerald-400'
+                                  : t.signalScore > -25
+                                  ? 'bg-gray-500/15 text-gray-400'
+                                  : t.signalScore > -50
+                                  ? 'bg-orange-500/15 text-orange-400'
+                                  : 'bg-red-500/20 text-red-400'
+                              }`}
+                              title={`Signal: ${t.signalLabel || (t.signalScore >= 50 ? 'STRONG BUY' : t.signalScore >= 25 ? 'BUY' : t.signalScore > -25 ? 'NEUTRAL' : t.signalScore > -50 ? 'SELL' : 'STRONG SELL')} (${t.signalScoreDetails?.signalCount || 0} signals)`}
+                            >
+                              <span className={`w-1.5 h-1.5 rounded-full shrink-0 ${
+                                t.signalScore >= 50
+                                  ? 'bg-green-500'
+                                  : t.signalScore >= 25
+                                  ? 'bg-emerald-400'
+                                  : t.signalScore > -25
+                                  ? 'bg-gray-400'
+                                  : t.signalScore > -50
+                                  ? 'bg-orange-400'
+                                  : 'bg-red-500'
+                              }`} />
+                              <span>{t.signalScore >= 0 ? '+' : ''}{t.signalScore}</span>
+                              {(t.signalScore >= 25 || t.signalScore <= -25) && (
+                                <span className="text-[10px] opacity-70">
+                                  {t.signalScore >= 25 ? 'BUY' : 'SELL'}
+                                </span>
+                              )}
+                            </div>
+                          ) : (
+                            <span className="text-gray-600 text-xs">--</span>
+                          )}
+                        </div>
+                        {/* Chart */}
+                        <div className="col-span-2 flex items-center justify-center">
+                          <Spark data={t.sparkline} color={sparkColor} h={24} />
+                        </div>
+                        {/* Actions */}
+                        <div className="col-span-1 flex items-center justify-center gap-1">
+                          <button
+                            onClick={(e) => openTokenPage(t.id, e)}
+                            className={`p-1.5 rounded-md ${
+                              darkMode
+                                ? 'hover:bg-white/10 text-gray-500 hover:text-white'
+                                : 'hover:bg-gray-100 text-gray-400 hover:text-gray-600'
+                            } transition-colors`}
+                            title="View details"
+                          >
+                            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14" />
+                            </svg>
+                          </button>
+                          <button
+                            onClick={(e) => toggleWatch(t.id, e)}
+                            className={`p-1 text-base hover:scale-110 transition-transform ${
+                              watched
+                                ? 'text-yellow-400'
+                                : darkMode
+                                ? 'text-gray-600 hover:text-yellow-400'
+                                : 'text-gray-400 hover:text-yellow-500'
+                            }`}
+                            title={watched ? 'Remove from watchlist' : 'Add to watchlist'}
+                          >
+                            {watched ? '★' : '☆'}
+                          </button>
                         </div>
                       </div>
-                      {/* Price - col-span-1 */}
-                      <div className="col-span-2 lg:col-span-1 flex items-center justify-end font-mono text-sm tabular-nums">
-                        {formatPrice(t.price)}
-                      </div>
-                      {/* Volume - col-span-1 */}
-                      <div className="col-span-1 hidden lg:flex items-center justify-end text-sm tabular-nums">
-                        <span className={darkMode ? 'text-gray-400' : 'text-gray-600'}>
-                          {formatNumber(t.volume)}
-                        </span>
-                      </div>
-                      {/* MCap - col-span-1 */}
-                      <div className="col-span-1 hidden lg:flex items-center justify-end text-sm tabular-nums">
-                        <span className={darkMode ? 'text-gray-400' : 'text-gray-600'}>
-                          {formatNumber(t.mcap)}
-                        </span>
-                      </div>
-                      {/* 24H Change - col-span-1 */}
-                      <div className="col-span-1 hidden lg:flex items-center justify-end text-sm tabular-nums">
-                        <span className={t.change24h >= 0 ? 'text-green-500' : 'text-red-500'}>
-                          {t.change24h >= 0 ? '+' : ''}
-                          {t.change24h?.toFixed(1)}%
-                        </span>
-                      </div>
-                      {/* 7D Change - col-span-1 */}
-                      <div className="col-span-1 flex items-center justify-end text-sm tabular-nums">
-                        <span className={t.change7d >= 0 ? 'text-green-500' : 'text-red-500'}>
-                          {t.change7d >= 0 ? '+' : ''}
-                          {t.change7d?.toFixed(1)}%
-                        </span>
-                      </div>
-                      {/* Signal Score - col-span-2 */}
-                      <div className="col-span-2 hidden lg:flex items-center justify-end pr-4">
-                        {t.signalScore !== undefined && t.signalScore !== null ? (
-                          <div
-                            className={`inline-flex items-center justify-center gap-1.5 px-2.5 py-1 rounded-md text-xs font-semibold tabular-nums min-w-[70px] ${
-                              t.signalScore >= 50
-                                ? 'bg-green-500/20 text-green-400'
-                                : t.signalScore >= 25
-                                ? 'bg-emerald-500/15 text-emerald-400'
-                                : t.signalScore > -25
-                                ? 'bg-gray-500/15 text-gray-400'
-                                : t.signalScore > -50
-                                ? 'bg-orange-500/15 text-orange-400'
-                                : 'bg-red-500/20 text-red-400'
-                            }`}
-                            title={`Signal: ${t.signalLabel || (t.signalScore >= 50 ? 'STRONG BUY' : t.signalScore >= 25 ? 'BUY' : t.signalScore > -25 ? 'NEUTRAL' : t.signalScore > -50 ? 'SELL' : 'STRONG SELL')} (${t.signalScoreDetails?.signalCount || 0} signals)`}
-                          >
-                            <span className={`w-1.5 h-1.5 rounded-full shrink-0 ${
-                              t.signalScore >= 50
-                                ? 'bg-green-500'
-                                : t.signalScore >= 25
-                                ? 'bg-emerald-400'
-                                : t.signalScore > -25
-                                ? 'bg-gray-400'
-                                : t.signalScore > -50
-                                ? 'bg-orange-400'
-                                : 'bg-red-500'
-                            }`} />
-                            <span>{t.signalScore >= 0 ? '+' : ''}{t.signalScore}</span>
-                            {(t.signalScore >= 25 || t.signalScore <= -25) && (
-                              <span className="text-[10px] opacity-70">
-                                {t.signalScore >= 25 ? 'BUY' : 'SELL'}
-                              </span>
-                            )}
+
+                      {/* Mobile: card layout */}
+                      <div className="lg:hidden px-3 sm:px-4 py-3">
+                        <div className="flex items-center justify-between gap-2">
+                          {/* Left: token info */}
+                          <div className="flex items-center gap-2.5 min-w-0 flex-1">
+                            <span className={`text-[10px] w-5 text-right tabular-nums shrink-0 ${darkMode ? 'text-gray-600' : 'text-gray-400'}`}>
+                              {t.rank}
+                            </span>
+                            <img src={t.image} alt={t.symbol} className="w-8 h-8 rounded-full shrink-0 bg-gray-800" />
+                            <div className="min-w-0">
+                              <div className="flex items-center gap-1.5">
+                                <span className="font-semibold text-sm">{t.symbol}</span>
+                                {t.rsi !== null && t.rsi < 25 && <span className="text-xs">🔴</span>}
+                                {t.rsi !== null && t.rsi > 75 && <span className="text-xs">🟢</span>}
+                              </div>
+                              <p className="text-xs text-gray-500 truncate">{t.name}</p>
+                            </div>
                           </div>
-                        ) : (
-                          <span className="text-gray-600 text-xs">--</span>
-                        )}
-                      </div>
-                      {/* Chart - col-span-2 */}
-                      <div className="col-span-2 hidden lg:flex items-center justify-center">
-                        <Spark data={t.sparkline} color={sparkColor} h={24} />
-                      </div>
-                      {/* Actions - col-span-1 */}
-                      <div className="col-span-1 flex items-center justify-center gap-1">
-                        <button
-                          onClick={(e) => openTokenPage(t.id, e)}
-                          className={`p-1.5 rounded-md ${
-                            darkMode
-                              ? 'hover:bg-white/10 text-gray-500 hover:text-white'
-                              : 'hover:bg-gray-100 text-gray-400 hover:text-gray-600'
-                          } transition-colors`}
-                          title="View details"
-                        >
-                          <svg
-                            className="w-4 h-4"
-                            fill="none"
-                            stroke="currentColor"
-                            viewBox="0 0 24 24"
-                          >
-                            <path
-                              strokeLinecap="round"
-                              strokeLinejoin="round"
-                              strokeWidth={2}
-                              d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14"
-                            />
-                          </svg>
-                        </button>
-                        <button
-                          onClick={(e) => toggleWatch(t.id, e)}
-                          className={`p-1 text-base hover:scale-110 transition-transform ${
-                            watched
-                              ? 'text-yellow-400'
-                              : darkMode
-                              ? 'text-gray-600 hover:text-yellow-400'
-                              : 'text-gray-400 hover:text-yellow-500'
-                          }`}
-                          title={watched ? 'Remove from watchlist' : 'Add to watchlist'}
-                        >
-                          {watched ? '★' : '☆'}
-                        </button>
+                          {/* Right: price + change */}
+                          <div className="text-right shrink-0">
+                            <div className="font-mono text-sm font-semibold tabular-nums">{formatPrice(t.price)}</div>
+                            <div className="flex items-center justify-end gap-2 mt-0.5">
+                              <span className={`text-xs tabular-nums ${t.change24h >= 0 ? 'text-green-500' : 'text-red-500'}`}>
+                                {t.change24h >= 0 ? '+' : ''}{t.change24h?.toFixed(1)}%
+                              </span>
+                              <span className={`text-xs tabular-nums ${t.change7d >= 0 ? 'text-green-500' : 'text-red-500'}`}>
+                                <span className="text-gray-500">7d</span> {t.change7d >= 0 ? '+' : ''}{t.change7d?.toFixed(1)}%
+                              </span>
+                            </div>
+                          </div>
+                        </div>
+                        {/* Bottom row: signal + sparkline + actions */}
+                        <div className="flex items-center justify-between mt-2 pl-[58px]">
+                          <div className="flex items-center gap-3">
+                            {t.signalScore !== undefined && t.signalScore !== null ? (
+                              <div className={`inline-flex items-center gap-1 px-2 py-0.5 rounded text-[11px] font-semibold tabular-nums ${
+                                t.signalScore >= 50
+                                  ? 'bg-green-500/20 text-green-400'
+                                  : t.signalScore >= 25
+                                  ? 'bg-emerald-500/15 text-emerald-400'
+                                  : t.signalScore > -25
+                                  ? 'bg-gray-500/15 text-gray-400'
+                                  : t.signalScore > -50
+                                  ? 'bg-orange-500/15 text-orange-400'
+                                  : 'bg-red-500/20 text-red-400'
+                              }`}>
+                                <span className={`w-1.5 h-1.5 rounded-full ${
+                                  t.signalScore >= 50 ? 'bg-green-500' : t.signalScore >= 25 ? 'bg-emerald-400' : t.signalScore > -25 ? 'bg-gray-400' : t.signalScore > -50 ? 'bg-orange-400' : 'bg-red-500'
+                                }`} />
+                                {t.signalScore >= 0 ? '+' : ''}{t.signalScore}
+                                {(t.signalScore >= 25 || t.signalScore <= -25) && (
+                                  <span className="text-[9px] opacity-70 ml-0.5">{t.signalScore >= 25 ? 'BUY' : 'SELL'}</span>
+                                )}
+                              </div>
+                            ) : null}
+                            <Spark data={t.sparkline} color={sparkColor} h={20} />
+                          </div>
+                          <div className="flex items-center gap-1">
+                            <button
+                              onClick={(e) => openTokenPage(t.id, e)}
+                              className={`p-2 rounded-md ${darkMode ? 'hover:bg-white/10 text-gray-500' : 'hover:bg-gray-100 text-gray-400'} transition-colors`}
+                            >
+                              <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14" />
+                              </svg>
+                            </button>
+                            <button
+                              onClick={(e) => toggleWatch(t.id, e)}
+                              className={`p-2 text-base hover:scale-110 transition-transform ${watched ? 'text-yellow-400' : darkMode ? 'text-gray-600' : 'text-gray-400'}`}
+                            >
+                              {watched ? '★' : '☆'}
+                            </button>
+                          </div>
+                        </div>
                       </div>
                     </div>
                   );
