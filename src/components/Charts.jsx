@@ -267,8 +267,9 @@ export const CandlestickChart = ({ ohlcData, darkMode = true }) => {
 
   const getTimeLabels = () => {
     const labels = [];
-    const minPixelGap = 55; // minimum pixels between labels
+    const minPixelGap = 70; // minimum SVG units between labels
     let lastLabelX = -999;
+    let lastLabelKey = ''; // prevents duplicate labels
 
     for (let i = 0; i < candleCount; i++) {
       const ts = ohlcData[i][0];
@@ -278,29 +279,45 @@ export const CandlestickChart = ({ ohlcData, darkMode = true }) => {
       if (x - lastLabelX < minPixelGap) continue;
 
       let label;
+      let key;
+
       if (totalDays <= 1.5) {
-        // 24H: show every ~3 hours
+        // 24H: every 2-3 hours "00:00", "03:00"...
         const h = d.getHours();
-        if (h % 3 !== 0 && i !== 0) continue;
+        if (h % 2 !== 0 && i > 0) continue;
         label = d.getHours().toString().padStart(2, '0') + ':' + d.getMinutes().toString().padStart(2, '0');
+        key = label;
       } else if (totalDays <= 8) {
-        // 7D: show "6. Feb" with time
+        // 7D: "6. Feb", "7. Feb"...
         label = d.getDate() + '. ' + d.toLocaleString('en', { month: 'short' });
+        key = d.getDate() + '-' + d.getMonth();
       } else if (totalDays <= 35) {
-        // 1M: show every 2 days "14. Jan", "16. Jan"...
+        // 1M: every 2 days "14. Jan", "16. Jan"...
         const day = d.getDate();
         if (day % 2 !== 0 && i > 0 && i < candleCount - 1) continue;
         label = d.getDate() + '. ' + d.toLocaleString('en', { month: 'short' });
+        key = d.getDate() + '-' + d.getMonth();
       } else if (totalDays <= 100) {
-        // 3M: show ~weekly
+        // 3M: weekly-ish "14. Jan", "21. Jan"...
         label = d.getDate() + '. ' + d.toLocaleString('en', { month: 'short' });
-      } else {
-        // 1Y/Max: show monthly
+        key = d.getDate() + '-' + d.getMonth();
+      } else if (totalDays <= 400) {
+        // 1Y: monthly "Feb 25", "Mar 25"...
         label = d.toLocaleString('en', { month: 'short' }) + ' ' + d.getFullYear().toString().slice(2);
+        key = d.getMonth() + '-' + d.getFullYear();
+      } else {
+        // Max / multi-year: show years "2014", "2015", "2016"...
+        const year = d.getFullYear();
+        label = year.toString();
+        key = year.toString();
       }
+
+      // Skip duplicate labels
+      if (key === lastLabelKey) continue;
 
       labels.push({ label, x });
       lastLabelX = x;
+      lastLabelKey = key;
     }
     return labels;
   };
@@ -309,6 +326,7 @@ export const CandlestickChart = ({ ohlcData, darkMode = true }) => {
 
   // Format price for axis — clean round numbers
   const fmtAxis = (p) => {
+    if (p <= 0) return '$0';
     if (p >= 100000) return '$' + (p / 1000).toFixed(0) + 'K';
     if (p >= 10000) return '$' + (p / 1000).toFixed(0) + 'K';
     if (p >= 1000) {

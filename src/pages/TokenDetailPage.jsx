@@ -134,7 +134,7 @@ const ChartWithTimeframe = ({ token, darkMode }) => {
 
       try {
         const tf = TIMEFRAMES.find(t => t.id === timeframe);
-        const days = tf?.days === 'max' ? 1825 : (tf?.days || 30); // Max = ~5 years
+        const days = tf?.days === 'max' ? 'max' : (tf?.days || 30);
 
         const url = `/api/ohlc?id=${token.id}&days=${days}`;
         const response = await fetch(url);

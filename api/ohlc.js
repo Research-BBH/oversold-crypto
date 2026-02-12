@@ -18,23 +18,36 @@ const generateOHLCFromPrices = (prices, targetCandles = 60) => {
   
   const ohlc = [];
   let lastPrice = prices[0][1];
+  let priceIdx = 0;
   
   for (let i = 0; i < targetCandles; i++) {
     const candleStart = startTime + (i * candleDuration);
     const candleEnd = candleStart + candleDuration;
     
-    // Filter prices for this candle's time window
-    const candlePrices = prices.filter(p => p[0] >= candleStart && p[0] < candleEnd);
+    // Advance to this candle's start
+    while (priceIdx < prices.length && prices[priceIdx][0] < candleStart) {
+      lastPrice = prices[priceIdx][1];
+      priceIdx++;
+    }
     
-    if (candlePrices.length === 0) {
-      // No data - flat candle with last known price
+    // Collect prices in this window
+    const candlePriceValues = [];
+    const savedIdx = priceIdx;
+    while (priceIdx < prices.length && prices[priceIdx][0] < candleEnd) {
+      candlePriceValues.push(prices[priceIdx][1]);
+      priceIdx++;
+    }
+    
+    if (candlePriceValues.length === 0) {
       ohlc.push([candleStart, lastPrice, lastPrice, lastPrice, lastPrice]);
     } else {
-      const priceValues = candlePrices.map(p => p[1]);
-      const open = priceValues[0];
-      const close = priceValues[priceValues.length - 1];
-      const high = Math.max(...priceValues);
-      const low = Math.min(...priceValues);
+      const open = candlePriceValues[0];
+      const close = candlePriceValues[candlePriceValues.length - 1];
+      let high = open, low = open;
+      for (let j = 0; j < candlePriceValues.length; j++) {
+        if (candlePriceValues[j] > high) high = candlePriceValues[j];
+        if (candlePriceValues[j] < low) low = candlePriceValues[j];
+      }
       ohlc.push([candleStart, open, high, low, close]);
       lastPrice = close;
     }
@@ -43,20 +56,21 @@ const generateOHLCFromPrices = (prices, targetCandles = 60) => {
   return ohlc;
 };
 
-// Target candle counts - balanced for readability
-const getTargetCandles = (days) => {
-  if (days <= 1) return 24;    // 24H: hourly candles
-  if (days <= 7) return 42;    // 7D: ~4h candles, dense like CoinGecko
-  if (days <= 30) return 30;   // 1M: daily candles
-  if (days <= 90) return 45;   // 3M: ~2-day candles
-  if (days <= 365) return 52;  // 1Y: weekly candles
-  return 60;
+// Target candle counts calibrated to match CoinGecko's visual density
+const getTargetCandles = (actualDays) => {
+  if (actualDays <= 1) return 24;      // 24H: hourly
+  if (actualDays <= 7) return 42;      // 7D: ~4h candles
+  if (actualDays <= 30) return 30;     // 1M: daily
+  if (actualDays <= 90) return 45;     // 3M: ~2-day
+  if (actualDays <= 365) return 52;    // 1Y: weekly
+  if (actualDays <= 1825) return 60;   // up to 5Y: ~monthly
+  return 60;                           // Max: ~monthly (capped at 60)
 };
 
 export default async function handler(req) {
   const url = new URL(req.url);
   const tokenId = url.searchParams.get('id');
-  const days = url.searchParams.get('days') || '30';
+  const daysParam = url.searchParams.get('days') || '30';
 
   if (!tokenId) {
     return new Response(
@@ -75,7 +89,8 @@ export default async function handler(req) {
     const headers = { 'Accept': 'application/json' };
     if (CG_API_KEY) headers['x-cg-pro-api-key'] = CG_API_KEY;
 
-    const chartUrl = `${baseUrl}/coins/${tokenId}/market_chart?vs_currency=usd&days=${days}`;
+    // Pass daysParam directly — CoinGecko supports 'max' natively
+    const chartUrl = `${baseUrl}/coins/${tokenId}/market_chart?vs_currency=usd&days=${daysParam}`;
     const chartResponse = await fetch(chartUrl, { headers });
 
     if (!chartResponse.ok) {
@@ -88,14 +103,20 @@ export default async function handler(req) {
       throw new Error('Insufficient price data');
     }
 
-    const targetCandles = getTargetCandles(parseInt(days));
+    // Calculate actual span from the data itself
+    const startTime = chartData.prices[0][0];
+    const endTime = chartData.prices[chartData.prices.length - 1][0];
+    const actualDays = (endTime - startTime) / (86400000);
+
+    const targetCandles = getTargetCandles(actualDays);
     const ohlc = generateOHLCFromPrices(chartData.prices, targetCandles);
 
     return new Response(
       JSON.stringify({ 
         ohlc, 
         dataPoints: chartData.prices.length,
-        actualCandles: ohlc.length
+        actualCandles: ohlc.length,
+        spanDays: Math.round(actualDays)
       }),
       {
         status: 200,
