@@ -124,16 +124,16 @@ const ChartWithTimeframe = ({ token, darkMode }) => {
   const timeLabels = getTimeLabels(timeframe);
 
   return (
-    <div className={`${darkMode ? 'bg-white/5 border-white/10' : 'bg-white border-gray-200'} rounded-2xl p-6 border`}>
-      <div className="flex justify-between items-center mb-6">
-        <h2 className="text-xl font-semibold">Price Chart</h2>
-        <div className="flex items-center gap-3">
-          <div className={`inline-flex rounded-lg p-1 ${darkMode ? 'bg-white/5' : 'bg-gray-100'}`}>
+    <div className={`${darkMode ? 'bg-white/5 border-white/10' : 'bg-white border-gray-200'} rounded-2xl p-4 sm:p-6 border`}>
+      <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-2 sm:gap-0 mb-4 sm:mb-6">
+        <h2 className="text-lg sm:text-xl font-semibold">Price Chart</h2>
+        <div className="flex items-center gap-2 sm:gap-3">
+          <div className={`inline-flex rounded-lg p-1 ${darkMode ? 'bg-white/5' : 'bg-gray-100'} overflow-x-auto`}>
             {TIMEFRAMES.map((tf) => (
               <button
                 key={tf.id}
                 onClick={() => setTimeframe(tf.id)}
-                className={`px-3 py-1.5 rounded-md text-xs font-medium transition-all ${
+                className={`px-2 sm:px-3 py-1 sm:py-1.5 rounded-md text-[11px] sm:text-xs font-medium transition-all whitespace-nowrap ${
                   timeframe === tf.id
                     ? 'bg-orange-500 text-white shadow'
                     : darkMode ? 'text-gray-400 hover:text-white' : 'text-gray-600 hover:text-gray-900'
@@ -154,14 +154,14 @@ const ChartWithTimeframe = ({ token, darkMode }) => {
       </div>
       
       {loading ? (
-        <div className="w-full h-80 flex items-center justify-center">
+        <div className="w-full h-48 sm:h-80 flex items-center justify-center">
           <div className="text-center">
             <div className="w-10 h-10 border-4 border-orange-500 border-t-transparent rounded-full animate-spin mx-auto mb-3" />
             <p className={darkMode ? 'text-gray-400' : 'text-gray-500'}>Loading chart data...</p>
           </div>
         </div>
       ) : error ? (
-        <div className="w-full h-80 flex items-center justify-center">
+        <div className="w-full h-48 sm:h-80 flex items-center justify-center">
           <div className="text-center">
             <p className="text-red-400 mb-2">⚠️ {error}</p>
             <p className={`text-sm ${darkMode ? 'text-gray-500' : 'text-gray-400'}`}>
@@ -330,32 +330,32 @@ export const TokenDetailPage = ({ token, onBack, darkMode, setDarkMode }) => {
     <div className={`min-h-screen transition-colors duration-200 ${
       darkMode ? 'bg-[#0a0a0f] text-white' : 'bg-gray-100 text-gray-900'
     }`}>
-      <div className="max-w-6xl mx-auto px-6 py-8">
+      <div className="max-w-[1400px] mx-auto px-3 sm:px-4 md:px-6 lg:px-8 py-4 sm:py-8">
         {/* Header */}
-        <div className="flex items-center justify-between mb-8">
-          <div className="flex items-center gap-4">
+        <div className="flex items-center justify-between mb-6 sm:mb-8">
+          <div className="flex items-center gap-2 sm:gap-4 min-w-0 flex-1">
             <button
               onClick={onBack}
-              className={`p-2 rounded-lg ${
+              className={`p-1.5 sm:p-2 rounded-lg shrink-0 ${
                 darkMode ? 'bg-white/5 hover:bg-white/10' : 'bg-white hover:bg-gray-50 border border-gray-200'
               } transition-colors`}
             >
-              <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <svg className="w-5 h-5 sm:w-6 sm:h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 19l-7-7m0 0l7-7m-7 7h18" />
               </svg>
             </button>
-            <img src={token.image} alt={token.symbol} className="w-16 h-16 rounded-2xl bg-gray-800" />
-            <div className="flex-1">
-              <div className="flex items-center gap-3">
-                <h1 className="text-3xl font-bold">{token.name}</h1>
-                <span className={`text-xl ${darkMode ? 'text-gray-400' : 'text-gray-500'}`}>{token.symbol}</span>
-                <span className={`px-2 py-1 rounded text-sm ${darkMode ? 'bg-white/10 text-gray-400' : 'bg-gray-200 text-gray-600'}`}>
+            <img src={token.image} alt={token.symbol} className="w-10 h-10 sm:w-16 sm:h-16 rounded-xl sm:rounded-2xl bg-gray-800 shrink-0" />
+            <div className="min-w-0 flex-1">
+              <div className="flex items-center gap-2 sm:gap-3 flex-wrap">
+                <h1 className="text-xl sm:text-3xl font-bold truncate">{token.name}</h1>
+                <span className={`text-base sm:text-xl ${darkMode ? 'text-gray-400' : 'text-gray-500'}`}>{token.symbol}</span>
+                <span className={`px-2 py-0.5 sm:py-1 rounded text-xs sm:text-sm ${darkMode ? 'bg-white/10 text-gray-400' : 'bg-gray-200 text-gray-600'}`}>
                   Rank #{token.rank}
                 </span>
               </div>
-              <div className="flex items-center gap-4 mt-2">
-                <span className="text-2xl font-bold">{formatPrice(token.price)}</span>
-                <span className={`text-lg font-semibold ${token.change24h >= 0 ? 'text-green-400' : 'text-red-400'}`}>
+              <div className="flex items-center gap-2 sm:gap-4 mt-1 sm:mt-2 flex-wrap">
+                <span className="text-lg sm:text-2xl font-bold">{formatPrice(token.price)}</span>
+                <span className={`text-sm sm:text-lg font-semibold ${token.change24h >= 0 ? 'text-green-400' : 'text-red-400'}`}>
                   {token.change24h >= 0 ? '+' : ''}{token.change24h?.toFixed(2)}% (24h)
                 </span>
               </div>
@@ -365,13 +365,13 @@ export const TokenDetailPage = ({ token, onBack, darkMode, setDarkMode }) => {
         </div>
 
         {/* Main Grid */}
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-4 sm:gap-6">
           <div className="lg:col-span-2">
             <ChartWithTimeframe token={token} darkMode={darkMode} />
           </div>
 
-          <div className="space-y-6">
-            <div className={`${darkMode ? 'bg-white/5 border-white/10' : 'bg-white border-gray-200'} rounded-2xl p-6 border`}>
+          <div className="space-y-4 sm:space-y-6">
+            <div className={`${darkMode ? 'bg-white/5 border-white/10' : 'bg-white border-gray-200'} rounded-2xl p-4 sm:p-6 border`}>
               <div className="flex justify-between items-center mb-4">
                 <h2 className="text-lg font-semibold">RSI (14)</h2>
                 <div className="flex items-center gap-2">
@@ -390,9 +390,9 @@ export const TokenDetailPage = ({ token, onBack, darkMode, setDarkMode }) => {
               </div>
             </div>
 
-            <div className={`${darkMode ? 'bg-white/5 border-white/10' : 'bg-white border-gray-200'} rounded-2xl p-6 border`}>
-              <h2 className="text-lg font-semibold mb-4">Price Changes</h2>
-              <div className="grid grid-cols-2 gap-3">
+            <div className={`${darkMode ? 'bg-white/5 border-white/10' : 'bg-white border-gray-200'} rounded-2xl p-4 sm:p-6 border`}>
+              <h2 className="text-base sm:text-lg font-semibold mb-3 sm:mb-4">Price Changes</h2>
+              <div className="grid grid-cols-2 gap-2 sm:gap-3">
                 {[
                   { l: '1 Hour', v: token.change1h },
                   { l: '24 Hours', v: token.change24h },
@@ -413,7 +413,7 @@ export const TokenDetailPage = ({ token, onBack, darkMode, setDarkMode }) => {
 
         {/* RSI Threshold Analysis */}
         <div className="mt-6">
-          <h2 className="text-2xl font-bold mb-4">🎯 RSI Threshold Analysis</h2>
+          <h2 className="text-xl sm:text-2xl font-bold mb-4">🎯 RSI Threshold Analysis</h2>
           <RSIThresholdAnalysis 
             rsi={token.rsi} 
             priceHistory={historicalPrices}
@@ -423,7 +423,7 @@ export const TokenDetailPage = ({ token, onBack, darkMode, setDarkMode }) => {
 
         {/* Signal Analysis */}
         <div className="mt-6">
-          <h2 className="text-2xl font-bold mb-4">📊 Trading Signal Analysis</h2>
+          <h2 className="text-xl sm:text-2xl font-bold mb-4">📊 Trading Signal Analysis</h2>
           {loadingSignals ? (
             <div className={`${darkMode ? 'bg-white/5 border-white/10' : 'bg-white border-gray-200'} border rounded-xl p-12 text-center`}>
               <div className="w-12 h-12 border-4 border-orange-500 border-t-transparent rounded-full animate-spin mx-auto mb-4" />
@@ -435,9 +435,9 @@ export const TokenDetailPage = ({ token, onBack, darkMode, setDarkMode }) => {
         </div>
 
         {/* Market Data */}
-        <div className={`mt-6 ${darkMode ? 'bg-white/5 border-white/10' : 'bg-white border-gray-200'} rounded-2xl p-6 border`}>
-          <h2 className="text-lg font-semibold mb-4">Market Data</h2>
-          <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-4">
+        <div className={`mt-4 sm:mt-6 ${darkMode ? 'bg-white/5 border-white/10' : 'bg-white border-gray-200'} rounded-2xl p-4 sm:p-6 border`}>
+          <h2 className="text-base sm:text-lg font-semibold mb-3 sm:mb-4">Market Data</h2>
+          <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-2 sm:gap-4">
             {[
               { icon: '💰', label: 'Price', value: formatPrice(token.price) },
               { icon: '📊', label: 'Market Cap', value: '$' + formatNumber(token.mcap) },
@@ -456,8 +456,8 @@ export const TokenDetailPage = ({ token, onBack, darkMode, setDarkMode }) => {
 
         {/* ATH/ATL */}
         {token.ath && (
-          <div className={`mt-6 ${darkMode ? 'bg-white/5 border-white/10' : 'bg-white border-gray-200'} rounded-2xl p-6 border`}>
-            <h2 className="text-lg font-semibold mb-4">All-Time High &amp; Low</h2>
+          <div className={`mt-4 sm:mt-6 ${darkMode ? 'bg-white/5 border-white/10' : 'bg-white border-gray-200'} rounded-2xl p-4 sm:p-6 border`}>
+            <h2 className="text-base sm:text-lg font-semibold mb-3 sm:mb-4">All-Time High &amp; Low</h2>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
               <div>
                 <div className="flex items-center gap-2 mb-3">
@@ -490,12 +490,12 @@ export const TokenDetailPage = ({ token, onBack, darkMode, setDarkMode }) => {
         )}
 
         {/* CoinGecko Link */}
-        <div className="mt-6">
+        <div className="mt-4 sm:mt-6">
           <a
             href={`https://coingecko.com/en/coins/${token.id}`}
             target="_blank"
             rel="noreferrer"
-            className="block w-full py-4 bg-green-500/20 hover:bg-green-500/30 rounded-xl text-center text-green-400 font-medium transition-colors text-lg"
+            className="block w-full py-3 sm:py-4 bg-green-500/20 hover:bg-green-500/30 rounded-xl text-center text-green-400 font-medium transition-colors text-base sm:text-lg"
           >
             View on CoinGecko ↗
           </a>
