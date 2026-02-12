@@ -1,70 +1,11 @@
 // ==================================================
 // FILE: api/ohlc.js
-// Proxy endpoint for CoinGecko OHLC data (for candlestick charts)
-// Uses market_chart endpoint to generate better granularity candles
+// Proxy for CoinGecko's native OHLC endpoint
+// Returns real candlestick data (not derived from price points)
 // ==================================================
 
 export const config = {
   runtime: 'edge',
-};
-
-// Generate exactly N candles covering equal time intervals
-const generateOHLCFromPrices = (prices, targetCandles = 60) => {
-  if (!prices || prices.length < 2) return [];
-  
-  const startTime = prices[0][0];
-  const endTime = prices[prices.length - 1][0];
-  const candleDuration = (endTime - startTime) / targetCandles;
-  
-  const ohlc = [];
-  let lastPrice = prices[0][1];
-  let priceIdx = 0;
-  
-  for (let i = 0; i < targetCandles; i++) {
-    const candleStart = startTime + (i * candleDuration);
-    const candleEnd = candleStart + candleDuration;
-    
-    // Advance to this candle's start
-    while (priceIdx < prices.length && prices[priceIdx][0] < candleStart) {
-      lastPrice = prices[priceIdx][1];
-      priceIdx++;
-    }
-    
-    // Collect prices in this window
-    const candlePriceValues = [];
-    const savedIdx = priceIdx;
-    while (priceIdx < prices.length && prices[priceIdx][0] < candleEnd) {
-      candlePriceValues.push(prices[priceIdx][1]);
-      priceIdx++;
-    }
-    
-    if (candlePriceValues.length === 0) {
-      ohlc.push([candleStart, lastPrice, lastPrice, lastPrice, lastPrice]);
-    } else {
-      const open = candlePriceValues[0];
-      const close = candlePriceValues[candlePriceValues.length - 1];
-      let high = open, low = open;
-      for (let j = 0; j < candlePriceValues.length; j++) {
-        if (candlePriceValues[j] > high) high = candlePriceValues[j];
-        if (candlePriceValues[j] < low) low = candlePriceValues[j];
-      }
-      ohlc.push([candleStart, open, high, low, close]);
-      lastPrice = close;
-    }
-  }
-  
-  return ohlc;
-};
-
-// Target candle counts calibrated to match CoinGecko's visual density
-const getTargetCandles = (actualDays) => {
-  if (actualDays <= 1) return 24;      // 24H: hourly
-  if (actualDays <= 7) return 42;      // 7D: ~4h candles
-  if (actualDays <= 30) return 30;     // 1M: daily
-  if (actualDays <= 90) return 45;     // 3M: ~2-day
-  if (actualDays <= 365) return 52;    // 1Y: weekly
-  if (actualDays <= 1825) return 60;   // up to 5Y: ~monthly
-  return 60;                           // Max: ~monthly (capped at 60)
 };
 
 export default async function handler(req) {
@@ -89,34 +30,29 @@ export default async function handler(req) {
     const headers = { 'Accept': 'application/json' };
     if (CG_API_KEY) headers['x-cg-pro-api-key'] = CG_API_KEY;
 
-    // Pass daysParam directly — CoinGecko supports 'max' natively
-    const chartUrl = `${baseUrl}/coins/${tokenId}/market_chart?vs_currency=usd&days=${daysParam}`;
-    const chartResponse = await fetch(chartUrl, { headers });
+    // Use CoinGecko's native OHLC endpoint — returns proper candle data
+    // Candle granularity is automatic:
+    //   1-2 days  → 30 min candles
+    //   3-30 days → 4 hour candles
+    //   31+ days  → 4 day candles
+    const ohlcUrl = `${baseUrl}/coins/${tokenId}/ohlc?vs_currency=usd&days=${daysParam}`;
+    const ohlcResponse = await fetch(ohlcUrl, { headers });
 
-    if (!chartResponse.ok) {
-      throw new Error(`CoinGecko API error: ${chartResponse.status}`);
+    if (!ohlcResponse.ok) {
+      throw new Error(`CoinGecko OHLC API error: ${ohlcResponse.status}`);
     }
 
-    const chartData = await chartResponse.json();
+    // Response format: [[timestamp, open, high, low, close], ...]
+    const ohlcData = await ohlcResponse.json();
 
-    if (!chartData.prices || chartData.prices.length < 2) {
-      throw new Error('Insufficient price data');
+    if (!ohlcData || !Array.isArray(ohlcData) || ohlcData.length < 2) {
+      throw new Error('Insufficient OHLC data');
     }
-
-    // Calculate actual span from the data itself
-    const startTime = chartData.prices[0][0];
-    const endTime = chartData.prices[chartData.prices.length - 1][0];
-    const actualDays = (endTime - startTime) / (86400000);
-
-    const targetCandles = getTargetCandles(actualDays);
-    const ohlc = generateOHLCFromPrices(chartData.prices, targetCandles);
 
     return new Response(
       JSON.stringify({ 
-        ohlc, 
-        dataPoints: chartData.prices.length,
-        actualCandles: ohlc.length,
-        spanDays: Math.round(actualDays)
+        ohlc: ohlcData, 
+        actualCandles: ohlcData.length,
       }),
       {
         status: 200,

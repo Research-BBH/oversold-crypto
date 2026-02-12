@@ -219,9 +219,32 @@ export const CandlestickChart = ({ ohlcData, darkMode = true }) => {
   const chartW = W - PAD.left - PAD.right;
   const chartH = H - PAD.top - PAD.bottom;
 
+  // Downsample OHLC if too many candles for the chart width
+  const downsampleOHLC = (data, maxCandles) => {
+    if (data.length <= maxCandles) return data;
+    const factor = Math.ceil(data.length / maxCandles);
+    const result = [];
+    for (let i = 0; i < data.length; i += factor) {
+      const chunk = data.slice(i, Math.min(i + factor, data.length));
+      const open = chunk[0][1];
+      const close = chunk[chunk.length - 1][4];
+      let high = -Infinity, low = Infinity;
+      let ts = chunk[0][0];
+      for (const c of chunk) {
+        if (c[2] > high) high = c[2];
+        if (c[3] < low) low = c[3];
+      }
+      result.push([ts, open, high, low, close]);
+    }
+    return result;
+  };
+
+  // Cap at ~80 candles max for clean visuals
+  const processedData = downsampleOHLC(ohlcData, 80);
+
   // ohlcData format: [[timestamp, open, high, low, close], ...]
-  const allHighs = ohlcData.map(c => c[2]);
-  const allLows = ohlcData.map(c => c[3]);
+  const allHighs = processedData.map(c => c[2]);
+  const allLows = processedData.map(c => c[3]);
   const dataMax = Math.max(...allHighs);
   const dataMin = Math.min(...allLows);
   const dataRange = dataMax - dataMin || dataMin * 0.01;
@@ -252,7 +275,7 @@ export const CandlestickChart = ({ ohlcData, darkMode = true }) => {
   const paddedMax = gridLevels[gridLevels.length - 1];
   const paddedRange = paddedMax - paddedMin || 1;
 
-  const candleCount = ohlcData.length;
+  const candleCount = processedData.length;
   const slotW = chartW / candleCount;
   // CoinGecko proportions: body ~60% of slot, rest is gap
   const candleW = Math.max(3, slotW * 0.6);
@@ -262,7 +285,7 @@ export const CandlestickChart = ({ ohlcData, darkMode = true }) => {
   const getCandleCenterX = (i) => PAD.left + i * slotW + slotW / 2;
 
   // Time labels — CoinGecko shows every 1-2 days for 1M, every few hours for 24H, etc.
-  const totalDurationMs = ohlcData[ohlcData.length - 1][0] - ohlcData[0][0];
+  const totalDurationMs = processedData[processedData.length - 1][0] - processedData[0][0];
   const totalDays = totalDurationMs / (86400000);
 
   const getTimeLabels = () => {
@@ -272,7 +295,7 @@ export const CandlestickChart = ({ ohlcData, darkMode = true }) => {
     let lastLabelKey = ''; // prevents duplicate labels
 
     for (let i = 0; i < candleCount; i++) {
-      const ts = ohlcData[i][0];
+      const ts = processedData[i][0];
       const d = new Date(ts);
       const x = getCandleCenterX(i);
 
@@ -369,7 +392,7 @@ export const CandlestickChart = ({ ohlcData, darkMode = true }) => {
       return;
     }
 
-    const candle = ohlcData[candleIdx];
+    const candle = processedData[candleIdx];
     const x = getCandleCenterX(candleIdx);
     setHoverInfo({
       idx: candleIdx,
@@ -380,7 +403,7 @@ export const CandlestickChart = ({ ohlcData, darkMode = true }) => {
       low: candle[3],
       close: candle[4],
     });
-  }, [ohlcData, candleCount, slotW]);
+  }, [processedData, candleCount, slotW]);
 
   const handleMouseLeave = useCallback(() => {
     setHoverInfo(null);
@@ -449,7 +472,7 @@ export const CandlestickChart = ({ ohlcData, darkMode = true }) => {
         ))}
 
         {/* Candlesticks */}
-        {ohlcData.map((candle, i) => {
+        {processedData.map((candle, i) => {
           const [, open, high, low, close] = candle;
           const isBull = close >= open;
           const color = isBull ? bullColor : bearColor;
@@ -575,7 +598,7 @@ export const CandlestickChart = ({ ohlcData, darkMode = true }) => {
         </div>
         <span className={`text-sm ${darkMode ? 'text-gray-400' : 'text-gray-500'}`}>
           Spread:{' '}
-          <span className={`font-semibold ${ohlcData[ohlcData.length - 1][4] >= ohlcData[0][1] ? 'text-green-400' : 'text-red-400'}`}>
+          <span className={`font-semibold ${processedData[processedData.length - 1][4] >= processedData[0][1] ? 'text-green-400' : 'text-red-400'}`}>
             {(((dataMax - dataMin) / dataMin) * 100).toFixed(2)}%
           </span>
         </span>
