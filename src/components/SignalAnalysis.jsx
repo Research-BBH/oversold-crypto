@@ -321,10 +321,10 @@ export const FullSignalAnalysis = ({ analysis, darkMode }) => {
   return (
     <div className="space-y-4">
       {/* Unified Score Display */}
-      <div className={`${bgClass} border rounded-xl p-6`}>
-        <div className="flex items-center justify-between">
+      <div className={`${bgClass} border rounded-xl p-4 sm:p-6`}>
+        <div className="flex flex-col sm:flex-row items-center sm:items-center gap-4">
           {/* Score Circle */}
-          <div className="flex flex-col items-center">
+          <div className="flex flex-col items-center shrink-0">
             <UnifiedScoreCircle score={score} />
             <p className="text-xs text-gray-500 mt-2">
               {activeSignals.length} signals active
@@ -332,10 +332,10 @@ export const FullSignalAnalysis = ({ analysis, darkMode }) => {
           </div>
           
           {/* Label and Description */}
-          <div className="flex-1 ml-6">
-            <div className="flex items-center gap-2 mb-2">
+          <div className="flex-1 text-center sm:text-left">
+            <div className="flex items-center justify-center sm:justify-start gap-2 mb-2">
               <span className={`w-3 h-3 rounded-full ${dotClass}`}></span>
-              <span className={`text-2xl font-bold ${textClass}`}>{label}</span>
+              <span className={`text-xl sm:text-2xl font-bold ${textClass}`}>{label}</span>
             </div>
             <p className={`text-sm ${darkMode ? 'text-gray-400' : 'text-gray-600'}`}>
               {score >= 50 && 'Multiple bullish signals aligned. High conviction setup.'}
@@ -344,7 +344,7 @@ export const FullSignalAnalysis = ({ analysis, darkMode }) => {
               {score > -50 && score <= -25 && 'Moderate bearish signals present. Consider reducing exposure.'}
               {score <= -50 && 'Multiple bearish signals aligned. High conviction sell setup.'}
             </p>
-            <div className="flex gap-4 mt-3 text-xs">
+            <div className="flex gap-4 mt-3 text-xs justify-center sm:justify-start">
               <span className="text-green-500">▲ +{bullishTotal} bullish</span>
               <span className="text-red-500">▼ -{bearishTotal} bearish</span>
             </div>
@@ -359,11 +359,11 @@ export const FullSignalAnalysis = ({ analysis, darkMode }) => {
 
       {/* Signal Pairs - Symmetrical Display */}
       {signalPairs && signalPairs.length > 0 && (
-        <div className={`${darkMode ? 'bg-white/5 border-white/10' : 'bg-white border-gray-200'} border rounded-xl p-6`}>
-          <div className="flex items-center justify-between mb-4">
+        <div className={`${darkMode ? 'bg-white/5 border-white/10' : 'bg-white border-gray-200'} border rounded-xl p-4 sm:p-6`}>
+          <div className="flex items-center justify-between mb-3 sm:mb-4">
             <div className="flex items-center gap-2">
               <span className="text-lg">⚖️</span>
-              <h3 className="font-semibold">Signal Analysis</h3>
+              <h3 className="font-semibold text-sm sm:text-base">Signal Analysis</h3>
             </div>
             <div className="text-xs text-gray-500">
               Max ±100 per side
@@ -371,10 +371,10 @@ export const FullSignalAnalysis = ({ analysis, darkMode }) => {
           </div>
           
           {/* Column Headers */}
-          <div className="grid grid-cols-[1fr_100px_1fr] gap-2 mb-3 px-1">
-            <div className="text-xs font-semibold text-green-500 text-center">BULLISH</div>
-            <div className="text-xs font-semibold text-gray-500 text-center">SIGNAL</div>
-            <div className="text-xs font-semibold text-red-500 text-center">BEARISH</div>
+          <div className="grid grid-cols-[1fr_80px_1fr] sm:grid-cols-[1fr_100px_1fr] gap-1 sm:gap-2 mb-3 px-1">
+            <div className="text-[10px] sm:text-xs font-semibold text-green-500 text-center">BULLISH</div>
+            <div className="text-[10px] sm:text-xs font-semibold text-gray-500 text-center">SIGNAL</div>
+            <div className="text-[10px] sm:text-xs font-semibold text-red-500 text-center">BEARISH</div>
           </div>
           
           {/* Signal Pairs */}
@@ -382,7 +382,7 @@ export const FullSignalAnalysis = ({ analysis, darkMode }) => {
             {signalPairs.map((pair, index) => (
               <div 
                 key={index}
-                className={`grid grid-cols-[1fr_100px_1fr] gap-2 items-center p-2 rounded-lg ${
+                className={`grid grid-cols-[1fr_80px_1fr] sm:grid-cols-[1fr_100px_1fr] gap-1 sm:gap-2 items-center p-1.5 sm:p-2 rounded-lg ${
                   darkMode ? 'bg-white/5' : 'bg-gray-50'
                 }`}
               >
