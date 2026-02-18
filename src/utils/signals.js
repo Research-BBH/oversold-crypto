@@ -554,17 +554,6 @@ export const analyzeToken = (token, historicalData = null) => {
       analysis.signals.bearishDivergence = divergence.bearish;
     }
     
-    // Near ATH calculation - use actual ATH data from API if available
-    // athChange is negative (e.g., -10% means price is 10% below ATH)
-    if (token.athChange !== undefined && token.athChange !== null) {
-      // If athChange is > -10, we're within 10% of ATH (bearish signal)
-      analysis.signals.nearATH = token.athChange > -10;
-    } else if (prices.length > 0) {
-      // Fallback to historical data if ATH not available
-      const maxPrice = Math.max(...prices);
-      analysis.signals.nearATH = token.price >= maxPrice * 0.9;
-    }
-    
     // Engulfing patterns require OHLC data which we don't have on frontend
     analysis.signals.bullishEngulfing = null;
     analysis.signals.bearishEngulfing = null;
@@ -582,6 +571,17 @@ export const analyzeToken = (token, historicalData = null) => {
   const volMcapRatio = token.mcap > 0 ? (token.volume / token.mcap) * 100 : null;
   analysis.volMcapRatio = volMcapRatio;
   analysis.signals.highVolMcap = volMcapRatio !== null && volMcapRatio > 10;
+
+  // Near ATH/ATL calculation - use actual data from API (works even without historical data)
+  // athChange is negative (e.g., -85% means price is 85% below ATH)
+  // Only consider "near ATH" if within 10% of ATH
+  if (token.athChange !== undefined && token.athChange !== null) {
+    analysis.signals.nearATH = token.athChange > -10;
+  }
+  // If no ATH data from API and no historical calculation was done, default to false
+  if (analysis.signals.nearATH === undefined) {
+    analysis.signals.nearATH = false;
+  }
 
   // Calculate unified score
   const scoreData = {
