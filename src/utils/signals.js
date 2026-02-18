@@ -358,9 +358,11 @@ export const calculateSignalScore = (data) => {
     const strength = (10 - athPct) / 8;
     const points = lerp(SIGNAL_WEIGHTS.PRICE_POSITION.min, SIGNAL_WEIGHTS.PRICE_POSITION.max, Math.max(0, strength));
     score -= points;
-    activeSignals.push({ name: 'Near All-Time High', points: -points, type: 'bearish' });
+    const athLabel = data.athChange !== undefined ? `${data.athChange.toFixed(1)}%` : '';
+    activeSignals.push({ name: 'Near All-Time High', value: athLabel, points: -points, type: 'bearish' });
     positionPair.bearish.active = true;
     positionPair.bearish.points = points;
+    positionPair.bearish.label = athLabel ? `Near ATH (${athLabel})` : 'Near ATH';
   }
   signalPairs.push(positionPair);
   
@@ -549,8 +551,13 @@ export const analyzeToken = (token, historicalData = null) => {
       analysis.signals.bearishDivergence = divergence.bearish;
     }
     
-    // Near ATH calculation (within 10% of max price from available data)
-    if (prices.length > 0) {
+    // Near ATH calculation - use actual ATH data from API if available
+    // athChange is negative (e.g., -10% means price is 10% below ATH)
+    if (token.athChange !== undefined && token.athChange !== null) {
+      // If athChange is > -10, we're within 10% of ATH (bearish signal)
+      analysis.signals.nearATH = token.athChange > -10;
+    } else if (prices.length > 0) {
+      // Fallback to historical data if ATH not available
       const maxPrice = Math.max(...prices);
       analysis.signals.nearATH = token.price >= maxPrice * 0.9;
     }
@@ -584,7 +591,9 @@ export const analyzeToken = (token, historicalData = null) => {
     divergence: analysis.divergence,
     fundingRate: analysis.fundingRate,
     volMcapRatio: analysis.volMcapRatio,
-    nearATH: analysis.signals.nearATH
+    nearATH: analysis.signals.nearATH,
+    athChange: token.athChange,  // Pass ATH percentage from API
+    atlChange: token.atlChange   // Pass ATL percentage from API
   };
   
   const scoreResult = calculateSignalScore(scoreData);
