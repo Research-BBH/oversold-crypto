@@ -342,11 +342,14 @@ export const calculateSignalScore = (data) => {
     bearish: { label: 'Near ATH', weight: SIGNAL_WEIGHTS.PRICE_POSITION.max, active: false },
   };
   
-  const nearATL = data.atlChange !== undefined && data.atlChange !== null && data.atlChange <= 20;
+  // Near ATL: within 50% of all-time low (atlChange is positive, e.g., +30% means 30% above ATL)
+  const nearATL = data.atlChange !== undefined && data.atlChange !== null && data.atlChange <= 50;
+  // Near ATH: within 10% of all-time high (set by analyzeToken based on athChange)
   const nearATH = data.nearATH === true;
   
   if (nearATL && !nearATH) {
-    const strength = (20 - data.atlChange) / 18;
+    // Strength: closer to ATL = stronger signal (0% = max strength, 50% = min strength)
+    const strength = (50 - data.atlChange) / 48;
     const points = lerp(SIGNAL_WEIGHTS.PRICE_POSITION.min, SIGNAL_WEIGHTS.PRICE_POSITION.max, strength);
     score += points;
     activeSignals.push({ name: 'Near All-Time Low', value: `+${data.atlChange?.toFixed(1)}%`, points: +points, type: 'bullish' });
