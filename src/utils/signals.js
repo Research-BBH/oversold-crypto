@@ -342,31 +342,35 @@ export const calculateSignalScore = (data) => {
     bearish: { label: 'Near ATH', weight: SIGNAL_WEIGHTS.PRICE_POSITION.max, active: false },
   };
   
-  // Near ATL: within 50% of all-time low (atlChange is positive, e.g., +30% means 30% above ATL)
-  const nearATL = data.atlChange !== undefined && data.atlChange !== null && data.atlChange <= 50;
-  // Near ATH: within 10% of all-time high (athChange is negative, e.g., -5% means 5% below ATH)
-  // Only use data.nearATH if athChange confirms it (or if athChange isn't available)
+  // atlChange: percentage above ATL (e.g., 39 means 39% above ATL)
+  // athChange: percentage from ATH (e.g., -85 means 85% below ATH)
+  const atlChangeValue = data.atlChange;
   const athChangeValue = data.athChange !== undefined && data.athChange !== null ? data.athChange : -100;
-  const nearATH = athChangeValue > -10;  // Within 10% of ATH
+  
+  // Near ATL: within 50% of all-time low
+  const nearATL = atlChangeValue !== undefined && atlChangeValue !== null && atlChangeValue <= 50;
+  // Near ATH: within 10% of all-time high
+  const nearATH = athChangeValue > -10;
   
   // Debug: log the values
   console.log('Price Position Debug:', { 
-    atlChange: data.atlChange, 
-    athChange: data.athChange, 
+    atlChange: atlChangeValue, 
+    athChange: athChangeValue, 
     nearATL, 
     nearATH,
-    dataNearATH: data.nearATH 
+    rawAtlChange: data.atlChange,
+    rawAthChange: data.athChange
   });
   
   if (nearATL && !nearATH) {
     // Strength: closer to ATL = stronger signal (0% = max strength, 50% = min strength)
-    const strength = (50 - data.atlChange) / 48;
+    const strength = (50 - atlChangeValue) / 48;
     const points = lerp(SIGNAL_WEIGHTS.PRICE_POSITION.min, SIGNAL_WEIGHTS.PRICE_POSITION.max, strength);
     score += points;
-    activeSignals.push({ name: 'Near All-Time Low', value: `+${data.atlChange?.toFixed(1)}%`, points: +points, type: 'bullish' });
+    activeSignals.push({ name: 'Near All-Time Low', value: `+${atlChangeValue?.toFixed(1)}%`, points: +points, type: 'bullish' });
     positionPair.bullish.active = true;
     positionPair.bullish.points = points;
-    positionPair.bullish.label = `Near ATL (+${data.atlChange?.toFixed(1)}%)`;
+    positionPair.bullish.label = `Near ATL (+${atlChangeValue?.toFixed(1)}%)`;
   } else if (nearATH && !nearATL) {
     const athPct = Math.abs(athChangeValue);
     const strength = (10 - athPct) / 8;
@@ -517,6 +521,15 @@ export const getSignalStrength = (score) => {
  * Analyze token with all signals
  */
 export const analyzeToken = (token, historicalData = null) => {
+  // Debug: Log token ATL/ATH data at the start
+  console.log('=== analyzeToken called ===', {
+    symbol: token.symbol,
+    price: token.price,
+    athChange: token.athChange,
+    atlChange: token.atlChange,
+    hasHistoricalData: !!historicalData
+  });
+  
   const analysis = {
     token: token.symbol,
     price: token.price,
