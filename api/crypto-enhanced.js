@@ -421,12 +421,15 @@ const calculateSignalScore = (token, signals, fundingRate, rawData = {}) => {
     bearish: { label: 'Near ATH', weight: SIGNAL_WEIGHTS.PRICE_POSITION.max, active: false },
   };
   
-  const nearATL = token.atlChange !== undefined && token.atlChange !== null && token.atlChange <= 20;
-  const nearATH = signals.nearATH === true;
+  // atlChange: percentage above ATL (e.g., 39 means 39% above ATL) - within 50% is "near"
+  // athChange: percentage from ATH (e.g., -85 means 85% below ATH) - within 10% is "near"
+  const nearATL = token.atlChange !== undefined && token.atlChange !== null && token.atlChange <= 50;
+  const athChangeValue = token.athChange !== undefined && token.athChange !== null ? token.athChange : -100;
+  const nearATH = athChangeValue > -10;  // Within 10% of ATH
   
   if (nearATL && !nearATH) {
-    // Scale: 20% from ATL = 3pts, 10% = 6pts, 5% = 8pts, <2% = 10pts
-    const strength = (20 - token.atlChange) / 18; // 0 at 20%, 1 at 2%
+    // Scale: 50% from ATL = 3pts, 25% = 6pts, 10% = 8pts, <5% = 10pts
+    const strength = (50 - token.atlChange) / 48; // 0 at 50%, 1 at 2%
     const points = lerp(SIGNAL_WEIGHTS.PRICE_POSITION.min, SIGNAL_WEIGHTS.PRICE_POSITION.max, strength);
     score += points;
     activeSignals.push({ name: 'Near All-Time Low', value: `+${token.atlChange?.toFixed(1)}%`, points: +points, category: 'position' });
@@ -435,8 +438,8 @@ const calculateSignalScore = (token, signals, fundingRate, rawData = {}) => {
     positionPair.bullish.points = points;
     positionPair.bullish.label = `Near ATL (+${token.atlChange?.toFixed(1)}%)`;
   } else if (nearATH && !nearATL) {
-    // For ATH, we use the athChange if available, else give minimum points
-    const athPct = token.athChange !== undefined ? Math.abs(token.athChange) : 10;
+    // For ATH, we use the athChange directly
+    const athPct = Math.abs(athChangeValue);
     const strength = (10 - athPct) / 8; // 0 at 10%, 1 at 2%
     const points = lerp(SIGNAL_WEIGHTS.PRICE_POSITION.min, SIGNAL_WEIGHTS.PRICE_POSITION.max, Math.max(0, strength));
     score -= points;
