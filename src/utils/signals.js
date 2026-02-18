@@ -344,8 +344,19 @@ export const calculateSignalScore = (data) => {
   
   // Near ATL: within 50% of all-time low (atlChange is positive, e.g., +30% means 30% above ATL)
   const nearATL = data.atlChange !== undefined && data.atlChange !== null && data.atlChange <= 50;
-  // Near ATH: within 10% of all-time high (set by analyzeToken based on athChange)
-  const nearATH = data.nearATH === true;
+  // Near ATH: within 10% of all-time high (athChange is negative, e.g., -5% means 5% below ATH)
+  // Only use data.nearATH if athChange confirms it (or if athChange isn't available)
+  const athChangeValue = data.athChange !== undefined && data.athChange !== null ? data.athChange : -100;
+  const nearATH = athChangeValue > -10;  // Within 10% of ATH
+  
+  // Debug: log the values
+  console.log('Price Position Debug:', { 
+    atlChange: data.atlChange, 
+    athChange: data.athChange, 
+    nearATL, 
+    nearATH,
+    dataNearATH: data.nearATH 
+  });
   
   if (nearATL && !nearATH) {
     // Strength: closer to ATL = stronger signal (0% = max strength, 50% = min strength)
@@ -357,7 +368,7 @@ export const calculateSignalScore = (data) => {
     positionPair.bullish.points = points;
     positionPair.bullish.label = `Near ATL (+${data.atlChange?.toFixed(1)}%)`;
   } else if (nearATH && !nearATL) {
-    const athPct = data.athChange !== undefined ? Math.abs(data.athChange) : 10;
+    const athPct = Math.abs(athChangeValue);
     const strength = (10 - athPct) / 8;
     const points = lerp(SIGNAL_WEIGHTS.PRICE_POSITION.min, SIGNAL_WEIGHTS.PRICE_POSITION.max, Math.max(0, strength));
     score -= points;
