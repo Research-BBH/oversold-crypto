@@ -1435,8 +1435,6 @@ if (signalFilters.size > 0) {
                         </div>
                       </div>
 
-                      {/* Mobile: compact table row — xs only (< 640px) */}
-                      <div className="sm:hidden">
                       {/* Mobile xs: 2-column layout — only very narrow screens (< 400px) */}
                       <div className="min-[400px]:hidden">
                         <div className="grid px-2 py-2.5 gap-x-2 items-center" style={{gridTemplateColumns: '1fr auto'}}>
