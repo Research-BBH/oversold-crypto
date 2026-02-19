@@ -32,7 +32,7 @@ export const TermsPage = ({ onBack, darkMode, setDarkMode }) => (
         </button>
         <ThemeToggle darkMode={darkMode} setDarkMode={setDarkMode} />
       </div>
-      <h1 className="text-4xl font-black mb-2">
+      <h1 className="text-2xl sm:text-4xl font-black mb-2">
         <span className="bg-gradient-to-r from-blue-500 via-purple-500 to-pink-500 bg-clip-text text-transparent">
           Terms of Service
         </span>
@@ -44,7 +44,7 @@ export const TermsPage = ({ onBack, darkMode, setDarkMode }) => (
       <div
         className={`${
           darkMode ? 'bg-white/5 border-white/10' : 'bg-white border-gray-200'
-        } border rounded-2xl p-8 mb-8 space-y-6`}
+        } border rounded-2xl p-4 sm:p-8 mb-8 space-y-6`}
       >
         <section>
           <h2 className="text-2xl font-bold mb-3">1. Acceptance of Terms</h2>
