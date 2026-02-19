@@ -949,26 +949,30 @@ if (signalFilters.size > 0) {
 
             {/* ── MOBILE: native select dropdown ── */}
             <div className="sm:hidden">
-              <select
-                value={cat}
-                onChange={(e) => setCat(e.target.value)}
-                className={`w-full rounded-xl px-3 py-2 text-sm font-medium cursor-pointer appearance-none focus:outline-none focus:ring-2 focus:ring-orange-500/40 ${
-                  darkMode
-                    ? 'bg-white/5 border border-white/10 text-white'
-                    : 'bg-white border border-gray-200 text-gray-900'
-                } ${cat !== 'all' ? 'border-orange-500/50 text-orange-400' : ''}`}
-                style={{
-                  backgroundImage: `url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 24 24' stroke='%239ca3af'%3E%3Cpath stroke-linecap='round' stroke-linejoin='round' stroke-width='2' d='M19 9l-7 7-7-7'%3E%3C/path%3E%3C/svg%3E")`,
-                  backgroundRepeat: 'no-repeat',
-                  backgroundPosition: 'right 12px center',
-                  backgroundSize: '16px',
-                  paddingRight: '36px',
-                }}
-              >
-                {CATEGORIES.map((c) => (
-                  <option key={c.id} value={c.id}>{c.icon} {c.name}</option>
-                ))}
-              </select>
+              <div className="relative">
+                <span className={`absolute left-3 top-1/2 -translate-y-1/2 text-[10px] font-semibold uppercase tracking-wide pointer-events-none ${darkMode ? 'text-gray-500' : 'text-gray-400'}`}>
+                  Category
+                </span>
+                <select
+                  value={cat}
+                  onChange={(e) => setCat(e.target.value)}
+                  className={`w-full rounded-xl pl-20 pr-9 py-2 text-sm font-medium cursor-pointer appearance-none focus:outline-none focus:ring-2 focus:ring-orange-500/40 ${
+                    darkMode
+                      ? 'bg-white/5 border border-white/10 text-white'
+                      : 'bg-white border border-gray-200 text-gray-900'
+                  } ${cat !== 'all' ? 'border-orange-500/50 text-orange-400' : ''}`}
+                  style={{
+                    backgroundImage: `url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 24 24' stroke='%239ca3af'%3E%3Cpath stroke-linecap='round' stroke-linejoin='round' stroke-width='2' d='M19 9l-7 7-7-7'%3E%3C/path%3E%3C/svg%3E")`,
+                    backgroundRepeat: 'no-repeat',
+                    backgroundPosition: 'right 12px center',
+                    backgroundSize: '16px',
+                  }}
+                >
+                  {CATEGORIES.map((c) => (
+                    <option key={c.id} value={c.id}>{c.icon} {c.name}</option>
+                  ))}
+                </select>
+              </div>
             </div>
 
             {/* ── DESKTOP: original scrollable pill row ── */}
