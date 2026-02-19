@@ -1235,44 +1235,44 @@ if (signalFilters.size > 0) {
 
             {/* Table Body */}
             <div>
-              {/* Mobile column header — compact (xs only, < 640px) */}
-              <div className={`sm:hidden grid px-2 py-1.5 border-b gap-x-2 ${darkMode ? 'border-white/10 bg-white/[0.02]' : 'border-gray-100 bg-gray-50'}`} style={{gridTemplateColumns: '1fr auto'}}>
-                <div
-                  className={`text-[10px] font-semibold uppercase tracking-wide cursor-pointer ${darkMode ? 'text-gray-500 hover:text-gray-300' : 'text-gray-400 hover:text-gray-700'}`}
-                  onClick={() => { setSortBy(sortBy === 'rank_asc' ? 'rank_desc' : 'rank_asc'); setPreset(null); setRsiFilter(null); }}
-                >
+              {/* Mobile column header — 2-col (< 400px) */}
+              <div className={`min-[400px]:hidden grid px-2 py-1.5 border-b gap-x-2 ${darkMode ? 'border-white/10 bg-white/[0.02]' : 'border-gray-100 bg-gray-50'}`} style={{gridTemplateColumns: '1fr auto'}}>
+                <div className={`text-[10px] font-semibold uppercase tracking-wide cursor-pointer ${darkMode ? 'text-gray-500 hover:text-gray-300' : 'text-gray-400 hover:text-gray-700'}`} onClick={() => { setSortBy(sortBy === 'rank_asc' ? 'rank_desc' : 'rank_asc'); setPreset(null); setRsiFilter(null); }}>
                   Coin {sortBy === 'rank_asc' ? '↑' : sortBy === 'rank_desc' ? '↓' : ''}
                 </div>
-                <div className={`text-[10px] font-semibold uppercase tracking-wide text-right ${darkMode ? 'text-gray-500' : 'text-gray-400'}`}>
-                  Price · 24H · MCap
+                <div className={`text-[10px] font-semibold uppercase tracking-wide text-right ${darkMode ? 'text-gray-500' : 'text-gray-400'}`}>Price · 24H · MCap</div>
+              </div>
+
+              {/* Mobile column header — 5-col (400px–640px) */}
+              <div className={`hidden min-[400px]:grid sm:hidden px-2 py-1.5 border-b gap-x-1 ${darkMode ? 'border-white/10 bg-white/[0.02]' : 'border-gray-100 bg-gray-50'}`} style={{gridTemplateColumns: '1fr 76px 44px 58px 24px'}}>
+                <div className={`text-[10px] font-semibold uppercase tracking-wide cursor-pointer ${darkMode ? 'text-gray-500 hover:text-gray-300' : 'text-gray-400 hover:text-gray-700'}`} onClick={() => { setSortBy(sortBy === 'rank_asc' ? 'rank_desc' : 'rank_asc'); setPreset(null); setRsiFilter(null); }}>
+                  Coin {sortBy === 'rank_asc' ? '↑' : sortBy === 'rank_desc' ? '↓' : ''}
                 </div>
+                <div className={`text-[10px] font-semibold uppercase tracking-wide text-right cursor-pointer ${darkMode ? 'text-gray-500 hover:text-gray-300' : 'text-gray-400 hover:text-gray-700'}`} onClick={() => { setSortBy(sortBy === 'price_desc' ? 'price_asc' : 'price_desc'); setPreset(null); setRsiFilter(null); }}>
+                  Price {sortBy.startsWith('price') ? (sortBy === 'price_asc' ? '↑' : '↓') : ''}
+                </div>
+                <div className={`text-[10px] font-semibold uppercase tracking-wide text-right cursor-pointer ${darkMode ? 'text-gray-500 hover:text-gray-300' : 'text-gray-400 hover:text-gray-700'}`} onClick={() => { setSortBy(sortBy === 'change24h_desc' ? 'change24h_asc' : 'change24h_desc'); setPreset(null); setRsiFilter(null); }}>
+                  24H {sortBy.startsWith('change24h') ? (sortBy === 'change24h_asc' ? '↑' : '↓') : ''}
+                </div>
+                <div className={`text-[10px] font-semibold uppercase tracking-wide text-right cursor-pointer ${sortBy.startsWith('mcap') ? 'text-orange-500' : darkMode ? 'text-gray-500 hover:text-gray-300' : 'text-gray-400 hover:text-gray-700'}`} onClick={() => { setSortBy(sortBy === 'mcap_desc' ? 'mcap_asc' : 'mcap_desc'); setPreset(null); setRsiFilter(null); }}>
+                  MCap {sortBy.startsWith('mcap') ? (sortBy === 'mcap_asc' ? '↑' : '↓') : '▼'}
+                </div>
+                <div />
               </div>
 
               {/* Mobile column header — full (sm–lg, 640px–1024px) */}
               <div className={`hidden sm:grid lg:hidden px-2 py-1.5 border-b gap-x-2 ${darkMode ? 'border-white/10 bg-white/[0.02]' : 'border-gray-100 bg-gray-50'}`} style={{gridTemplateColumns: '28px 1fr 88px 52px 64px 28px'}}>
                 <div className={`text-[10px] font-semibold text-right ${darkMode ? 'text-gray-500' : 'text-gray-400'}`}>#</div>
-                <div
-                  className={`text-[10px] font-semibold uppercase tracking-wide cursor-pointer ${darkMode ? 'text-gray-500 hover:text-gray-300' : 'text-gray-400 hover:text-gray-700'}`}
-                  onClick={() => { setSortBy(sortBy === 'rank_asc' ? 'rank_desc' : 'rank_asc'); setPreset(null); setRsiFilter(null); }}
-                >
+                <div className={`text-[10px] font-semibold uppercase tracking-wide cursor-pointer ${darkMode ? 'text-gray-500 hover:text-gray-300' : 'text-gray-400 hover:text-gray-700'}`} onClick={() => { setSortBy(sortBy === 'rank_asc' ? 'rank_desc' : 'rank_asc'); setPreset(null); setRsiFilter(null); }}>
                   Coin {sortBy === 'rank_asc' ? '↑' : sortBy === 'rank_desc' ? '↓' : ''}
                 </div>
-                <div
-                  className={`text-[10px] font-semibold uppercase tracking-wide text-right cursor-pointer ${darkMode ? 'text-gray-500 hover:text-gray-300' : 'text-gray-400 hover:text-gray-700'}`}
-                  onClick={() => { setSortBy(sortBy === 'price_desc' ? 'price_asc' : 'price_desc'); setPreset(null); setRsiFilter(null); }}
-                >
+                <div className={`text-[10px] font-semibold uppercase tracking-wide text-right cursor-pointer ${darkMode ? 'text-gray-500 hover:text-gray-300' : 'text-gray-400 hover:text-gray-700'}`} onClick={() => { setSortBy(sortBy === 'price_desc' ? 'price_asc' : 'price_desc'); setPreset(null); setRsiFilter(null); }}>
                   Price {sortBy.startsWith('price') ? (sortBy === 'price_asc' ? '↑' : '↓') : ''}
                 </div>
-                <div
-                  className={`text-[10px] font-semibold uppercase tracking-wide text-right cursor-pointer ${darkMode ? 'text-gray-500 hover:text-gray-300' : 'text-gray-400 hover:text-gray-700'}`}
-                  onClick={() => { setSortBy(sortBy === 'change24h_desc' ? 'change24h_asc' : 'change24h_desc'); setPreset(null); setRsiFilter(null); }}
-                >
+                <div className={`text-[10px] font-semibold uppercase tracking-wide text-right cursor-pointer ${darkMode ? 'text-gray-500 hover:text-gray-300' : 'text-gray-400 hover:text-gray-700'}`} onClick={() => { setSortBy(sortBy === 'change24h_desc' ? 'change24h_asc' : 'change24h_desc'); setPreset(null); setRsiFilter(null); }}>
                   24H {sortBy.startsWith('change24h') ? (sortBy === 'change24h_asc' ? '↑' : '↓') : ''}
                 </div>
-                <div
-                  className={`text-[10px] font-semibold uppercase tracking-wide text-right cursor-pointer ${sortBy.startsWith('mcap') ? 'text-orange-500' : darkMode ? 'text-gray-500 hover:text-gray-300' : 'text-gray-400 hover:text-gray-700'}`}
-                  onClick={() => { setSortBy(sortBy === 'mcap_desc' ? 'mcap_asc' : 'mcap_desc'); setPreset(null); setRsiFilter(null); }}
-                >
+                <div className={`text-[10px] font-semibold uppercase tracking-wide text-right cursor-pointer ${sortBy.startsWith('mcap') ? 'text-orange-500' : darkMode ? 'text-gray-500 hover:text-gray-300' : 'text-gray-400 hover:text-gray-700'}`} onClick={() => { setSortBy(sortBy === 'mcap_desc' ? 'mcap_asc' : 'mcap_desc'); setPreset(null); setRsiFilter(null); }}>
                   MCap {sortBy.startsWith('mcap') ? (sortBy === 'mcap_asc' ? '↑' : '↓') : '▼'}
                 </div>
                 <div />
