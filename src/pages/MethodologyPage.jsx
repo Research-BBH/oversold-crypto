@@ -10,7 +10,7 @@ const Section = ({ children, darkMode, className = '' }) => (
   <div
     className={`${
       darkMode ? 'bg-white/5 border-white/10' : 'bg-white border-gray-200'
-    } border rounded-2xl p-8 mb-8 ${className}`}
+    } border rounded-2xl p-4 sm:p-8 mb-8 ${className}`}
   >
     {children}
   </div>
@@ -115,7 +115,7 @@ export const MethodologyPage = ({ onBack, darkMode, setDarkMode }) => (
 
       {/* Title */}
       <div className="mb-12">
-        <h1 className="text-5xl font-black mb-3">
+        <h1 className="text-3xl sm:text-5xl font-black mb-3">
           <span className="bg-gradient-to-r from-red-500 via-orange-500 to-yellow-500 bg-clip-text text-transparent">
             Methodology
           </span>
@@ -185,7 +185,7 @@ export const MethodologyPage = ({ onBack, darkMode, setDarkMode }) => (
       {/* RSI CALCULATION */}
       {/* ============================================================ */}
       <Section darkMode={darkMode}>
-        <h2 className="text-3xl font-bold mb-6">Understanding RSI</h2>
+        <h2 className="text-xl sm:text-3xl font-bold mb-6">Understanding RSI</h2>
 
         <div className="mb-8">
           <h3 className={`text-xl font-semibold mb-3 ${darkMode ? 'text-orange-400' : 'text-orange-600'}`}>
@@ -245,7 +245,7 @@ export const MethodologyPage = ({ onBack, darkMode, setDarkMode }) => (
 
       {/* RSI Interpretation */}
       <div className="mb-8">
-        <h2 className="text-3xl font-bold mb-6">Interpreting RSI Values</h2>
+        <h2 className="text-xl sm:text-3xl font-bold mb-6">Interpreting RSI Values</h2>
         <div className="grid md:grid-cols-2 gap-4">
           <div className={`${darkMode ? 'bg-red-500/10 border-red-500/30' : 'bg-red-50 border-red-200'} border rounded-2xl p-6`}>
             <div className="flex items-center gap-3 mb-3">
@@ -298,7 +298,7 @@ export const MethodologyPage = ({ onBack, darkMode, setDarkMode }) => (
       {/* GRADUATED SIGNAL SCORING SYSTEM */}
       {/* ============================================================ */}
       <Section darkMode={darkMode}>
-        <h2 className="text-3xl font-bold mb-2">⚖️ Unified Momentum Score</h2>
+        <h2 className="text-xl sm:text-3xl font-bold mb-2">⚖️ Unified Momentum Score</h2>
         <p className={`mb-6 leading-relaxed ${darkMode ? 'text-gray-300' : 'text-gray-700'}`}>
           Our signal system produces a single score from <strong>−100</strong> (max bearish) to{' '}
           <strong>+100</strong> (max bullish). Each of the 8 signal categories has both a bullish and a
@@ -525,7 +525,7 @@ export const MethodologyPage = ({ onBack, darkMode, setDarkMode }) => (
       {/* SCORE INTERPRETATION */}
       {/* ============================================================ */}
       <Section darkMode={darkMode}>
-        <h2 className="text-3xl font-bold mb-6">📈 Interpreting Signal Scores</h2>
+        <h2 className="text-xl sm:text-3xl font-bold mb-6">📈 Interpreting Signal Scores</h2>
 
         <div className="grid md:grid-cols-5 gap-4 mb-6">
           {[
@@ -561,7 +561,7 @@ export const MethodologyPage = ({ onBack, darkMode, setDarkMode }) => (
       {/* MARKET CAP RELIABILITY */}
       {/* ============================================================ */}
       <Section darkMode={darkMode}>
-        <h2 className="text-3xl font-bold mb-6">🛡️ Market Cap Reliability</h2>
+        <h2 className="text-xl sm:text-3xl font-bold mb-6">🛡️ Market Cap Reliability</h2>
         <p className={`mb-6 leading-relaxed ${darkMode ? 'text-gray-300' : 'text-gray-700'}`}>
           Signal scores are adjusted based on market capitalization because technical analysis is more
           reliable for liquid, large-cap assets. The adjustment multiplies the raw score before
@@ -624,7 +624,7 @@ export const MethodologyPage = ({ onBack, darkMode, setDarkMode }) => (
       {/* STABLECOIN FILTERING */}
       {/* ============================================================ */}
       <Section darkMode={darkMode}>
-        <h2 className="text-3xl font-bold mb-6">🚫 Stablecoin Filtering</h2>
+        <h2 className="text-xl sm:text-3xl font-bold mb-6">🚫 Stablecoin Filtering</h2>
         <p className={`mb-4 leading-relaxed ${darkMode ? 'text-gray-300' : 'text-gray-700'}`}>
           Stablecoins are excluded from all analysis and rankings because technical analysis
           does not meaningfully apply to price-pegged assets. The detection uses a multi-layered
@@ -659,7 +659,7 @@ export const MethodologyPage = ({ onBack, darkMode, setDarkMode }) => (
       {/* TOKEN CATEGORIES */}
       {/* ============================================================ */}
       <Section darkMode={darkMode}>
-        <h2 className="text-3xl font-bold mb-6">🏷️ Token Categories</h2>
+        <h2 className="text-xl sm:text-3xl font-bold mb-6">🏷️ Token Categories</h2>
         <p className={`mb-4 leading-relaxed ${darkMode ? 'text-gray-300' : 'text-gray-700'}`}>
           Each token is classified into one of six categories based on its CoinGecko ID, name, and
           symbol using keyword matching and curated allowlists. You can filter the dashboard by
@@ -687,7 +687,7 @@ export const MethodologyPage = ({ onBack, darkMode, setDarkMode }) => (
       {/* DASHBOARD FILTERS */}
       {/* ============================================================ */}
       <Section darkMode={darkMode}>
-        <h2 className="text-3xl font-bold mb-6">🎯 Dashboard Filters</h2>
+        <h2 className="text-xl sm:text-3xl font-bold mb-6">🎯 Dashboard Filters</h2>
         <p className={`mb-6 leading-relaxed ${darkMode ? 'text-gray-300' : 'text-gray-700'}`}>
           The main table can be filtered using four rows of combinable signal filters. Multiple
           filters can be active simultaneously — tokens must match <strong>all</strong> selected
@@ -772,7 +772,7 @@ export const MethodologyPage = ({ onBack, darkMode, setDarkMode }) => (
       {/* MAIN TABLE COLUMNS */}
       {/* ============================================================ */}
       <Section darkMode={darkMode}>
-        <h2 className="text-3xl font-bold mb-6">📋 Main Table Columns</h2>
+        <h2 className="text-xl sm:text-3xl font-bold mb-6">📋 Main Table Columns</h2>
         <p className={`mb-4 leading-relaxed ${darkMode ? 'text-gray-300' : 'text-gray-700'}`}>
           The dashboard table displays the following data for each token, all of which are sortable
           by clicking the column header:
@@ -801,7 +801,7 @@ export const MethodologyPage = ({ onBack, darkMode, setDarkMode }) => (
       {/* TOKEN DETAIL PAGE */}
       {/* ============================================================ */}
       <Section darkMode={darkMode}>
-        <h2 className="text-3xl font-bold mb-6">🔍 Token Detail Page</h2>
+        <h2 className="text-xl sm:text-3xl font-bold mb-6">🔍 Token Detail Page</h2>
         <p className={`mb-4 leading-relaxed ${darkMode ? 'text-gray-300' : 'text-gray-700'}`}>
           Clicking any token opens a detailed analysis view with several sections:
         </p>
@@ -843,7 +843,7 @@ export const MethodologyPage = ({ onBack, darkMode, setDarkMode }) => (
       {/* DATA SOURCES & LIMITATIONS */}
       {/* ============================================================ */}
       <Section darkMode={darkMode}>
-        <h2 className="text-3xl font-bold mb-6">Data Sources & Technical Details</h2>
+        <h2 className="text-xl sm:text-3xl font-bold mb-6">Data Sources & Technical Details</h2>
 
         <div className="space-y-5">
           <div>
@@ -927,7 +927,7 @@ export const MethodologyPage = ({ onBack, darkMode, setDarkMode }) => (
       {/* ADDITIONAL FEATURES */}
       {/* ============================================================ */}
       <Section darkMode={darkMode}>
-        <h2 className="text-3xl font-bold mb-6">✨ Additional Features</h2>
+        <h2 className="text-xl sm:text-3xl font-bold mb-6">✨ Additional Features</h2>
         <div className="space-y-4">
           <div className={`${darkMode ? 'bg-white/5' : 'bg-gray-50'} rounded-xl p-5`}>
             <h3 className="font-bold mb-2">⭐ Personal Watchlist</h3>
