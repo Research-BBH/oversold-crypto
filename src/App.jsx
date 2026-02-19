@@ -944,9 +944,10 @@ if (signalFilters.size > 0) {
             </button>
           </div>
 
-          {/* Row 2: Categories scroll + sort + volume */}
-          <div className="flex gap-2">
-            <div className="flex gap-1.5 overflow-x-auto pb-1 scrollbar-hide flex-1 min-w-0">
+          {/* Row 2: Categories + sort + volume */}
+          <div className="flex flex-col sm:flex-row gap-2">
+            {/* On mobile: wrap. On desktop: single-line scroll. */}
+            <div className="flex flex-wrap sm:flex-nowrap gap-1.5 sm:overflow-x-auto sm:pb-1 sm:scrollbar-hide flex-1 min-w-0">
               {CATEGORIES.map((c) => (
                 <button
                   key={c.id}
@@ -1391,10 +1392,10 @@ if (signalFilters.size > 0) {
                             <div className="font-mono text-sm font-semibold tabular-nums">{formatPrice(t.price)}</div>
                             <div className="flex items-center justify-end gap-2 mt-0.5">
                               <span className={`text-[11px] tabular-nums ${t.change24h >= 0 ? 'text-green-500' : 'text-red-500'}`}>
-                                {t.change24h >= 0 ? '+' : ''}{t.change24h?.toFixed(1)}%
+                                <span className={darkMode ? 'text-gray-600' : 'text-gray-400'}>24h </span>{t.change24h >= 0 ? '+' : ''}{t.change24h?.toFixed(1)}%
                               </span>
                               <span className={`text-[11px] tabular-nums ${t.change7d >= 0 ? 'text-green-500' : 'text-red-500'}`}>
-                                <span className={darkMode ? 'text-gray-600' : 'text-gray-400'}>7d</span> {t.change7d >= 0 ? '+' : ''}{t.change7d?.toFixed(1)}%
+                                <span className={darkMode ? 'text-gray-600' : 'text-gray-400'}>7d </span>{t.change7d >= 0 ? '+' : ''}{t.change7d?.toFixed(1)}%
                               </span>
                             </div>
                           </div>
@@ -1430,6 +1431,7 @@ if (signalFilters.size > 0) {
                                 <span className={`w-1.5 h-1.5 rounded-full shrink-0 ${
                                   t.signalScore >= 50 ? 'bg-green-500' : t.signalScore >= 25 ? 'bg-emerald-400' : t.signalScore > -25 ? 'bg-gray-400' : t.signalScore > -50 ? 'bg-orange-400' : 'bg-red-500'
                                 }`} />
+                                <span className="opacity-50 font-normal">SIG</span>
                                 {t.signalScore >= 0 ? '+' : ''}{t.signalScore}
                               </div>
                             ) : null}
