@@ -47,7 +47,6 @@ export default function App() {
   const [useEnhancedAPI, setUseEnhancedAPI] = useState(true);
   const [showLowVolume, setShowLowVolume] = useState(false);
   const [showMobileFilters, setShowMobileFilters] = useState(false);
-  const [showMobileCategories, setShowMobileCategories] = useState(false);
   const [tablePage, setTablePage] = useState(1);
   const [rowsPerPage, setRowsPerPage] = useState(50);
   const [darkMode, setDarkMode] = useState(() => {
@@ -948,57 +947,29 @@ if (signalFilters.size > 0) {
           {/* Row 2: Categories + sort + volume */}
           <div className="flex flex-col sm:flex-row gap-2">
 
-            {/* ── MOBILE: collapsible category picker ── */}
-            <div className="sm:hidden flex gap-2">
-              <button
-                onClick={() => setShowMobileCategories(v => !v)}
-                className={`flex items-center gap-2 px-3 py-2 rounded-xl text-xs font-semibold transition-all flex-1 ${
-                  showMobileCategories
-                    ? darkMode ? 'bg-white/10 text-white border border-white/20' : 'bg-gray-200 text-gray-900 border border-gray-300'
-                    : darkMode ? 'bg-white/5 text-gray-300 border border-white/10' : 'bg-white text-gray-700 border border-gray-200'
-                }`}
+            {/* ── MOBILE: native select dropdown ── */}
+            <div className="sm:hidden">
+              <select
+                value={cat}
+                onChange={(e) => setCat(e.target.value)}
+                className={`w-full rounded-xl px-3 py-2 text-sm font-medium cursor-pointer appearance-none focus:outline-none focus:ring-2 focus:ring-orange-500/40 ${
+                  darkMode
+                    ? 'bg-white/5 border border-white/10 text-white'
+                    : 'bg-white border border-gray-200 text-gray-900'
+                } ${cat !== 'all' ? 'border-orange-500/50 text-orange-400' : ''}`}
+                style={{
+                  backgroundImage: `url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 24 24' stroke='%239ca3af'%3E%3Cpath stroke-linecap='round' stroke-linejoin='round' stroke-width='2' d='M19 9l-7 7-7-7'%3E%3C/path%3E%3C/svg%3E")`,
+                  backgroundRepeat: 'no-repeat',
+                  backgroundPosition: 'right 12px center',
+                  backgroundSize: '16px',
+                  paddingRight: '36px',
+                }}
               >
-                <span>
-                  {cat === 'all'
-                    ? '🌐 All Categories'
-                    : (() => { const c = CATEGORIES.find(x => x.id === cat); return c ? `${c.icon} ${c.name}` : 'Category'; })()}
-                </span>
-                {cat !== 'all' && (
-                  <span className="bg-orange-500 text-white text-[10px] font-bold px-1.5 py-0.5 rounded-full leading-none ml-auto">1</span>
-                )}
-                <svg className={`w-4 h-4 transition-transform ml-auto ${showMobileCategories ? 'rotate-180' : ''}`} fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
-                </svg>
-              </button>
-              {cat !== 'all' && (
-                <button
-                  onClick={() => setCat('all')}
-                  className={`px-3 py-2 rounded-xl text-xs font-medium ${darkMode ? 'bg-red-500/20 text-red-400 border border-red-500/30' : 'bg-red-50 text-red-600 border border-red-200'}`}
-                >
-                  Clear
-                </button>
-              )}
+                {CATEGORIES.map((c) => (
+                  <option key={c.id} value={c.id}>{c.icon} {c.name}</option>
+                ))}
+              </select>
             </div>
-            {/* Mobile category panel */}
-            {showMobileCategories && (
-              <div className={`sm:hidden rounded-2xl border p-3 ${darkMode ? 'bg-white/[0.03] border-white/10' : 'bg-white border-gray-200'}`}>
-                <div className="flex flex-wrap gap-1.5">
-                  {CATEGORIES.map((c) => (
-                    <button
-                      key={c.id}
-                      onClick={() => { setCat(c.id); setShowMobileCategories(false); }}
-                      className={`px-3 py-1.5 rounded-lg text-xs font-medium transition-all ${
-                        cat === c.id
-                          ? darkMode ? 'bg-white text-gray-900' : 'bg-gray-900 text-white'
-                          : darkMode ? 'bg-white/5 text-gray-400 border border-white/10' : 'bg-gray-100 text-gray-600 border border-gray-200'
-                      }`}
-                    >
-                      {c.icon} {c.name}
-                    </button>
-                  ))}
-                </div>
-              </div>
-            )}
 
             {/* ── DESKTOP: original scrollable pill row ── */}
             <div className="hidden sm:flex gap-1.5 overflow-x-auto pb-1 scrollbar-hide flex-1 min-w-0">
