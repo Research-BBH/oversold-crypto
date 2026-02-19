@@ -32,7 +32,7 @@ export const PrivacyPage = ({ onBack, darkMode, setDarkMode }) => (
         </button>
         <ThemeToggle darkMode={darkMode} setDarkMode={setDarkMode} />
       </div>
-      <h1 className="text-4xl font-black mb-2">
+      <h1 className="text-2xl sm:text-4xl font-black mb-2">
         <span className="bg-gradient-to-r from-green-500 via-blue-500 to-purple-500 bg-clip-text text-transparent">
           Privacy Policy
         </span>
@@ -44,7 +44,7 @@ export const PrivacyPage = ({ onBack, darkMode, setDarkMode }) => (
       <div
         className={`${
           darkMode ? 'bg-white/5 border-white/10' : 'bg-white border-gray-200'
-        } border rounded-2xl p-8 mb-8 space-y-6`}
+        } border rounded-2xl p-4 sm:p-8 mb-8 space-y-6`}
       >
         <section>
           <h2 className="text-2xl font-bold mb-3">1. Information We Collect</h2>
