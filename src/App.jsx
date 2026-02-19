@@ -47,6 +47,7 @@ export default function App() {
   const [useEnhancedAPI, setUseEnhancedAPI] = useState(true);
   const [showLowVolume, setShowLowVolume] = useState(false);
   const [showMobileFilters, setShowMobileFilters] = useState(false);
+  const [showMobileCategories, setShowMobileCategories] = useState(false);
   const [tablePage, setTablePage] = useState(1);
   const [rowsPerPage, setRowsPerPage] = useState(50);
   const [darkMode, setDarkMode] = useState(() => {
@@ -946,42 +947,88 @@ if (signalFilters.size > 0) {
 
           {/* Row 2: Categories + sort + volume */}
           <div className="flex flex-col sm:flex-row gap-2">
-            {/* On mobile: wrap. On desktop: single-line scroll. */}
-            <div className="flex flex-wrap sm:flex-nowrap gap-1.5 sm:overflow-x-auto sm:pb-1 sm:scrollbar-hide flex-1 min-w-0">
+
+            {/* ── MOBILE: collapsible category picker ── */}
+            <div className="sm:hidden flex gap-2">
+              <button
+                onClick={() => setShowMobileCategories(v => !v)}
+                className={`flex items-center gap-2 px-3 py-2 rounded-xl text-xs font-semibold transition-all flex-1 ${
+                  showMobileCategories
+                    ? darkMode ? 'bg-white/10 text-white border border-white/20' : 'bg-gray-200 text-gray-900 border border-gray-300'
+                    : darkMode ? 'bg-white/5 text-gray-300 border border-white/10' : 'bg-white text-gray-700 border border-gray-200'
+                }`}
+              >
+                <span>
+                  {cat === 'all'
+                    ? '🌐 All Categories'
+                    : (() => { const c = CATEGORIES.find(x => x.id === cat); return c ? `${c.icon} ${c.name}` : 'Category'; })()}
+                </span>
+                {cat !== 'all' && (
+                  <span className="bg-orange-500 text-white text-[10px] font-bold px-1.5 py-0.5 rounded-full leading-none ml-auto">1</span>
+                )}
+                <svg className={`w-4 h-4 transition-transform ml-auto ${showMobileCategories ? 'rotate-180' : ''}`} fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+                </svg>
+              </button>
+              {cat !== 'all' && (
+                <button
+                  onClick={() => setCat('all')}
+                  className={`px-3 py-2 rounded-xl text-xs font-medium ${darkMode ? 'bg-red-500/20 text-red-400 border border-red-500/30' : 'bg-red-50 text-red-600 border border-red-200'}`}
+                >
+                  Clear
+                </button>
+              )}
+            </div>
+            {/* Mobile category panel */}
+            {showMobileCategories && (
+              <div className={`sm:hidden rounded-2xl border p-3 ${darkMode ? 'bg-white/[0.03] border-white/10' : 'bg-white border-gray-200'}`}>
+                <div className="flex flex-wrap gap-1.5">
+                  {CATEGORIES.map((c) => (
+                    <button
+                      key={c.id}
+                      onClick={() => { setCat(c.id); setShowMobileCategories(false); }}
+                      className={`px-3 py-1.5 rounded-lg text-xs font-medium transition-all ${
+                        cat === c.id
+                          ? darkMode ? 'bg-white text-gray-900' : 'bg-gray-900 text-white'
+                          : darkMode ? 'bg-white/5 text-gray-400 border border-white/10' : 'bg-gray-100 text-gray-600 border border-gray-200'
+                      }`}
+                    >
+                      {c.icon} {c.name}
+                    </button>
+                  ))}
+                </div>
+              </div>
+            )}
+
+            {/* ── DESKTOP: original scrollable pill row ── */}
+            <div className="hidden sm:flex gap-1.5 overflow-x-auto pb-1 scrollbar-hide flex-1 min-w-0">
               {CATEGORIES.map((c) => (
                 <button
                   key={c.id}
                   onClick={() => setCat(c.id)}
                   className={`px-3 py-2 rounded-xl text-xs whitespace-nowrap transition-all font-medium ${
                     cat === c.id
-                      ? darkMode
-                        ? 'bg-white text-gray-900'
-                        : 'bg-gray-900 text-white'
-                      : darkMode
-                      ? 'bg-white/5 text-gray-400 hover:bg-white/10 border border-white/5'
-                      : 'bg-white text-gray-600 hover:bg-gray-50 border border-gray-200'
+                      ? darkMode ? 'bg-white text-gray-900' : 'bg-gray-900 text-white'
+                      : darkMode ? 'bg-white/5 text-gray-400 hover:bg-white/10 border border-white/5' : 'bg-white text-gray-600 hover:bg-gray-50 border border-gray-200'
                   }`}
                 >
                   {c.icon} {c.name}
                 </button>
               ))}
             </div>
+
             <div className="flex gap-1.5 shrink-0">
               {!showWL && (
                 <button
                   onClick={() => setShowLowVolume((v) => !v)}
                   className={`px-3 py-2 rounded-xl text-xs font-medium transition-all whitespace-nowrap ${
                     !showLowVolume
-                      ? darkMode
-                        ? 'bg-blue-500/20 text-blue-400 border border-blue-500/40'
-                        : 'bg-blue-100 text-blue-600 border border-blue-300'
-                      : darkMode
-                      ? 'bg-white/5 text-gray-400 hover:bg-white/10 border border-white/5'
-                      : 'bg-white text-gray-600 hover:bg-gray-50 border border-gray-200'
+                      ? darkMode ? 'bg-blue-500/20 text-blue-400 border border-blue-500/40' : 'bg-blue-100 text-blue-600 border border-blue-300'
+                      : darkMode ? 'bg-white/5 text-gray-400 hover:bg-white/10 border border-white/5' : 'bg-white text-gray-600 hover:bg-gray-50 border border-gray-200'
                   }`}
                   title={!showLowVolume ? 'Volume filter active: Only showing >$200K' : 'Volume filter off: Showing all tokens'}
                 >
-                  💧<span className="hidden sm:inline ml-1">{!showLowVolume ? '>$200K' : 'All'}</span>
+                  💧 {!showLowVolume ? '>$200K' : 'All'}
                 </button>
               )}
               <select
@@ -1212,6 +1259,35 @@ if (signalFilters.size > 0) {
 
             {/* Table Body */}
             <div>
+              {/* Mobile column header */}
+              <div className={`lg:hidden grid px-2 py-1.5 border-b gap-x-2 ${darkMode ? 'border-white/10 bg-white/[0.02]' : 'border-gray-100 bg-gray-50'}`} style={{gridTemplateColumns: '28px 1fr 88px 52px 64px'}}>
+                <div className={`text-[10px] font-semibold text-right ${darkMode ? 'text-gray-500' : 'text-gray-400'}`}>#</div>
+                <div
+                  className={`text-[10px] font-semibold uppercase tracking-wide cursor-pointer ${darkMode ? 'text-gray-500 hover:text-gray-300' : 'text-gray-400 hover:text-gray-700'}`}
+                  onClick={() => { setSortBy(sortBy === 'rank_asc' ? 'rank_desc' : 'rank_asc'); setPreset(null); setRsiFilter(null); }}
+                >
+                  Coin {sortBy === 'rank_asc' ? '↑' : sortBy === 'rank_desc' ? '↓' : ''}
+                </div>
+                <div
+                  className={`text-[10px] font-semibold uppercase tracking-wide text-right cursor-pointer ${darkMode ? 'text-gray-500 hover:text-gray-300' : 'text-gray-400 hover:text-gray-700'}`}
+                  onClick={() => { setSortBy(sortBy === 'price_desc' ? 'price_asc' : 'price_desc'); setPreset(null); setRsiFilter(null); }}
+                >
+                  Price {sortBy.startsWith('price') ? (sortBy === 'price_asc' ? '↑' : '↓') : ''}
+                </div>
+                <div
+                  className={`text-[10px] font-semibold uppercase tracking-wide text-right cursor-pointer ${darkMode ? 'text-gray-500 hover:text-gray-300' : 'text-gray-400 hover:text-gray-700'}`}
+                  onClick={() => { setSortBy(sortBy === 'change24h_desc' ? 'change24h_asc' : 'change24h_desc'); setPreset(null); setRsiFilter(null); }}
+                >
+                  24H {sortBy.startsWith('change24h') ? (sortBy === 'change24h_asc' ? '↑' : '↓') : ''}
+                </div>
+                <div
+                  className={`text-[10px] font-semibold uppercase tracking-wide text-right cursor-pointer ${darkMode ? 'text-gray-500 hover:text-gray-300' : 'text-gray-400 hover:text-gray-700'} ${sortBy.startsWith('mcap') ? 'text-orange-500' : ''}`}
+                  onClick={() => { setSortBy(sortBy === 'mcap_desc' ? 'mcap_asc' : 'mcap_desc'); setPreset(null); setRsiFilter(null); }}
+                >
+                  MCap {sortBy.startsWith('mcap') ? (sortBy === 'mcap_asc' ? '↑' : '↓') : '▼'}
+                </div>
+              </div>
+
               {filtered.length === 0 ? (
                 <div className="text-center py-16">
                   <p className="text-4xl mb-3">🔍</p>
@@ -1369,91 +1445,53 @@ if (signalFilters.size > 0) {
                         </div>
                       </div>
 
-                      {/* Mobile: card layout */}
-                      <div className="lg:hidden px-3 py-3">
-                        {/* Top row: rank + icon + name | price + changes */}
-                        <div className="flex items-center justify-between gap-2">
-                          <div className="flex items-center gap-2.5 min-w-0 flex-1">
-                            <span className={`text-[10px] w-5 text-right tabular-nums shrink-0 ${darkMode ? 'text-gray-600' : 'text-gray-400'}`}>
-                              {t.rank}
-                            </span>
-                            <img src={t.image} alt={t.symbol} className="w-8 h-8 rounded-full shrink-0 bg-gray-800" />
+                      {/* Mobile: compact table row */}
+                      <div className="lg:hidden">
+                        <div className="grid px-2 py-2.5 gap-x-2" style={{gridTemplateColumns: '28px 1fr 88px 52px 64px'}}>
+                          {/* # */}
+                          <div className={`flex items-center justify-end text-[10px] tabular-nums ${darkMode ? 'text-gray-600' : 'text-gray-400'}`}>
+                            {t.rank}
+                          </div>
+                          {/* Coin */}
+                          <div className="flex items-center gap-2 min-w-0">
+                            <img src={t.image} alt={t.symbol} className="w-7 h-7 rounded-full shrink-0 bg-gray-800" />
                             <div className="min-w-0">
-                              <div className="flex items-center gap-1.5">
-                                <span className="font-semibold text-sm">{t.symbol}</span>
-                                {t.rsi !== null && t.rsi < 25 && <span className="text-[10px]">🔴</span>}
-                                {t.rsi !== null && t.rsi > 75 && <span className="text-[10px]">🟢</span>}
+                              <div className="flex items-center gap-1">
+                                <span className="font-semibold text-xs leading-tight">{t.symbol}</span>
+                                {t.rsi !== null && t.rsi < 25 && <span className="text-[9px]">🔴</span>}
+                                {t.rsi !== null && t.rsi > 75 && <span className="text-[9px]">🟢</span>}
                               </div>
-                              <p className="text-[11px] text-gray-500 truncate max-w-[100px]">{t.name}</p>
+                              {/* RSI + Signal under coin name */}
+                              <div className="flex items-center gap-1 mt-0.5">
+                                {t.rsi !== null ? (() => {
+                                  const rs = getRsiStyle(t.rsi);
+                                  return (
+                                    <span className={`text-[10px] font-mono font-bold px-1 py-0 rounded ${rs.bg} ${rs.text} border`}>
+                                      {t.rsi.toFixed(0)}
+                                    </span>
+                                  );
+                                })() : <span className={`text-[10px] ${darkMode ? 'text-gray-600' : 'text-gray-400'}`}>--</span>}
+                                {t.signalScore !== undefined && t.signalScore !== null && (
+                                  <span className={`text-[10px] font-semibold tabular-nums ${
+                                    t.signalScore >= 25 ? 'text-green-500' : t.signalScore <= -25 ? 'text-red-400' : darkMode ? 'text-gray-500' : 'text-gray-400'
+                                  }`}>
+                                    {t.signalScore >= 0 ? '+' : ''}{t.signalScore}
+                                  </span>
+                                )}
+                              </div>
                             </div>
                           </div>
-                          {/* Price + changes */}
-                          <div className="text-right shrink-0">
-                            <div className="font-mono text-sm font-semibold tabular-nums">{formatPrice(t.price)}</div>
-                            <div className="flex items-center justify-end gap-2 mt-0.5">
-                              <span className={`text-[11px] tabular-nums ${t.change24h >= 0 ? 'text-green-500' : 'text-red-500'}`}>
-                                <span className={darkMode ? 'text-gray-600' : 'text-gray-400'}>24h </span>{t.change24h >= 0 ? '+' : ''}{t.change24h?.toFixed(1)}%
-                              </span>
-                              <span className={`text-[11px] tabular-nums ${t.change7d >= 0 ? 'text-green-500' : 'text-red-500'}`}>
-                                <span className={darkMode ? 'text-gray-600' : 'text-gray-400'}>7d </span>{t.change7d >= 0 ? '+' : ''}{t.change7d?.toFixed(1)}%
-                              </span>
-                            </div>
+                          {/* Price */}
+                          <div className="flex items-center justify-end font-mono text-xs tabular-nums font-semibold">
+                            {formatPrice(t.price)}
                           </div>
-                        </div>
-
-                        {/* Bottom row: RSI badge + signal + sparkline + actions */}
-                        <div className="flex items-center justify-between mt-2 pl-[58px]">
-                          <div className="flex items-center gap-2">
-                            {/* RSI value — core metric of this app */}
-                            {t.rsi !== null ? (() => {
-                              const rs = getRsiStyle(t.rsi);
-                              return (
-                                <span className={`text-[11px] font-mono font-semibold px-2 py-0.5 rounded border ${rs.bg} ${rs.text}`}>
-                                  RSI {t.rsi.toFixed(1)}
-                                </span>
-                              );
-                            })() : (
-                              <span className="text-[11px] text-gray-600 px-2 py-0.5">--</span>
-                            )}
-                            {/* Signal score */}
-                            {t.signalScore !== undefined && t.signalScore !== null ? (
-                              <div className={`inline-flex items-center gap-1 px-2 py-0.5 rounded text-[11px] font-semibold tabular-nums ${
-                                t.signalScore >= 50
-                                  ? 'bg-green-500/20 text-green-400'
-                                  : t.signalScore >= 25
-                                  ? 'bg-emerald-500/15 text-emerald-400'
-                                  : t.signalScore > -25
-                                  ? 'bg-gray-500/15 text-gray-400'
-                                  : t.signalScore > -50
-                                  ? 'bg-orange-500/15 text-orange-400'
-                                  : 'bg-red-500/20 text-red-400'
-                              }`}>
-                                <span className={`w-1.5 h-1.5 rounded-full shrink-0 ${
-                                  t.signalScore >= 50 ? 'bg-green-500' : t.signalScore >= 25 ? 'bg-emerald-400' : t.signalScore > -25 ? 'bg-gray-400' : t.signalScore > -50 ? 'bg-orange-400' : 'bg-red-500'
-                                }`} />
-                                <span className="opacity-50 font-normal">SIG</span>
-                                {t.signalScore >= 0 ? '+' : ''}{t.signalScore}
-                              </div>
-                            ) : null}
-                                <span className="hidden sm:block">
-                                  <Spark data={t.sparkline} color={sparkColor} h={20} />
-                                </span>
+                          {/* 24H */}
+                          <div className={`flex items-center justify-end text-xs tabular-nums font-medium ${t.change24h >= 0 ? 'text-green-500' : 'text-red-500'}`}>
+                            {t.change24h >= 0 ? '+' : ''}{t.change24h?.toFixed(1)}%
                           </div>
-                          <div className="flex items-center gap-0.5">
-                            <button
-                              onClick={(e) => openTokenPage(t.id, e)}
-                              className={`p-2 rounded-md ${darkMode ? 'hover:bg-white/10 text-gray-500' : 'hover:bg-gray-100 text-gray-400'} transition-colors`}
-                            >
-                              <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14" />
-                              </svg>
-                            </button>
-                            <button
-                              onClick={(e) => toggleWatch(t.id, e)}
-                              className={`p-2 text-base hover:scale-110 transition-transform ${watched ? 'text-yellow-400' : darkMode ? 'text-gray-600' : 'text-gray-400'}`}
-                            >
-                              {watched ? '★' : '☆'}
-                            </button>
+                          {/* MCap */}
+                          <div className={`flex items-center justify-end text-xs tabular-nums ${darkMode ? 'text-gray-400' : 'text-gray-600'}`}>
+                            ${formatNumber(t.mcap)}
                           </div>
                         </div>
                       </div>
