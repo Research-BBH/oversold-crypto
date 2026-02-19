@@ -1452,9 +1452,6 @@ if (signalFilters.size > 0) {
                                       ? 'bg-orange-500/15 text-orange-400'
                                       : 'bg-red-500/20 text-red-400'
                                   }`}>
-                                    <span className={`w-1 h-1 rounded-full shrink-0 ${
-                                      t.signalScore >= 50 ? 'bg-green-500' : t.signalScore >= 25 ? 'bg-emerald-400' : t.signalScore > -25 ? 'bg-gray-400' : t.signalScore > -50 ? 'bg-orange-400' : 'bg-red-500'
-                                    }`} />
                                     <span className="opacity-50 font-normal">Sig</span>
                                     {t.signalScore >= 0 ? '+' : ''}{t.signalScore}
                                   </span>
