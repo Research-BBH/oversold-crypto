@@ -1236,7 +1236,7 @@ if (signalFilters.size > 0) {
             {/* Table Body */}
             <div>
               {/* Mobile column header */}
-              <div className={`lg:hidden grid px-2 py-1.5 border-b gap-x-2 ${darkMode ? 'border-white/10 bg-white/[0.02]' : 'border-gray-100 bg-gray-50'}`} style={{gridTemplateColumns: '28px 1fr 88px 52px 64px'}}>
+              <div className={`lg:hidden grid px-2 py-1.5 border-b gap-x-2 ${darkMode ? 'border-white/10 bg-white/[0.02]' : 'border-gray-100 bg-gray-50'}`} style={{gridTemplateColumns: '28px 1fr 88px 52px 64px 28px'}}>
                 <div className={`text-[10px] font-semibold text-right ${darkMode ? 'text-gray-500' : 'text-gray-400'}`}>#</div>
                 <div
                   className={`text-[10px] font-semibold uppercase tracking-wide cursor-pointer ${darkMode ? 'text-gray-500 hover:text-gray-300' : 'text-gray-400 hover:text-gray-700'}`}
@@ -1262,6 +1262,7 @@ if (signalFilters.size > 0) {
                 >
                   MCap {sortBy.startsWith('mcap') ? (sortBy === 'mcap_asc' ? '↑' : '↓') : '▼'}
                 </div>
+                <div />
               </div>
 
               {filtered.length === 0 ? (
@@ -1423,7 +1424,7 @@ if (signalFilters.size > 0) {
 
                       {/* Mobile: compact table row */}
                       <div className="lg:hidden">
-                        <div className="grid px-2 py-2.5 gap-x-2" style={{gridTemplateColumns: '28px 1fr 88px 52px 64px'}}>
+                        <div className="grid px-2 py-2.5 gap-x-2" style={{gridTemplateColumns: '28px 1fr 88px 52px 64px 28px'}}>
                           {/* # */}
                           <div className={`flex items-center justify-end text-[10px] tabular-nums ${darkMode ? 'text-gray-600' : 'text-gray-400'}`}>
                             {t.rank}
@@ -1462,6 +1463,15 @@ if (signalFilters.size > 0) {
                           {/* MCap */}
                           <div className={`flex items-center justify-end text-xs tabular-nums ${darkMode ? 'text-gray-400' : 'text-gray-600'}`}>
                             ${formatNumber(t.mcap)}
+                          </div>
+                          {/* Star */}
+                          <div className="flex items-center justify-center">
+                            <button
+                              onClick={(e) => toggleWatch(t.id, e)}
+                              className={`text-sm hover:scale-110 transition-transform ${watched ? 'text-yellow-400' : darkMode ? 'text-gray-600 hover:text-yellow-400' : 'text-gray-300 hover:text-yellow-500'}`}
+                            >
+                              {watched ? '★' : '☆'}
+                            </button>
                           </div>
                         </div>
                       </div>
