@@ -48,14 +48,15 @@ export const WatchlistPage = ({ tokens, watchlist, onRemove, onBack, user, darkM
         <div className="flex items-center justify-between mb-8">
           <button
             onClick={onBack}
-            className={`flex items-center gap-2 ${
+            className={`flex items-center gap-2 shrink-0 ${
               darkMode ? 'text-gray-400 hover:text-white' : 'text-gray-600 hover:text-gray-900'
             } transition-colors`}
           >
-            <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <svg className="w-5 h-5 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
             </svg>
-            Back to Dashboard
+            <span className="hidden xs:inline sm:inline">Back to Dashboard</span>
+            <span className="sm:hidden">Back</span>
           </button>
           <ThemeToggle darkMode={darkMode} setDarkMode={setDarkMode} />
         </div>
@@ -71,7 +72,7 @@ export const WatchlistPage = ({ tokens, watchlist, onRemove, onBack, user, darkM
             </svg>
           </div>
           <div>
-            <h1 className="text-3xl font-black">My Watchlist</h1>
+            <h1 className="text-2xl sm:text-3xl font-black">My Watchlist</h1>
             <p className={darkMode ? 'text-gray-400' : 'text-gray-600'}>
               {user?.name && <span>Welcome, {user.name.split(' ')[0]}! </span>}
               {watchedTokens.length} {watchedTokens.length === 1 ? 'token' : 'tokens'} saved
@@ -103,8 +104,17 @@ export const WatchlistPage = ({ tokens, watchlist, onRemove, onBack, user, darkM
               darkMode ? 'bg-white/5 border-white/10' : 'bg-white border-gray-200'
             } border rounded-2xl overflow-hidden`}
           >
+            {/* Mobile column header — xs only */}
+            <div className={`sm:hidden grid px-2 py-1.5 border-b gap-x-1 ${darkMode ? 'border-white/10 bg-white/[0.02]' : 'border-gray-100 bg-gray-50'}`} style={{gridTemplateColumns: '1fr 80px 60px 56px'}}>
+              <div className={`text-[10px] font-semibold uppercase tracking-wide ${darkMode ? 'text-gray-500' : 'text-gray-400'}`}>Coin</div>
+              <div className={`text-[10px] font-semibold uppercase tracking-wide text-right cursor-pointer ${darkMode ? 'text-gray-500 hover:text-gray-300' : 'text-gray-400 hover:text-gray-700'}`} onClick={() => toggleSort('price')}>Price {sortBy.startsWith('price') ? (sortBy === 'price_asc' ? '↑' : '↓') : ''}</div>
+              <div className={`text-[10px] font-semibold uppercase tracking-wide text-right cursor-pointer ${darkMode ? 'text-gray-500 hover:text-gray-300' : 'text-gray-400 hover:text-gray-700'}`} onClick={() => toggleSort('change24h')}>24H {sortBy.startsWith('change24h') ? (sortBy === 'change24h_asc' ? '↑' : '↓') : ''}</div>
+              <div />
+            </div>
+
+            {/* Desktop column header — sm+ */}
             <div
-              className={`hidden md:grid grid-cols-12 gap-4 px-6 py-4 border-b ${
+              className={`hidden sm:grid grid-cols-12 gap-4 px-4 sm:px-6 py-4 border-b ${
                 darkMode ? 'border-white/10' : 'border-gray-100'
               } text-xs text-gray-500 font-semibold uppercase tracking-wider`}
             >
@@ -182,98 +192,78 @@ export const WatchlistPage = ({ tokens, watchlist, onRemove, onBack, user, darkM
               {watchedTokens.map((t) => {
                 const rs = getRsiStyle(t.rsi);
                 return (
-                  <div
-                    key={t.id}
-                    className={`grid grid-cols-12 gap-4 px-6 py-4 ${
-                      darkMode ? 'hover:bg-white/[0.03]' : 'hover:bg-gray-50'
-                    } transition-colors items-center`}
-                  >
-                    <div className="col-span-12 md:col-span-4 flex items-center gap-3">
-                      <span
-                        className={`text-xs w-6 text-right ${
-                          darkMode ? 'text-gray-600' : 'text-gray-400'
-                        }`}
-                      >
-                        #{t.rank}
-                      </span>
-                      <img
-                        src={t.image}
-                        alt={t.symbol}
-                        className="w-10 h-10 rounded-full bg-gray-800"
-                      />
-                      <div>
-                        <div className="flex items-center gap-2">
-                          <span className="font-semibold">{t.symbol}</span>
-                          {t.rsi !== null && t.rsi < 25 && <span className="text-xs">🔴</span>}
-                          {t.rsi !== null && t.rsi > 75 && <span className="text-xs">🟢</span>}
+                  <div key={t.id} className={`${darkMode ? 'hover:bg-white/[0.03]' : 'hover:bg-gray-50'} transition-colors`}>
+
+                    {/* Compact row — xs only (< 640px) */}
+                    <div className="sm:hidden grid px-2 py-2.5 gap-x-1 items-start" style={{gridTemplateColumns: '1fr 80px 60px 56px'}}>
+                      {/* Coin + signal */}
+                      <div className="flex items-center gap-2 min-w-0">
+                        <span className={`text-[10px] tabular-nums shrink-0 w-5 text-right ${darkMode ? 'text-gray-600' : 'text-gray-400'}`}>#{t.rank}</span>
+                        <img src={t.image} alt={t.symbol} className="w-7 h-7 rounded-full shrink-0 bg-gray-800" />
+                        <div className="min-w-0">
+                          <div className="flex items-center gap-1">
+                            <span className="font-semibold text-xs leading-tight truncate">{t.symbol}</span>
+                            {t.rsi !== null && t.rsi < 25 && <span className="text-[9px] shrink-0">🔴</span>}
+                            {t.rsi !== null && t.rsi > 75 && <span className="text-[9px] shrink-0">🟢</span>}
+                          </div>
+                          <div className={`inline-flex items-center gap-1 mt-0.5 px-1.5 py-0.5 rounded text-[10px] font-bold border ${rs.bg} ${rs.text}`}>
+                            RSI {t.rsi !== null ? t.rsi.toFixed(0) : '--'}
+                          </div>
                         </div>
-                        <p className="text-sm text-gray-500">{t.name}</p>
+                      </div>
+                      {/* Price */}
+                      <div className="flex items-start justify-end pt-0.5 font-mono text-xs tabular-nums font-semibold">{formatPrice(t.price)}</div>
+                      {/* 24H */}
+                      <div className={`flex items-start justify-end pt-0.5 text-xs tabular-nums font-medium ${t.change24h >= 0 ? 'text-green-500' : 'text-red-500'}`}>
+                        {t.change24h >= 0 ? '+' : ''}{t.change24h?.toFixed(1)}%
+                      </div>
+                      {/* Actions */}
+                      <div className="flex items-start justify-end gap-1 pt-0.5">
+                        <a href={`#/token/${t.id}`} className={`p-1.5 rounded-lg ${darkMode ? 'hover:bg-white/10 text-gray-400 hover:text-white' : 'hover:bg-gray-100 text-gray-400 hover:text-gray-600'} transition-colors`} title="View details">
+                          <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"/></svg>
+                        </a>
+                        <button onClick={(e) => onRemove(t.id, e)} className="p-1.5 rounded-lg hover:bg-red-500/20 text-gray-400 hover:text-red-400 transition-colors" title="Remove">
+                          <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/></svg>
+                        </button>
                       </div>
                     </div>
-                    <div className="col-span-4 md:col-span-2 text-right font-mono">
-                      {formatPrice(t.price)}
-                    </div>
-                    <div className="col-span-4 md:col-span-2 text-right text-sm">
-                      <span className={t.change24h >= 0 ? 'text-green-500' : 'text-red-500'}>
-                        {t.change24h >= 0 ? '+' : ''}
-                        {t.change24h?.toFixed(1)}%
-                      </span>
-                      <span className={darkMode ? 'text-gray-600' : 'text-gray-400'}> / </span>
-                      <span className={t.change7d >= 0 ? 'text-green-500' : 'text-red-500'}>
-                        {t.change7d >= 0 ? '+' : ''}
-                        {t.change7d?.toFixed(1)}%
-                      </span>
-                    </div>
-                    <div className="col-span-2 md:col-span-2 flex justify-center">
-                      <div
-                        className={`inline-flex items-center gap-2 px-3 py-1.5 rounded-lg border ${rs.bg} ${rs.text}`}
-                      >
-                        <span className={`w-1.5 h-1.5 rounded-full ${rs.dot}`} />
-                        <span className="font-bold text-sm">
-                          {t.rsi !== null ? t.rsi.toFixed(0) : '--'}
-                        </span>
+
+                    {/* Full row — sm+ (>= 640px) */}
+                    <div className="hidden sm:grid grid-cols-12 gap-4 px-4 sm:px-6 py-4 items-center">
+                      <div className="col-span-4 flex items-center gap-3">
+                        <span className={`text-xs w-6 text-right ${darkMode ? 'text-gray-600' : 'text-gray-400'}`}>#{t.rank}</span>
+                        <img src={t.image} alt={t.symbol} className="w-10 h-10 rounded-full bg-gray-800" />
+                        <div>
+                          <div className="flex items-center gap-2">
+                            <span className="font-semibold">{t.symbol}</span>
+                            {t.rsi !== null && t.rsi < 25 && <span className="text-xs">🔴</span>}
+                            {t.rsi !== null && t.rsi > 75 && <span className="text-xs">🟢</span>}
+                          </div>
+                          <p className="text-sm text-gray-500">{t.name}</p>
+                        </div>
+                      </div>
+                      <div className="col-span-2 text-right font-mono">{formatPrice(t.price)}</div>
+                      <div className="col-span-2 text-right text-sm">
+                        <span className={t.change24h >= 0 ? 'text-green-500' : 'text-red-500'}>{t.change24h >= 0 ? '+' : ''}{t.change24h?.toFixed(1)}%</span>
+                        <span className={darkMode ? 'text-gray-600' : 'text-gray-400'}> / </span>
+                        <span className={t.change7d >= 0 ? 'text-green-500' : 'text-red-500'}>{t.change7d >= 0 ? '+' : ''}{t.change7d?.toFixed(1)}%</span>
+                      </div>
+                      <div className="col-span-2 flex justify-center">
+                        <div className={`inline-flex items-center gap-2 px-3 py-1.5 rounded-lg border ${rs.bg} ${rs.text}`}>
+                          <span className={`w-1.5 h-1.5 rounded-full ${rs.dot}`} />
+                          <span className="font-bold text-sm">{t.rsi !== null ? t.rsi.toFixed(0) : '--'}</span>
+                        </div>
+                      </div>
+                      <div className="col-span-2 flex justify-center gap-2">
+                        <a href={`#/token/${t.id}`} className={`p-2 rounded-lg ${darkMode ? 'hover:bg-white/10 text-gray-400 hover:text-white' : 'hover:bg-gray-100 text-gray-400 hover:text-gray-600'} transition-colors`} title="View details">
+                          <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"/></svg>
+                        </a>
+                        <button onClick={(e) => onRemove(t.id, e)} className="p-2 rounded-lg hover:bg-red-500/20 text-gray-400 hover:text-red-400 transition-colors" title="Remove">
+                          <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/></svg>
+                        </button>
                       </div>
                     </div>
-                    <div className="col-span-2 md:col-span-2 flex justify-center gap-2">
-                      <a
-                        href={`#/token/${t.id}`}
-                        className={`p-2 rounded-lg ${
-                          darkMode
-                            ? 'hover:bg-white/10 text-gray-400 hover:text-white'
-                            : 'hover:bg-gray-100 text-gray-400 hover:text-gray-600'
-                        } transition-colors`}
-                        title="View details"
-                      >
-                        <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                          <path
-                            strokeLinecap="round"
-                            strokeLinejoin="round"
-                            strokeWidth={2}
-                            d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"
-                          />
-                          <path
-                            strokeLinecap="round"
-                            strokeLinejoin="round"
-                            strokeWidth={2}
-                            d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"
-                          />
-                        </svg>
-                      </a>
-                      <button
-                        onClick={(e) => onRemove(t.id, e)}
-                        className="p-2 rounded-lg hover:bg-red-500/20 text-gray-400 hover:text-red-400 transition-colors"
-                        title="Remove"
-                      >
-                        <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                          <path
-                            strokeLinecap="round"
-                            strokeLinejoin="round"
-                            strokeWidth={2}
-                            d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"
-                          />
-                        </svg>
-                      </button>
-                    </div>
+
                   </div>
                 );
               })}
