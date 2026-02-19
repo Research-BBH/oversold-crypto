@@ -625,7 +625,7 @@ if (signalFilters.size > 0) {
         <div className="mb-4 sm:mb-5">
 
           {/* ── MOBILE: collapsible panel ── */}
-          <div className="sm:hidden">
+          <div className="lg:hidden">
             {/* Toggle button row */}
             <div className="flex items-center gap-2 mb-2">
               <button
@@ -948,7 +948,7 @@ if (signalFilters.size > 0) {
           <div className="flex flex-col sm:flex-row gap-2">
 
             {/* ── MOBILE: native select dropdown ── */}
-            <div className="sm:hidden">
+            <div className="lg:hidden">
               <div className="relative">
                 <span className={`absolute left-3 top-1/2 -translate-y-1/2 text-[10px] font-semibold uppercase tracking-wide pointer-events-none ${darkMode ? 'text-gray-500' : 'text-gray-400'}`}>
                   Category
@@ -1235,48 +1235,14 @@ if (signalFilters.size > 0) {
 
             {/* Table Body */}
             <div>
-              {/* Mobile column header — 2-col (< 400px) */}
-              <div className={`min-[400px]:hidden grid px-2 py-1.5 border-b gap-x-2 ${darkMode ? 'border-white/10 bg-white/[0.02]' : 'border-gray-100 bg-gray-50'}`} style={{gridTemplateColumns: '1fr auto'}}>
+              {/* Mobile column header — 2-col (< 1024px) */}
+              <div className={`lg:hidden grid px-2 py-1.5 border-b gap-x-2 ${darkMode ? 'border-white/10 bg-white/[0.02]' : 'border-gray-100 bg-gray-50'}`} style={{gridTemplateColumns: '1fr auto'}}>
                 <div className={`text-[10px] font-semibold uppercase tracking-wide cursor-pointer ${darkMode ? 'text-gray-500 hover:text-gray-300' : 'text-gray-400 hover:text-gray-700'}`} onClick={() => { setSortBy(sortBy === 'rank_asc' ? 'rank_desc' : 'rank_asc'); setPreset(null); setRsiFilter(null); }}>
                   Coin {sortBy === 'rank_asc' ? '↑' : sortBy === 'rank_desc' ? '↓' : ''}
                 </div>
                 <div className={`text-[10px] font-semibold uppercase tracking-wide text-right ${darkMode ? 'text-gray-500' : 'text-gray-400'}`}>Price · 24H · MCap</div>
               </div>
 
-              {/* Mobile column header — 5-col (400px–640px) */}
-              <div className={`hidden min-[400px]:grid sm:hidden px-2 py-1.5 border-b gap-x-1 ${darkMode ? 'border-white/10 bg-white/[0.02]' : 'border-gray-100 bg-gray-50'}`} style={{gridTemplateColumns: '1fr 76px 44px 58px 24px'}}>
-                <div className={`text-[10px] font-semibold uppercase tracking-wide cursor-pointer ${darkMode ? 'text-gray-500 hover:text-gray-300' : 'text-gray-400 hover:text-gray-700'}`} onClick={() => { setSortBy(sortBy === 'rank_asc' ? 'rank_desc' : 'rank_asc'); setPreset(null); setRsiFilter(null); }}>
-                  Coin {sortBy === 'rank_asc' ? '↑' : sortBy === 'rank_desc' ? '↓' : ''}
-                </div>
-                <div className={`text-[10px] font-semibold uppercase tracking-wide text-right cursor-pointer ${darkMode ? 'text-gray-500 hover:text-gray-300' : 'text-gray-400 hover:text-gray-700'}`} onClick={() => { setSortBy(sortBy === 'price_desc' ? 'price_asc' : 'price_desc'); setPreset(null); setRsiFilter(null); }}>
-                  Price {sortBy.startsWith('price') ? (sortBy === 'price_asc' ? '↑' : '↓') : ''}
-                </div>
-                <div className={`text-[10px] font-semibold uppercase tracking-wide text-right cursor-pointer ${darkMode ? 'text-gray-500 hover:text-gray-300' : 'text-gray-400 hover:text-gray-700'}`} onClick={() => { setSortBy(sortBy === 'change24h_desc' ? 'change24h_asc' : 'change24h_desc'); setPreset(null); setRsiFilter(null); }}>
-                  24H {sortBy.startsWith('change24h') ? (sortBy === 'change24h_asc' ? '↑' : '↓') : ''}
-                </div>
-                <div className={`text-[10px] font-semibold uppercase tracking-wide text-right cursor-pointer ${sortBy.startsWith('mcap') ? 'text-orange-500' : darkMode ? 'text-gray-500 hover:text-gray-300' : 'text-gray-400 hover:text-gray-700'}`} onClick={() => { setSortBy(sortBy === 'mcap_desc' ? 'mcap_asc' : 'mcap_desc'); setPreset(null); setRsiFilter(null); }}>
-                  MCap {sortBy.startsWith('mcap') ? (sortBy === 'mcap_asc' ? '↑' : '↓') : '▼'}
-                </div>
-                <div />
-              </div>
-
-              {/* Mobile column header — full (sm–lg, 640px–1024px) */}
-              <div className={`hidden sm:grid lg:hidden px-2 py-1.5 border-b gap-x-2 ${darkMode ? 'border-white/10 bg-white/[0.02]' : 'border-gray-100 bg-gray-50'}`} style={{gridTemplateColumns: '28px 1fr 88px 52px 64px 28px'}}>
-                <div className={`text-[10px] font-semibold text-right ${darkMode ? 'text-gray-500' : 'text-gray-400'}`}>#</div>
-                <div className={`text-[10px] font-semibold uppercase tracking-wide cursor-pointer ${darkMode ? 'text-gray-500 hover:text-gray-300' : 'text-gray-400 hover:text-gray-700'}`} onClick={() => { setSortBy(sortBy === 'rank_asc' ? 'rank_desc' : 'rank_asc'); setPreset(null); setRsiFilter(null); }}>
-                  Coin {sortBy === 'rank_asc' ? '↑' : sortBy === 'rank_desc' ? '↓' : ''}
-                </div>
-                <div className={`text-[10px] font-semibold uppercase tracking-wide text-right cursor-pointer ${darkMode ? 'text-gray-500 hover:text-gray-300' : 'text-gray-400 hover:text-gray-700'}`} onClick={() => { setSortBy(sortBy === 'price_desc' ? 'price_asc' : 'price_desc'); setPreset(null); setRsiFilter(null); }}>
-                  Price {sortBy.startsWith('price') ? (sortBy === 'price_asc' ? '↑' : '↓') : ''}
-                </div>
-                <div className={`text-[10px] font-semibold uppercase tracking-wide text-right cursor-pointer ${darkMode ? 'text-gray-500 hover:text-gray-300' : 'text-gray-400 hover:text-gray-700'}`} onClick={() => { setSortBy(sortBy === 'change24h_desc' ? 'change24h_asc' : 'change24h_desc'); setPreset(null); setRsiFilter(null); }}>
-                  24H {sortBy.startsWith('change24h') ? (sortBy === 'change24h_asc' ? '↑' : '↓') : ''}
-                </div>
-                <div className={`text-[10px] font-semibold uppercase tracking-wide text-right cursor-pointer ${sortBy.startsWith('mcap') ? 'text-orange-500' : darkMode ? 'text-gray-500 hover:text-gray-300' : 'text-gray-400 hover:text-gray-700'}`} onClick={() => { setSortBy(sortBy === 'mcap_desc' ? 'mcap_asc' : 'mcap_desc'); setPreset(null); setRsiFilter(null); }}>
-                  MCap {sortBy.startsWith('mcap') ? (sortBy === 'mcap_asc' ? '↑' : '↓') : '▼'}
-                </div>
-                <div />
-              </div>
 
               {filtered.length === 0 ? (
                 <div className="text-center py-16">
@@ -1435,8 +1401,8 @@ if (signalFilters.size > 0) {
                         </div>
                       </div>
 
-                      {/* Mobile xs: 2-column layout — only very narrow screens (< 400px) */}
-                      <div className="min-[400px]:hidden">
+                      {/* Mobile: 2-col layout — all mobile (< 1024px) */}
+                      <div className="lg:hidden">
                         <div className="grid px-2 py-2.5 gap-x-2 items-center" style={{gridTemplateColumns: '1fr auto'}}>
                           {/* Left: rank + icon + symbol + sig */}
                           <div className="flex items-center gap-2 min-w-0">
@@ -1482,87 +1448,6 @@ if (signalFilters.size > 0) {
                         </div>
                       </div>
 
-                      {/* Mobile: 5-col grid — medium phones (400px–640px) */}
-                      <div className="hidden min-[400px]:block sm:hidden">
-                        <div className="grid px-2 py-2.5 gap-x-1 items-start" style={{gridTemplateColumns: '1fr 76px 44px 58px 24px'}}>
-                          <div className="flex items-center gap-2 min-w-0">
-                            <span className={`text-[10px] tabular-nums shrink-0 w-5 text-right ${darkMode ? 'text-gray-600' : 'text-gray-400'}`}>{t.rank}</span>
-                            <img src={t.image} alt={t.symbol} className="w-7 h-7 rounded-full shrink-0 bg-gray-800" />
-                            <div className="min-w-0">
-                              <div className="flex items-center gap-1">
-                                <span className="font-semibold text-xs leading-tight truncate">{t.symbol}</span>
-                                {t.rsi !== null && t.rsi < 25 && <span className="text-[9px] shrink-0">🔴</span>}
-                                {t.rsi !== null && t.rsi > 75 && <span className="text-[9px] shrink-0">🟢</span>}
-                              </div>
-                              <div className="flex items-center gap-1 mt-0.5">
-                                {t.signalScore !== undefined && t.signalScore !== null ? (
-                                  <span className={`inline-flex items-center gap-1 text-[10px] font-semibold tabular-nums whitespace-nowrap px-1.5 py-0.5 rounded ${
-                                    t.signalScore >= 50 ? 'bg-green-500/20 text-green-400'
-                                    : t.signalScore >= 25 ? 'bg-emerald-500/15 text-emerald-400'
-                                    : t.signalScore > -25 ? 'bg-gray-500/15 text-gray-400'
-                                    : t.signalScore > -50 ? 'bg-orange-500/15 text-orange-400'
-                                    : 'bg-red-500/20 text-red-400'
-                                  }`}>
-                                    <span className="opacity-50 font-normal">Sig</span>
-                                    {t.signalScore >= 0 ? '+' : ''}{t.signalScore}
-                                  </span>
-                                ) : (
-                                  <span className={`text-[10px] ${darkMode ? 'text-gray-600' : 'text-gray-400'}`}>--</span>
-                                )}
-                              </div>
-                            </div>
-                          </div>
-                          <div className="flex items-start justify-end pt-0.5 font-mono text-xs tabular-nums font-semibold">{formatPrice(t.price)}</div>
-                          <div className={`flex items-start justify-end pt-0.5 text-xs tabular-nums font-medium ${t.change24h >= 0 ? 'text-green-500' : 'text-red-500'}`}>{t.change24h >= 0 ? '+' : ''}{t.change24h?.toFixed(1)}%</div>
-                          <div className={`flex items-start justify-end pt-0.5 text-xs tabular-nums ${darkMode ? 'text-gray-400' : 'text-gray-600'}`}>${formatNumber(t.mcap)}</div>
-                          <div className="flex items-start justify-center pt-0.5">
-                            <button onClick={(e) => toggleWatch(t.id, e)} className={`text-sm hover:scale-110 transition-transform ${watched ? 'text-yellow-400' : darkMode ? 'text-gray-600 hover:text-yellow-400' : 'text-gray-300 hover:text-yellow-500'}`}>
-                              {watched ? '★' : '☆'}
-                            </button>
-                          </div>
-                        </div>
-                      </div>
-
-                      {/* Mobile: full table row — sm–lg (640px–1024px) */}
-                      <div className="hidden sm:block lg:hidden">
-                        <div className="grid px-2 py-2.5 gap-x-2" style={{gridTemplateColumns: '28px 1fr 88px 52px 64px 28px'}}>
-                          <div className={`flex items-center justify-end text-[10px] tabular-nums ${darkMode ? 'text-gray-600' : 'text-gray-400'}`}>{t.rank}</div>
-                          <div className="flex items-center gap-2 min-w-0">
-                            <img src={t.image} alt={t.symbol} className="w-7 h-7 rounded-full shrink-0 bg-gray-800" />
-                            <div className="min-w-0">
-                              <div className="flex items-center gap-1">
-                                <span className="font-semibold text-xs leading-tight truncate">{t.symbol}</span>
-                                {t.rsi !== null && t.rsi < 25 && <span className="text-[9px] shrink-0">🔴</span>}
-                                {t.rsi !== null && t.rsi > 75 && <span className="text-[9px] shrink-0">🟢</span>}
-                              </div>
-                              <div className="flex items-center gap-1 mt-0.5">
-                                {t.signalScore !== undefined && t.signalScore !== null ? (
-                                  <span className={`inline-flex items-center gap-1 text-[10px] font-semibold tabular-nums whitespace-nowrap px-1.5 py-0.5 rounded ${
-                                    t.signalScore >= 50 ? 'bg-green-500/20 text-green-400'
-                                    : t.signalScore >= 25 ? 'bg-emerald-500/15 text-emerald-400'
-                                    : t.signalScore > -25 ? 'bg-gray-500/15 text-gray-400'
-                                    : t.signalScore > -50 ? 'bg-orange-500/15 text-orange-400'
-                                    : 'bg-red-500/20 text-red-400'
-                                  }`}>
-                                    <span className="opacity-50 font-normal">Sig</span>
-                                    {t.signalScore >= 0 ? '+' : ''}{t.signalScore}
-                                  </span>
-                                ) : (
-                                  <span className={`text-[10px] ${darkMode ? 'text-gray-600' : 'text-gray-400'}`}>--</span>
-                                )}
-                              </div>
-                            </div>
-                          </div>
-                          <div className="flex items-center justify-end font-mono text-xs tabular-nums font-semibold">{formatPrice(t.price)}</div>
-                          <div className={`flex items-center justify-end text-xs tabular-nums font-medium ${t.change24h >= 0 ? 'text-green-500' : 'text-red-500'}`}>{t.change24h >= 0 ? '+' : ''}{t.change24h?.toFixed(1)}%</div>
-                          <div className={`flex items-center justify-end text-xs tabular-nums ${darkMode ? 'text-gray-400' : 'text-gray-600'}`}>${formatNumber(t.mcap)}</div>
-                          <div className="flex items-center justify-center">
-                            <button onClick={(e) => toggleWatch(t.id, e)} className={`text-sm hover:scale-110 transition-transform ${watched ? 'text-yellow-400' : darkMode ? 'text-gray-600 hover:text-yellow-400' : 'text-gray-300 hover:text-yellow-500'}`}>
-                              {watched ? '★' : '☆'}
-                            </button>
-                          </div>
-                        </div>
-                      </div>
                     </div>
                   );
                 })
