@@ -1461,22 +1461,16 @@ if (signalFilters.size > 0) {
                                 {t.rsi !== null && t.rsi < 25 && <span className="text-[9px]">🔴</span>}
                                 {t.rsi !== null && t.rsi > 75 && <span className="text-[9px]">🟢</span>}
                               </div>
-                              {/* RSI + Signal under coin name */}
+                              {/* Signal score under coin name */}
                               <div className="flex items-center gap-1 mt-0.5">
-                                {t.rsi !== null ? (() => {
-                                  const rs = getRsiStyle(t.rsi);
-                                  return (
-                                    <span className={`text-[10px] font-mono font-bold px-1 py-0 rounded ${rs.bg} ${rs.text} border`}>
-                                      {t.rsi.toFixed(0)}
-                                    </span>
-                                  );
-                                })() : <span className={`text-[10px] ${darkMode ? 'text-gray-600' : 'text-gray-400'}`}>--</span>}
-                                {t.signalScore !== undefined && t.signalScore !== null && (
+                                {t.signalScore !== undefined && t.signalScore !== null ? (
                                   <span className={`text-[10px] font-semibold tabular-nums ${
                                     t.signalScore >= 25 ? 'text-green-500' : t.signalScore <= -25 ? 'text-red-400' : darkMode ? 'text-gray-500' : 'text-gray-400'
                                   }`}>
-                                    {t.signalScore >= 0 ? '+' : ''}{t.signalScore}
+                                    <span className={`font-normal ${darkMode ? 'text-gray-600' : 'text-gray-400'}`}>Sig </span>{t.signalScore >= 0 ? '+' : ''}{t.signalScore}
                                   </span>
+                                ) : (
+                                  <span className={`text-[10px] ${darkMode ? 'text-gray-600' : 'text-gray-400'}`}>--</span>
                                 )}
                               </div>
                             </div>
