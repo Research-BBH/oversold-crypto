@@ -1006,7 +1006,7 @@ if (signalFilters.size > 0) {
                   💧 {!showLowVolume ? '>$200K' : 'All'}
                 </button>
               )}
-              <div className="relative flex-1">
+              <div className="relative ml-auto">
                 <span className={`absolute left-3 top-1/2 -translate-y-1/2 text-[10px] font-semibold uppercase tracking-wide pointer-events-none ${darkMode ? 'text-gray-500' : 'text-gray-400'}`}>
                   Sort
                 </span>
@@ -1017,7 +1017,7 @@ if (signalFilters.size > 0) {
                     setPreset(null);
                     setRsiFilter(null);
                   }}
-                  className={`w-full ${
+                  className={`${
                     darkMode ? 'bg-gray-900 border-white/10 text-white' : 'bg-white border-gray-200 text-gray-900'
                   } border rounded-xl pl-12 py-2 text-xs focus:outline-none cursor-pointer appearance-none`}
                   style={{
