@@ -992,11 +992,11 @@ if (signalFilters.size > 0) {
               ))}
             </div>
 
-            <div className="flex gap-1.5 shrink-0">
+            <div className="flex items-center gap-2">
               {!showWL && (
                 <button
                   onClick={() => setShowLowVolume((v) => !v)}
-                  className={`px-3 py-2 rounded-xl text-xs font-medium transition-all whitespace-nowrap ${
+                  className={`px-3 py-2 rounded-xl text-xs font-medium transition-all whitespace-nowrap shrink-0 ${
                     !showLowVolume
                       ? darkMode ? 'bg-blue-500/20 text-blue-400 border border-blue-500/40' : 'bg-blue-100 text-blue-600 border border-blue-300'
                       : darkMode ? 'bg-white/5 text-gray-400 hover:bg-white/10 border border-white/5' : 'bg-white text-gray-600 hover:bg-gray-50 border border-gray-200'
@@ -1006,45 +1006,46 @@ if (signalFilters.size > 0) {
                   💧 {!showLowVolume ? '>$200K' : 'All'}
                 </button>
               )}
-              <select
-                value={sortBy}
-                onChange={(e) => {
-                  setSortBy(e.target.value);
-                  setPreset(null);
-                  setRsiFilter(null);
-                }}
-                className={`${
-                  darkMode
-                    ? 'bg-gray-900 border-white/10 text-white'
-                    : 'bg-white border-gray-200 text-gray-900'
-                } border rounded-xl px-3 py-2 text-xs focus:outline-none cursor-pointer appearance-none`}
-                style={{
-                  backgroundImage: `url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 24 24' stroke='%239ca3af'%3E%3Cpath stroke-linecap='round' stroke-linejoin='round' stroke-width='2' d='M19 9l-7 7-7-7'%3E%3C/path%3E%3C/svg%3E")`,
-                  backgroundRepeat: 'no-repeat',
-                  backgroundPosition: 'right 8px center',
-                  backgroundSize: '14px',
-                  paddingRight: '28px',
-                  minWidth: '110px',
-                  maxWidth: '140px',
-                }}
-              >
-                <option value="rank_asc">Rank ↑</option>
-                <option value="rank_desc">Rank ↓</option>
-                <option value="price_asc">Price ↑</option>
-                <option value="price_desc">Price ↓</option>
-                <option value="volume_asc">Volume ↑</option>
-                <option value="volume_desc">Volume ↓</option>
-                <option value="mcap_asc">MCap ↑</option>
-                <option value="mcap_desc">MCap ↓</option>
-                <option value="rsi_asc">RSI ↑</option>
-                <option value="rsi_desc">RSI ↓</option>
-                <option value="signalScore_desc">Signal ↓</option>
-                <option value="signalScore_asc">Signal ↑</option>
-                <option value="change24h_asc">24h ↑</option>
-                <option value="change24h_desc">24h ↓</option>
-                <option value="change7d_asc">7d ↑</option>
-                <option value="change7d_desc">7d ↓</option>
-              </select>
+              <div className="relative flex-1">
+                <span className={`absolute left-3 top-1/2 -translate-y-1/2 text-[10px] font-semibold uppercase tracking-wide pointer-events-none ${darkMode ? 'text-gray-500' : 'text-gray-400'}`}>
+                  Sort
+                </span>
+                <select
+                  value={sortBy}
+                  onChange={(e) => {
+                    setSortBy(e.target.value);
+                    setPreset(null);
+                    setRsiFilter(null);
+                  }}
+                  className={`w-full ${
+                    darkMode ? 'bg-gray-900 border-white/10 text-white' : 'bg-white border-gray-200 text-gray-900'
+                  } border rounded-xl pl-12 py-2 text-xs focus:outline-none cursor-pointer appearance-none`}
+                  style={{
+                    backgroundImage: `url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 24 24' stroke='%239ca3af'%3E%3Cpath stroke-linecap='round' stroke-linejoin='round' stroke-width='2' d='M19 9l-7 7-7-7'%3E%3C/path%3E%3C/svg%3E")`,
+                    backgroundRepeat: 'no-repeat',
+                    backgroundPosition: 'right 10px center',
+                    backgroundSize: '14px',
+                    paddingRight: '30px',
+                  }}
+                >
+                  <option value="rank_asc">Rank ↑</option>
+                  <option value="rank_desc">Rank ↓</option>
+                  <option value="price_asc">Price ↑</option>
+                  <option value="price_desc">Price ↓</option>
+                  <option value="volume_asc">Volume ↑</option>
+                  <option value="volume_desc">Volume ↓</option>
+                  <option value="mcap_asc">MCap ↑</option>
+                  <option value="mcap_desc">MCap ↓</option>
+                  <option value="rsi_asc">RSI ↑</option>
+                  <option value="rsi_desc">RSI ↓</option>
+                  <option value="signalScore_desc">Signal ↓</option>
+                  <option value="signalScore_asc">Signal ↑</option>
+                  <option value="change24h_asc">24h ↑</option>
+                  <option value="change24h_desc">24h ↓</option>
+                  <option value="change7d_asc">7d ↑</option>
+                  <option value="change7d_desc">7d ↓</option>
+                </select>
+              </div>
             </div>
           </div>
         </div>
