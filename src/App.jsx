@@ -78,6 +78,10 @@ export default function App() {
     if (params.has('signals')) {
       filters.signals = params.get('signals').split(',').filter(Boolean);
     }
+    if (params.has('page')) {
+      const pageNum = parseInt(params.get('page'), 10);
+      if (!isNaN(pageNum) && pageNum > 0) filters.page = pageNum;
+    }
     
     return filters;
   }, []);
@@ -94,6 +98,7 @@ export default function App() {
     if (preset) params.set('preset', preset);
     if (sortBy && sortBy !== 'rsi_asc') params.set('sort', sortBy);
     if (signalFilters.size > 0) params.set('signals', Array.from(signalFilters).join(','));
+    if (tablePage > 1) params.set('page', tablePage.toString());
     
     const queryString = params.toString();
     const newHash = queryString ? `#/?${queryString}` : '#/';
@@ -102,7 +107,7 @@ export default function App() {
     if (window.location.hash !== newHash && window.location.hash !== '' || queryString) {
       window.history.replaceState(null, '', newHash || window.location.pathname);
     }
-  }, [rsiFilter, cat, preset, sortBy, signalFilters, currentPage]);
+  }, [rsiFilter, cat, preset, sortBy, signalFilters, tablePage, currentPage]);
 
   // Initialize filters from URL on mount
   useEffect(() => {
@@ -113,6 +118,7 @@ export default function App() {
       if (filters.preset) setPreset(filters.preset);
       if (filters.sort) setSortBy(filters.sort);
       if (filters.signals) setSignalFilters(new Set(filters.signals));
+      if (filters.page) setTablePage(filters.page);
     }
     setUrlInitialized(true);
   }, []);
@@ -122,7 +128,7 @@ export default function App() {
     if (urlInitialized) {
       updateUrlWithFilters();
     }
-  }, [rsiFilter, cat, preset, sortBy, signalFilters, urlInitialized, updateUrlWithFilters]);
+  }, [rsiFilter, cat, preset, sortBy, signalFilters, tablePage, urlInitialized, updateUrlWithFilters]);
 
   // Dark mode persistence
   useEffect(() => {
@@ -394,9 +400,14 @@ if (signalFilters.size > 0) {
     return r;
   }, [tokens, search, cat, sortBy, showWL, watchlist, preset, rsiFilter, rsiSortDir, signalFilters, showLowVolume]);
 
-  // Reset to page 1 when filters change
+  // Reset to page 1 when filters change (but not on initial URL load)
+  const [filtersInitialized, setFiltersInitialized] = useState(false);
   useEffect(() => {
-    setTablePage(1);
+    if (filtersInitialized) {
+      setTablePage(1);
+    } else {
+      setFiltersInitialized(true);
+    }
   }, [search, cat, sortBy, showWL, preset, rsiFilter, signalFilters, showLowVolume]);
 
   // Paginated tokens for display
