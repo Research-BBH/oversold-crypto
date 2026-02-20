@@ -229,6 +229,105 @@ const detectEngulfingFromArrays = (prices, opens) => {
   return { bullish, bearish };
 };
 
+// ── MACD ──────────────────────────────────────────────────────────────────────
+
+const calculateEMASeries = (prices, period) => {
+  if (!prices || prices.length < period) return [];
+  const k = 2 / (period + 1);
+  const result = new Array(period - 1).fill(null);
+  let ema = prices.slice(0, period).reduce((a, b) => a + b, 0) / period;
+  result.push(ema);
+  for (let i = period; i < prices.length; i++) {
+    ema = prices[i] * k + ema * (1 - k);
+    result.push(ema);
+  }
+  return result;
+};
+
+const calculateMACD = (prices, fastPeriod = 12, slowPeriod = 26, signalPeriod = 9) => {
+  if (!prices || prices.length < slowPeriod + signalPeriod) return null;
+  const fastEMA = calculateEMASeries(prices, fastPeriod);
+  const slowEMA = calculateEMASeries(prices, slowPeriod);
+  const macdSeries = [];
+  for (let i = 0; i < prices.length; i++) {
+    if (fastEMA[i] != null && slowEMA[i] != null) macdSeries.push(fastEMA[i] - slowEMA[i]);
+  }
+  if (macdSeries.length < signalPeriod) return null;
+  const k = 2 / (signalPeriod + 1);
+  let sigLine = macdSeries.slice(0, signalPeriod).reduce((a, b) => a + b, 0) / signalPeriod;
+  const sigSeries = [sigLine];
+  for (let i = signalPeriod; i < macdSeries.length; i++) {
+    sigLine = macdSeries[i] * k + sigLine * (1 - k);
+    sigSeries.push(sigLine);
+  }
+  const macdLine = macdSeries[macdSeries.length - 1];
+  const curSig   = sigSeries[sigSeries.length - 1];
+  const histogram = macdLine - curSig;
+  const prevMacd = macdSeries[macdSeries.length - 2];
+  const prevSig  = sigSeries[sigSeries.length - 2];
+  return {
+    macdLine:   Math.round(macdLine * 1e8) / 1e8,
+    signalLine: Math.round(curSig   * 1e8) / 1e8,
+    histogram:  Math.round(histogram * 1e8) / 1e8,
+    bullishCross:      prevMacd != null ? prevMacd <= prevSig && macdLine > curSig  : false,
+    bearishCross:      prevMacd != null ? prevMacd >= prevSig && macdLine < curSig  : false,
+    histogramPositive: histogram > 0,
+    histogramNegative: histogram < 0,
+  };
+};
+
+// ── Stochastic RSI ────────────────────────────────────────────────────────────
+
+const calculateStochRSI = (prices, rsiPeriod = 14, stochPeriod = 14, kPeriod = 3, dPeriod = 3) => {
+  if (!prices || prices.length < rsiPeriod + stochPeriod + kPeriod + dPeriod) return null;
+  // Build RSI series
+  const rsiSeries = [];
+  for (let i = rsiPeriod; i <= prices.length; i++) {
+    const slice = prices.slice(i - rsiPeriod - 1, i);
+    const changes = slice.map((p, j) => j === 0 ? 0 : p - slice[j - 1]).slice(1);
+    let avgGain = changes.map(c => c > 0 ? c : 0).slice(0, rsiPeriod).reduce((a, b) => a + b, 0) / rsiPeriod;
+    let avgLoss = changes.map(c => c < 0 ? Math.abs(c) : 0).slice(0, rsiPeriod).reduce((a, b) => a + b, 0) / rsiPeriod;
+    for (let j = rsiPeriod; j < changes.length; j++) {
+      const gain = changes[j] > 0 ? changes[j] : 0;
+      const loss = changes[j] < 0 ? Math.abs(changes[j]) : 0;
+      avgGain = (avgGain * (rsiPeriod - 1) + gain) / rsiPeriod;
+      avgLoss = (avgLoss * (rsiPeriod - 1) + loss) / rsiPeriod;
+    }
+    if (avgLoss === 0) { rsiSeries.push(100); continue; }
+    rsiSeries.push(100 - 100 / (1 + avgGain / avgLoss));
+  }
+  if (rsiSeries.length < stochPeriod + kPeriod + dPeriod) return null;
+  // Raw %K
+  const rawK = [];
+  for (let i = stochPeriod - 1; i < rsiSeries.length; i++) {
+    const win = rsiSeries.slice(i - stochPeriod + 1, i + 1);
+    const lo = Math.min(...win), hi = Math.max(...win);
+    rawK.push(hi === lo ? 50 : ((rsiSeries[i] - lo) / (hi - lo)) * 100);
+  }
+  if (rawK.length < kPeriod + dPeriod) return null;
+  // Smooth %K
+  const smoothK = [];
+  for (let i = kPeriod - 1; i < rawK.length; i++)
+    smoothK.push(rawK.slice(i - kPeriod + 1, i + 1).reduce((a, b) => a + b, 0) / kPeriod);
+  if (smoothK.length < dPeriod) return null;
+  // %D
+  const smoothD = [];
+  for (let i = dPeriod - 1; i < smoothK.length; i++)
+    smoothD.push(smoothK.slice(i - dPeriod + 1, i + 1).reduce((a, b) => a + b, 0) / dPeriod);
+  const k = smoothK[smoothK.length - 1];
+  const d = smoothD[smoothD.length - 1];
+  const prevK = smoothK[smoothK.length - 2];
+  const prevD = smoothD[smoothD.length - 2];
+  return {
+    k: Math.round(k * 10) / 10,
+    d: Math.round(d * 10) / 10,
+    oversold:     k < 20,
+    overbought:   k > 80,
+    bullishCross: prevK != null ? prevK <= prevD && k > d && k < 50 : false,
+    bearishCross: prevK != null ? prevK >= prevD && k < d && k > 50 : false,
+  };
+};
+
 // Calculate unified momentum score (-100 to +100)
 // Positive = Bullish, Negative = Bearish, Near zero = Neutral
 // ============================================================
@@ -246,6 +345,8 @@ const SIGNAL_WEIGHTS = {
   ENGULFING: 10,                        // Binary - pattern detected or not
   PRICE_POSITION: { min: 3, max: 10 }, // ATL/ATH scales based on proximity
   VOLUME: { min: 3, max: 10 },         // Volume scales based on spike magnitude
+  MACD: 8,                               // MACD cross (binary)
+  STOCH_RSI: { min: 4, max: 8 },         // StochRSI (graduated by depth)
 };
 
 // Helper: Linear interpolation between min and max
@@ -539,7 +640,66 @@ const calculateSignalScore = (token, signals, fundingRate, rawData = {}) => {
     }
   }
   signalPairs.push(volumePair);
-  
+
+  // ============ 9. MACD Cross (binary: ±8) ============
+  const macdPair = {
+    name: 'MACD',
+    bullish: { label: 'Bullish Cross', weight: SIGNAL_WEIGHTS.MACD, active: false },
+    bearish: { label: 'Bearish Cross', weight: SIGNAL_WEIGHTS.MACD, active: false },
+    unavailable: !rawData.macd,
+  };
+  if (rawData.macd) {
+    if (rawData.macd.bullishCross) {
+      score += SIGNAL_WEIGHTS.MACD;
+      activeSignals.push({ name: 'MACD Bullish Cross', points: +SIGNAL_WEIGHTS.MACD, category: 'macd' });
+      macdPair.bullish.active = true;
+      macdPair.bullish.points = SIGNAL_WEIGHTS.MACD;
+    } else if (rawData.macd.bearishCross) {
+      score -= SIGNAL_WEIGHTS.MACD;
+      activeSignals.push({ name: 'MACD Bearish Cross', points: -SIGNAL_WEIGHTS.MACD, category: 'macd' });
+      macdPair.bearish.active = true;
+      macdPair.bearish.points = SIGNAL_WEIGHTS.MACD;
+    }
+  }
+  signalPairs.push(macdPair);
+
+  // ============ 10. Stochastic RSI (graduated: 4-8 points) ============
+  const stochPair = {
+    name: 'Stoch RSI',
+    bullish: { label: 'Oversold', weight: SIGNAL_WEIGHTS.STOCH_RSI.max, active: false },
+    bearish: { label: 'Overbought', weight: SIGNAL_WEIGHTS.STOCH_RSI.max, active: false },
+    unavailable: !rawData.stochRsi,
+  };
+  if (rawData.stochRsi) {
+    const { k } = rawData.stochRsi;
+    if (rawData.stochRsi.oversold) {
+      const strength = (20 - k) / 20; // 0 at 20, 1 at 0
+      const points = lerp(SIGNAL_WEIGHTS.STOCH_RSI.min, SIGNAL_WEIGHTS.STOCH_RSI.max, strength);
+      score += points;
+      activeSignals.push({ name: 'StochRSI Oversold', value: k, points: +points, category: 'stoch' });
+      stochPair.bullish.active = true;
+      stochPair.bullish.points = points;
+      stochPair.bullish.label = `Oversold (${k})`;
+    } else if (rawData.stochRsi.overbought) {
+      const strength = (k - 80) / 20; // 0 at 80, 1 at 100
+      const points = lerp(SIGNAL_WEIGHTS.STOCH_RSI.min, SIGNAL_WEIGHTS.STOCH_RSI.max, strength);
+      score -= points;
+      activeSignals.push({ name: 'StochRSI Overbought', value: k, points: -points, category: 'stoch' });
+      stochPair.bearish.active = true;
+      stochPair.bearish.points = points;
+      stochPair.bearish.label = `Overbought (${k})`;
+    }
+    // Bonus for bullish/bearish cross
+    if (rawData.stochRsi.bullishCross && !rawData.stochRsi.oversold) {
+      score += SIGNAL_WEIGHTS.STOCH_RSI.min;
+      activeSignals.push({ name: 'StochRSI Bullish Cross', points: +SIGNAL_WEIGHTS.STOCH_RSI.min, category: 'stoch' });
+    } else if (rawData.stochRsi.bearishCross && !rawData.stochRsi.overbought) {
+      score -= SIGNAL_WEIGHTS.STOCH_RSI.min;
+      activeSignals.push({ name: 'StochRSI Bearish Cross', points: -SIGNAL_WEIGHTS.STOCH_RSI.min, category: 'stoch' });
+    }
+  }
+  signalPairs.push(stochPair);
+
   // Clamp score to -100 to +100
   score = Math.max(-100, Math.min(100, score));
   
@@ -703,6 +863,10 @@ const enhanceToken = async (token) => {
       ? calculateVolumeRatio(exchangeData.volumes, 20) 
       : null;
     
+    // Calculate MACD and StochRSI
+    const macd      = calculateMACD(exchangeData.prices);
+    const stochRsi  = calculateStochRSI(exchangeData.prices);
+
     // Calculate divergence
     const divergence = detectDivergence(exchangeData.prices);
     
@@ -741,12 +905,24 @@ const enhanceToken = async (token) => {
       bearishEngulfing: engulfing.bearish,
       nearATH: nearATH,
       highVolMcap: highVolMcap,
+      // MACD
+      macdBullishCross:  macd ? macd.bullishCross  : null,
+      macdBearishCross:  macd ? macd.bearishCross  : null,
+      macdHistPositive:  macd ? macd.histogramPositive : null,
+      macdHistNegative:  macd ? macd.histogramNegative : null,
+      // StochRSI
+      stochOversold:     stochRsi ? stochRsi.oversold     : null,
+      stochOverbought:   stochRsi ? stochRsi.overbought   : null,
+      stochBullishCross: stochRsi ? stochRsi.bullishCross : null,
+      stochBearishCross: stochRsi ? stochRsi.bearishCross : null,
     };
     
     const signalScoreData = calculateSignalScore(token, signals, exchangeData.fundingRate, {
       sma50,
       bollingerBands: bb,
       volumeRatio,
+      macd,
+      stochRsi,
     });
     
     return {
@@ -765,6 +941,8 @@ const enhanceToken = async (token) => {
       fundingRate: exchangeData.fundingRate,
       dataSource: exchangeData.source,
       enhanced: true,
+      macd,
+      stochRsi,
     };
   }
   
