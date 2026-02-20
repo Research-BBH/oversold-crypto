@@ -2,110 +2,16 @@
 // FILE: src/utils/signals.js - Advanced Trading Signals
 // ==================================================
 
-/**
- * Calculate Simple Moving Average
- */
-export const calculateSMA = (prices, period) => {
-  if (!prices || prices.length < period) return null;
-  const slice = prices.slice(-period);
-  const sum = slice.reduce((a, b) => a + b, 0);
-  return sum / period;
-};
+// Import shared calculation functions
+import {
+  calculateSMA,
+  calculateBollingerBands,
+  calculateVolumeRatio,
+  detectRSIDivergence
+} from '../../shared/calculations.js';
 
-/**
- * Calculate Bollinger Bands
- * Returns { upper, middle, lower }
- */
-export const calculateBollingerBands = (prices, period = 20, stdDev = 2) => {
-  if (!prices || prices.length < period) return null;
-  
-  const slice = prices.slice(-period);
-  const sma = slice.reduce((a, b) => a + b, 0) / period;
-  
-  // Calculate standard deviation
-  const squaredDiffs = slice.map(price => Math.pow(price - sma, 2));
-  const variance = squaredDiffs.reduce((a, b) => a + b, 0) / period;
-  const std = Math.sqrt(variance);
-  
-  return {
-    upper: sma + (std * stdDev),
-    middle: sma,
-    lower: sma - (std * stdDev)
-  };
-};
-
-/**
- * Calculate volume ratio (current vs average)
- */
-export const calculateVolumeRatio = (volumes, period = 20) => {
-  if (!volumes || volumes.length < period + 1) return null;
-  
-  const currentVolume = volumes[volumes.length - 1];
-  const avgVolume = calculateSMA(volumes.slice(0, -1), period);
-  
-  if (!avgVolume || avgVolume === 0) return null;
-  return currentVolume / avgVolume;
-};
-
-/**
- * Detect RSI divergence
- * Returns { bullish: boolean, bearish: boolean }
- */
-export const detectRSIDivergence = (prices, rsiValues, lookback = 20) => {
-  if (!prices || !rsiValues || prices.length < lookback || rsiValues.length < lookback) {
-    return { bullish: false, bearish: false };
-  }
-  
-  const recentPrices = prices.slice(-lookback);
-  const recentRSI = rsiValues.slice(-lookback);
-  
-  // Find local minimums and maximums
-  const priceLows = [];
-  const priceHighs = [];
-  const rsiLows = [];
-  const rsiHighs = [];
-  
-  for (let i = 1; i < recentPrices.length - 1; i++) {
-    // Local low
-    if (recentPrices[i] < recentPrices[i - 1] && recentPrices[i] < recentPrices[i + 1]) {
-      priceLows.push({ index: i, value: recentPrices[i] });
-      rsiLows.push({ index: i, value: recentRSI[i] });
-    }
-    // Local high
-    if (recentPrices[i] > recentPrices[i - 1] && recentPrices[i] > recentPrices[i + 1]) {
-      priceHighs.push({ index: i, value: recentPrices[i] });
-      rsiHighs.push({ index: i, value: recentRSI[i] });
-    }
-  }
-  
-  // Bullish divergence: Lower price low, higher RSI low
-  let bullish = false;
-  if (priceLows.length >= 2 && rsiLows.length >= 2) {
-    const lastPriceLow = priceLows[priceLows.length - 1];
-    const prevPriceLow = priceLows[priceLows.length - 2];
-    const lastRSILow = rsiLows[rsiLows.length - 1];
-    const prevRSILow = rsiLows[rsiLows.length - 2];
-    
-    if (lastPriceLow.value < prevPriceLow.value && lastRSILow.value > prevRSILow.value) {
-      bullish = true;
-    }
-  }
-  
-  // Bearish divergence: Higher price high, lower RSI high
-  let bearish = false;
-  if (priceHighs.length >= 2 && rsiHighs.length >= 2) {
-    const lastPriceHigh = priceHighs[priceHighs.length - 1];
-    const prevPriceHigh = priceHighs[priceHighs.length - 2];
-    const lastRSIHigh = rsiHighs[rsiHighs.length - 1];
-    const prevRSIHigh = rsiHighs[rsiHighs.length - 2];
-    
-    if (lastPriceHigh.value > prevPriceHigh.value && lastRSIHigh.value < prevRSIHigh.value) {
-      bearish = true;
-    }
-  }
-  
-  return { bullish, bearish };
-};
+// Re-export for convenience
+export { calculateSMA, calculateBollingerBands, calculateVolumeRatio, detectRSIDivergence };
 
 /**
  * Calculate market cap reliability tier

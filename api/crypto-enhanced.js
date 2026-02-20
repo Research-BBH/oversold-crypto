@@ -8,7 +8,12 @@ export const config = {
   maxDuration: 60, // Allow up to 60 seconds for this endpoint
 };
 
-// Import calculation functions (these are duplicated from backend for edge function)
+// Import shared calculation functions
+// Note: For Vercel Edge Functions, we inline the imports since ES modules work differently
+// The shared module is copied here to ensure compatibility with edge runtime
+
+// ============ SHARED CALCULATIONS (from shared/calculations.js) ============
+
 const calculateRSI = (prices, period = 14) => {
   if (!prices || prices.length < period + 1) return null;
   
@@ -87,7 +92,88 @@ const calculateVolumeRatio = (volumes, period = 20) => {
   return currentVolume / avgVolume;
 };
 
-// Detect RSI divergence (bullish: price lower low, RSI higher low; bearish: price higher high, RSI lower high)
+const detectRSIDivergence = (prices, rsiValues, lookback = 20) => {
+  if (!prices || !rsiValues || prices.length < lookback || rsiValues.length < lookback) {
+    return { bullish: false, bearish: false };
+  }
+  
+  const recentPrices = prices.slice(-lookback);
+  const recentRSI = rsiValues.slice(-lookback);
+  
+  const priceLows = [];
+  const priceHighs = [];
+  const rsiLows = [];
+  const rsiHighs = [];
+  
+  for (let i = 1; i < recentPrices.length - 1; i++) {
+    if (recentPrices[i] < recentPrices[i - 1] && recentPrices[i] < recentPrices[i + 1]) {
+      priceLows.push({ index: i, value: recentPrices[i] });
+      rsiLows.push({ index: i, value: recentRSI[i] });
+    }
+    if (recentPrices[i] > recentPrices[i - 1] && recentPrices[i] > recentPrices[i + 1]) {
+      priceHighs.push({ index: i, value: recentPrices[i] });
+      rsiHighs.push({ index: i, value: recentRSI[i] });
+    }
+  }
+  
+  let bullish = false;
+  if (priceLows.length >= 2 && rsiLows.length >= 2) {
+    const lastPriceLow = priceLows[priceLows.length - 1];
+    const prevPriceLow = priceLows[priceLows.length - 2];
+    const lastRSILow = rsiLows[rsiLows.length - 1];
+    const prevRSILow = rsiLows[rsiLows.length - 2];
+    
+    if (lastPriceLow.value < prevPriceLow.value && lastRSILow.value > prevRSILow.value) {
+      bullish = true;
+    }
+  }
+  
+  let bearish = false;
+  if (priceHighs.length >= 2 && rsiHighs.length >= 2) {
+    const lastPriceHigh = priceHighs[priceHighs.length - 1];
+    const prevPriceHigh = priceHighs[priceHighs.length - 2];
+    const lastRSIHigh = rsiHighs[rsiHighs.length - 1];
+    const prevRSIHigh = rsiHighs[rsiHighs.length - 2];
+    
+    if (lastPriceHigh.value > prevPriceHigh.value && lastRSIHigh.value < prevRSIHigh.value) {
+      bearish = true;
+    }
+  }
+  
+  return { bullish, bearish };
+};
+
+const detectEngulfingPattern = (candles) => {
+  if (!candles || candles.length < 2) {
+    return { bullish: false, bearish: false };
+  }
+  
+  const prev = candles[candles.length - 2];
+  const curr = candles[candles.length - 1];
+  
+  if (!prev || !curr) {
+    return { bullish: false, bearish: false };
+  }
+  
+  const prevBearish = prev.close < prev.open;
+  const currBullish = curr.close > curr.open;
+  const prevBullish = prev.close > prev.open;
+  const currBearish = curr.close < curr.open;
+  
+  const bullish = prevBearish && currBullish && 
+    curr.open <= prev.close && 
+    curr.close >= prev.open;
+  
+  const bearish = prevBullish && currBearish && 
+    curr.open >= prev.close && 
+    curr.close <= prev.open;
+  
+  return { bullish, bearish };
+};
+
+// ============ END SHARED CALCULATIONS ============
+
+// Detect RSI divergence from prices only (calculates RSI internally)
 const detectDivergence = (prices, period = 14, lookback = 20) => {
   if (!prices || prices.length < lookback + period) {
     return { bullish: false, bearish: false };
@@ -108,49 +194,11 @@ const detectDivergence = (prices, period = 14, lookback = 20) => {
   const recentPrices = prices.slice(-lookback);
   const recentRSI = rsiValues.slice(-lookback);
   
-  // Find local lows and highs
-  const priceLows = [];
-  const priceHighs = [];
-  
-  for (let i = 2; i < recentPrices.length - 2; i++) {
-    // Local low
-    if (recentPrices[i] < recentPrices[i-1] && recentPrices[i] < recentPrices[i-2] &&
-        recentPrices[i] < recentPrices[i+1] && recentPrices[i] < recentPrices[i+2]) {
-      priceLows.push({ index: i, price: recentPrices[i], rsi: recentRSI[i] });
-    }
-    // Local high
-    if (recentPrices[i] > recentPrices[i-1] && recentPrices[i] > recentPrices[i-2] &&
-        recentPrices[i] > recentPrices[i+1] && recentPrices[i] > recentPrices[i+2]) {
-      priceHighs.push({ index: i, price: recentPrices[i], rsi: recentRSI[i] });
-    }
-  }
-  
-  let bullish = false;
-  let bearish = false;
-  
-  // Bullish divergence: price makes lower low, RSI makes higher low
-  if (priceLows.length >= 2) {
-    const last = priceLows[priceLows.length - 1];
-    const prev = priceLows[priceLows.length - 2];
-    if (last.price < prev.price && last.rsi > prev.rsi) {
-      bullish = true;
-    }
-  }
-  
-  // Bearish divergence: price makes higher high, RSI makes lower high
-  if (priceHighs.length >= 2) {
-    const last = priceHighs[priceHighs.length - 1];
-    const prev = priceHighs[priceHighs.length - 2];
-    if (last.price > prev.price && last.rsi < prev.rsi) {
-      bearish = true;
-    }
-  }
-  
-  return { bullish, bearish };
+  return detectRSIDivergence(recentPrices, recentRSI, lookback);
 };
 
-// Detect engulfing candle patterns
-const detectEngulfingPattern = (prices, opens) => {
+// Detect engulfing candle patterns (alternative version using prices/opens arrays)
+const detectEngulfingFromArrays = (prices, opens) => {
   if (!prices || !opens || prices.length < 2 || opens.length < 2) {
     return { bullish: false, bearish: false };
   }
@@ -660,7 +708,7 @@ const enhanceToken = async (token) => {
     
     // Calculate engulfing patterns
     const engulfing = exchangeData.opens 
-      ? detectEngulfingPattern(exchangeData.prices, exchangeData.opens)
+      ? detectEngulfingFromArrays(exchangeData.prices, exchangeData.opens)
       : { bullish: false, bearish: false };
     
     // Calculate price near ATH (within 10% of all-time high from available data)
