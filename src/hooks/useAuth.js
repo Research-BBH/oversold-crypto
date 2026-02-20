@@ -65,5 +65,6 @@ export function useAuth() {
     handleLogin,
     handleLogout,
     toggleWatch,
+    setWatchlist,
   };
 }
