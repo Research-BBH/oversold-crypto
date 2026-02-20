@@ -49,6 +49,7 @@ export default function App() {
   const [showMobileFilters, setShowMobileFilters] = useState(false);
   const [tablePage, setTablePage] = useState(1);
   const [rowsPerPage, setRowsPerPage] = useState(50);
+  const [showBackToTop, setShowBackToTop] = useState(false);
   const [darkMode, setDarkMode] = useState(() => {
     const saved = localStorage.getItem('oversold_darkMode');
     return saved !== null ? JSON.parse(saved) : true;
@@ -134,6 +135,19 @@ export default function App() {
   useEffect(() => {
     localStorage.setItem('oversold_darkMode', JSON.stringify(darkMode));
   }, [darkMode]);
+
+  // Back to top button visibility
+  useEffect(() => {
+    const handleScroll = () => {
+      setShowBackToTop(window.scrollY > 400);
+    };
+    window.addEventListener('scroll', handleScroll, { passive: true });
+    return () => window.removeEventListener('scroll', handleScroll);
+  }, []);
+
+  const scrollToTop = () => {
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  };
 
   // Load user from localStorage
   useEffect(() => {
@@ -1788,6 +1802,25 @@ if (signalFilters.size > 0) {
       {showLoginModal && (
         <LoginModal onClose={() => setShowLoginModal(false)} onLogin={handleLogin} darkMode={darkMode} />
       )}
+
+      {/* Back to Top Button */}
+      <button
+        onClick={scrollToTop}
+        className={`fixed bottom-6 right-6 z-40 p-3 rounded-full shadow-lg transition-all duration-300 ${
+          showBackToTop 
+            ? 'opacity-100 translate-y-0' 
+            : 'opacity-0 translate-y-4 pointer-events-none'
+        } ${
+          darkMode 
+            ? 'bg-white/10 hover:bg-white/20 text-white border border-white/10 backdrop-blur-sm' 
+            : 'bg-white hover:bg-gray-50 text-gray-700 border border-gray-200 shadow-md'
+        }`}
+        aria-label="Back to top"
+      >
+        <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 10l7-7m0 0l7 7m-7-7v18" />
+        </svg>
+      </button>
     </div>
   );
 }
