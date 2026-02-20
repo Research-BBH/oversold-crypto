@@ -26,6 +26,9 @@ const BUY_FILTERS = [
   { id: 'bullish_engulfing', label: '▲ Bull Engulf',  desc: 'Bullish engulfing candle', enhanced: true },
   { id: 'near_atl',          label: '▲ Near ATL',     desc: 'Within 20% of all-time low' },
   { id: 'volume_spike',      label: '▲ Vol Spike',    desc: 'Volume > 1.5x average', enhanced: true },
+  { id: 'macd_bullish_cross', label: '▲ MACD Cross',   desc: 'MACD crossed above signal line', enhanced: true },
+  { id: 'stoch_oversold',     label: '▲ StochRSI OS',  desc: 'Stoch RSI below 20 (oversold)', enhanced: true },
+  { id: 'stoch_bullish_cross',label: '▲ StochRSI ↑',   desc: 'Stoch RSI K crossed above D', enhanced: true },
 ];
 
 const SELL_FILTERS = [
@@ -36,6 +39,9 @@ const SELL_FILTERS = [
   { id: 'bearish_engulfing', label: '▼ Bear Engulf', desc: 'Bearish engulfing candle', enhanced: true },
   { id: 'near_ath',          label: '▼ Near ATH',    desc: 'Within 10% of all-time high', enhanced: true },
   { id: 'high_vol_mcap',     label: '▼ High V/MC',   desc: 'Volume > 10% market cap' },
+  { id: 'macd_bearish_cross', label: '▼ MACD Cross',   desc: 'MACD crossed below signal line', enhanced: true },
+  { id: 'stoch_overbought',   label: '▼ StochRSI OB',  desc: 'Stoch RSI above 80 (overbought)', enhanced: true },
+  { id: 'stoch_bearish_cross',label: '▼ StochRSI ↓',   desc: 'Stoch RSI K crossed below D', enhanced: true },
 ];
 
 // ─── Sub-components ───────────────────────────────────────────────────────────
