@@ -139,10 +139,10 @@ export const MethodologyPage = ({ onBack, darkMode, setDarkMode }) => (
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 7h8m0 0v8m0-8l-8 8-4-4-6 6" />
             </svg>
           </div>
-          <h3 className="text-xl font-bold mb-3">8 Signal Categories</h3>
+          <h3 className="text-xl font-bold mb-3">10 Signal Categories</h3>
           <p className={`text-sm leading-relaxed ${darkMode ? 'text-gray-400' : 'text-gray-600'}`}>
             RSI, SMA50 trend, Bollinger Bands, funding rates, divergence, engulfing patterns, price
-            position, and volume — each scored on a graduated scale for both bullish and bearish signals.
+            position, volume, MACD, and Stochastic RSI — each scored on a graduated scale for both bullish and bearish signals.
           </p>
         </div>
 
@@ -292,6 +292,14 @@ export const MethodologyPage = ({ onBack, darkMode, setDarkMode }) => (
             </p>
           </div>
         </div>
+
+        <Callout darkMode={darkMode} type="info" icon="ℹ️" title="RSI 30 vs 25: Two Different Thresholds">
+          Traditional technical analysis considers RSI below 30 as "oversold." Our signal scoring
+          system uses a stricter threshold of 25 before awarding bullish points, requiring deeper
+          oversold conditions for higher conviction. The dashboard filter buttons follow the scoring
+          thresholds (Oversold = RSI &lt; 25, Extreme = RSI &lt; 20), while the educational
+          descriptions above use the standard TA definitions.
+        </Callout>
       </div>
 
       {/* ============================================================ */}
@@ -301,7 +309,7 @@ export const MethodologyPage = ({ onBack, darkMode, setDarkMode }) => (
         <h2 className="text-xl sm:text-3xl font-bold mb-2">⚖️ Unified Momentum Score</h2>
         <p className={`mb-6 leading-relaxed ${darkMode ? 'text-gray-300' : 'text-gray-700'}`}>
           Our signal system produces a single score from <strong>−100</strong> (max bearish) to{' '}
-          <strong>+100</strong> (max bullish). Each of the 8 signal categories has both a bullish and a
+          <strong>+100</strong> (max bullish). Each of the 10 signal categories has both a bullish and a
           bearish side. Points are graduated — they scale with the intensity of the signal rather than
           using simple on/off thresholds.
         </p>
@@ -330,8 +338,10 @@ export const MethodologyPage = ({ onBack, darkMode, setDarkMode }) => (
                 { name: 'Funding Rate', bull: 'Negative (< −0.005%)', bear: 'Positive (> 0.01%)', pts: '5–15', type: 'Graduated' },
                 { name: 'RSI Divergence', bull: 'Bullish divergence', bear: 'Bearish divergence', pts: '15', type: 'Binary' },
                 { name: 'Candlestick', bull: 'Bullish engulfing', bear: 'Bearish engulfing', pts: '10', type: 'Binary' },
-                { name: 'Price Position', bull: 'Near ATL (≤ 20%)', bear: 'Near ATH (≤ 10%)', pts: '3–10', type: 'Graduated' },
+                { name: 'Price Position', bull: 'Near ATL (≤ 50%)', bear: 'Near ATH (≤ 10%)', pts: '3–10', type: 'Graduated' },
                 { name: 'Volume', bull: 'Accumulation', bear: 'Distribution', pts: '3–10', type: 'Graduated' },
+                { name: 'MACD', bull: 'Bullish crossover', bear: 'Bearish crossover', pts: '8', type: 'Binary' },
+                { name: 'Stochastic RSI', bull: 'Oversold (K < 20)', bear: 'Overbought (K > 80)', pts: '4–8', type: 'Graduated' },
               ].map((row, i) => (
                 <tr key={i} className={darkMode ? 'hover:bg-white/5' : 'hover:bg-gray-50'}>
                   <td className="px-4 py-2.5 font-medium">{row.name}</td>
@@ -485,7 +495,7 @@ export const MethodologyPage = ({ onBack, darkMode, setDarkMode }) => (
           {/* 7. Price Position */}
           <SignalCard darkMode={darkMode} color="pink" title="7. Price Position — ATL / ATH" points="±3 to ±10 pts">
             <p className="mb-2">
-              <strong>Bullish (Near ATL):</strong> Price within 20% of the all-time low earns 3–10
+              <strong>Bullish (Near ATL):</strong> Price within 50% of the all-time low earns 3–10
               pts. The closer to ATL, the higher the score (max at ≤ 2% from ATL).
             </p>
             <p className="mb-2">
@@ -516,6 +526,61 @@ export const MethodologyPage = ({ onBack, darkMode, setDarkMode }) => (
               <strong>Why it matters:</strong> High volume during extreme RSI conditions can indicate
               capitulation selling (creating a bottom) or heavy accumulation by informed participants.
               Either way, unusual volume often marks significant turning points.
+            </p>
+          </SignalCard>
+
+          {/* 9. MACD */}
+          <SignalCard darkMode={darkMode} color="cyan" title="9. MACD (Moving Average Convergence Divergence)" points="±8 pts (binary)">
+            <p className="mb-2">
+              <strong>Parameters:</strong> Fast EMA 12, Slow EMA 26, Signal EMA 9 (standard settings).
+            </p>
+            <p className="mb-2">
+              <strong>Bullish:</strong> MACD line crosses above the signal line (+8 pts). This indicates
+              short-term momentum is accelerating faster than longer-term momentum.
+            </p>
+            <p className="mb-2">
+              <strong>Bearish:</strong> MACD line crosses below the signal line (−8 pts). This indicates
+              momentum is decelerating.
+            </p>
+            <Formula darkMode={darkMode}>
+              <div>MACD Line = EMA(12) − EMA(26)</div>
+              <div>Signal Line = EMA(9) of MACD Line</div>
+              <div>Histogram = MACD Line − Signal Line</div>
+            </Formula>
+            <p>
+              <strong>Why it matters:</strong> MACD crossovers are among the most widely followed
+              momentum signals. A bullish cross after a period of negative histogram suggests buyers
+              are regaining control. The signal is binary (on/off) because the crossover itself is
+              the event — its strength is already reflected in other indicators like RSI and trend.
+            </p>
+          </SignalCard>
+
+          {/* 10. Stochastic RSI */}
+          <SignalCard darkMode={darkMode} color="purple" title="10. Stochastic RSI" points="±4 to ±8 pts">
+            <p className="mb-2">
+              <strong>Parameters:</strong> RSI period 14, Stochastic period 14, K smoothing 3, D smoothing 3.
+            </p>
+            <p className="mb-2">
+              <strong>Bullish:</strong> StochRSI K below 20 (oversold) earns 4–8 pts, graduating by depth.
+              A K/D bullish crossover (K crosses above D) outside of oversold territory earns a bonus of 4 pts.
+            </p>
+            <p className="mb-2">
+              <strong>Bearish:</strong> StochRSI K above 80 (overbought) earns 4–8 pts, with the same
+              graduated scale. A K/D bearish crossover outside overbought adds 4 pts.
+            </p>
+            <Formula darkMode={darkMode}>
+              <div>StochRSI = (RSI − RSI_Low) / (RSI_High − RSI_Low)</div>
+              <div>K = SMA(3) of StochRSI × 100</div>
+              <div>D = SMA(3) of K</div>
+              <div className={`mt-1 text-xs ${darkMode ? 'text-gray-500' : 'text-gray-500'}`}>
+                RSI_Low and RSI_High are the lowest and highest RSI values over the lookback period
+              </div>
+            </Formula>
+            <p>
+              <strong>Why it matters:</strong> Stochastic RSI applies stochastic oscillator math to
+              RSI values rather than price, making it more sensitive to momentum shifts than RSI alone.
+              It cycles between 0–100 more frequently, catching overbought/oversold conditions that
+              standard RSI misses — especially useful when RSI is in the 30–70 neutral range.
             </p>
           </SignalCard>
         </div>
@@ -721,8 +786,11 @@ export const MethodologyPage = ({ onBack, darkMode, setDarkMode }) => (
                 'Negative Funding',
                 'Bullish Divergence',
                 'Bullish Engulfing',
-                'Near ATL (within 20%)',
+                'Near ATL (within 50%)',
                 'Volume Spike (> 1.5× avg)',
+                'MACD Bullish Cross',
+                'StochRSI Oversold (K < 20)',
+                'StochRSI Bullish Cross (K > D)',
               ],
             },
             {
@@ -736,6 +804,9 @@ export const MethodologyPage = ({ onBack, darkMode, setDarkMode }) => (
                 'Bearish Engulfing',
                 'Near ATH (within 10%)',
                 'High Vol/MCap (> 10%)',
+                'MACD Bearish Cross',
+                'StochRSI Overbought (K > 80)',
+                'StochRSI Bearish Cross (K < D)',
               ],
             },
           ].map((row, i) => (
@@ -761,7 +832,7 @@ export const MethodologyPage = ({ onBack, darkMode, setDarkMode }) => (
 
         <Callout darkMode={darkMode} type="info" icon="ℹ️" title="Enhanced vs Basic Tokens">
           Buy and sell signal filters that require exchange data (SMA50, Bollinger Bands, funding
-          rate, divergence, engulfing patterns, volume spike) are only available for the top 250
+          rate, divergence, engulfing patterns, volume spike, MACD, and Stochastic RSI) are only available for the top 250
           tokens. These filters are grayed out when using the basic API.
           Tokens ranked 251–1,000 still receive RSI, price position, and high vol/mcap signals
           calculated from CoinGecko sparkline data.
@@ -829,7 +900,7 @@ export const MethodologyPage = ({ onBack, darkMode, setDarkMode }) => (
           <div className={`${darkMode ? 'bg-white/5' : 'bg-gray-50'} rounded-xl p-5`}>
             <h3 className="font-bold mb-2">Full Signal Analysis</h3>
             <p className={`text-sm ${darkMode ? 'text-gray-400' : 'text-gray-600'}`}>
-              Complete breakdown of all 8 signal categories in a symmetrical bullish vs bearish
+              Complete breakdown of all 10 signal categories in a symmetrical bullish vs bearish
               layout. Shows each signal pair with its active state, point contribution, and a visual
               score summary bar. Also displays the market cap reliability tier and overall
               recommendation. Technical indicator values (SMA50, SMA20, Bollinger Bands, Volume Ratio,
@@ -878,7 +949,7 @@ export const MethodologyPage = ({ onBack, darkMode, setDarkMode }) => (
             </h3>
             <p className={`text-sm leading-relaxed ${darkMode ? 'text-gray-400' : 'text-gray-600'}`}>
               <strong>Top 250 tokens</strong> are "enhanced" with exchange data from Bybit/OKX,
-              providing all 8 signal categories. <strong>Tokens 251–1,000</strong> use CoinGecko
+              providing all 10 signal categories. <strong>Tokens 251–1,000</strong> use CoinGecko
               sparkline data for SMA/BB calculations as a fallback, with funding rate, divergence,
               engulfing, and volume spike signals marked as unavailable. This tiering balances data
               quality with API rate limits.
@@ -921,6 +992,47 @@ export const MethodologyPage = ({ onBack, darkMode, setDarkMode }) => (
             </p>
           </Callout>
         </div>
+      </Section>
+
+      {/* ============================================================ */}
+      {/* MARKET SENTIMENT WIDGET */}
+      {/* ============================================================ */}
+      <Section darkMode={darkMode}>
+        <h2 className="text-xl sm:text-3xl font-bold mb-6">🌡️ Market Sentiment Widget</h2>
+        <p className={`mb-6 leading-relaxed ${darkMode ? 'text-gray-300' : 'text-gray-700'}`}>
+          The dashboard header displays a real-time market sentiment gauge that combines two data sources
+          to give an at-a-glance view of overall crypto market conditions.
+        </p>
+
+        <div className="space-y-5">
+          <div className={`${darkMode ? 'bg-white/5' : 'bg-gray-50'} rounded-xl p-5`}>
+            <h3 className="font-bold mb-2">Internal RSI Sentiment Score</h3>
+            <p className={`text-sm ${darkMode ? 'text-gray-400' : 'text-gray-600'}`}>
+              Calculated from the average RSI of all tracked tokens, mapped directly to a 0–100 scale.
+              The gauge needle and color reflect the current market-wide momentum: red (Extremely Weak)
+              when average RSI is very low, through neutral gray, to green (Extremely Strong) when average
+              RSI is high. The RSI distribution is shown as clickable breakdown cards (Extreme, Oversold,
+              Neutral, Overbought) that also act as quick filters for the main table.
+            </p>
+          </div>
+
+          <div className={`${darkMode ? 'bg-white/5' : 'bg-gray-50'} rounded-xl p-5`}>
+            <h3 className="font-bold mb-2">External Fear & Greed Index</h3>
+            <p className={`text-sm ${darkMode ? 'text-gray-400' : 'text-gray-600'}`}>
+              Fetched from the Alternative.me Crypto Fear & Greed Index API. This widely-followed index
+              aggregates volatility, market momentum/volume, social media sentiment, Bitcoin dominance,
+              and Google Trends data into a single 0–100 score. It is displayed alongside the internal
+              RSI score for comparison — when both indicators agree, conviction is higher.
+            </p>
+          </div>
+        </div>
+
+        <Callout darkMode={darkMode} type="info" icon="ℹ️" title="Two Perspectives">
+          The internal RSI score reflects current technical conditions across all tracked tokens,
+          while the Fear & Greed Index captures broader market psychology. Divergence between the two
+          (e.g., RSI showing weak conditions while Fear & Greed shows greed) can itself be an
+          informative signal worth investigating.
+        </Callout>
       </Section>
 
       {/* ============================================================ */}
@@ -968,6 +1080,35 @@ export const MethodologyPage = ({ onBack, darkMode, setDarkMode }) => (
             <p className={`text-sm ${darkMode ? 'text-gray-400' : 'text-gray-600'}`}>
               An optional toggle to hide tokens with volume below $1M, helping you focus on
               liquid assets where technical signals are more meaningful.
+            </p>
+          </div>
+
+          <div className={`${darkMode ? 'bg-white/5' : 'bg-gray-50'} rounded-xl p-5`}>
+            <h3 className="font-bold mb-2">⌨️ Keyboard Shortcuts</h3>
+            <p className={`text-sm ${darkMode ? 'text-gray-400' : 'text-gray-600'}`}>
+              Power-user shortcuts for faster navigation: <strong>/</strong> to focus search,{' '}
+              <strong>W</strong> to toggle the watchlist view, <strong>S</strong> to save the current
+              token to your watchlist, <strong>?</strong> to open the shortcuts reference modal, and
+              more. Press <strong>?</strong> at any time to see all available shortcuts.
+            </p>
+          </div>
+
+          <div className={`${darkMode ? 'bg-white/5' : 'bg-gray-50'} rounded-xl p-5`}>
+            <h3 className="font-bold mb-2">🔗 Shareable Filter URLs</h3>
+            <p className={`text-sm ${darkMode ? 'text-gray-400' : 'text-gray-600'}`}>
+              Active filters are automatically serialized into the URL hash (e.g.,{' '}
+              <code className={`text-xs px-1 py-0.5 rounded ${darkMode ? 'bg-white/10' : 'bg-gray-200'}`}>
+                #/?rsi=extreme&signals=bullish_divergence
+              </code>). This means your current filter setup survives page refreshes and can be
+              bookmarked or shared with others.
+            </p>
+          </div>
+
+          <div className={`${darkMode ? 'bg-white/5' : 'bg-gray-50'} rounded-xl p-5`}>
+            <h3 className="font-bold mb-2">⬆️ Back to Top</h3>
+            <p className={`text-sm ${darkMode ? 'text-gray-400' : 'text-gray-600'}`}>
+              A floating button appears after scrolling down in the token table, providing quick
+              one-click navigation back to the dashboard filters and sentiment widget.
             </p>
           </div>
         </div>
