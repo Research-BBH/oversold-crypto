@@ -24,7 +24,7 @@ const BUY_FILTERS = [
   { id: 'negative_funding',  label: '▲ Neg Funding',  desc: 'Shorts paying longs', enhanced: true },
   { id: 'bullish_divergence',label: '▲ Bull Divergence', desc: 'Price ↓ but RSI ↑', enhanced: true },
   { id: 'bullish_engulfing', label: '▲ Bull Engulf',  desc: 'Bullish engulfing candle', enhanced: true },
-  { id: 'near_atl',          label: '▲ Near ATL',     desc: 'Within 20% of all-time low' },
+  { id: 'near_atl',          label: '▲ Near ATL',     desc: 'Within 50% of all-time low' },
   { id: 'volume_spike',      label: '▲ Vol Spike',    desc: 'Volume > 1.5x average', enhanced: true },
   { id: 'macd_bullish_cross', label: '▲ MACD Cross',   desc: 'MACD crossed above signal line', enhanced: true },
   { id: 'stoch_oversold',     label: '▲ StochRSI OS',  desc: 'Stoch RSI below 20 (oversold)', enhanced: true },
