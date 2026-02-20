@@ -169,6 +169,52 @@ function TableHeader({ sortBy, setSortBy, setPreset, setRsiFilter, darkMode }) {
   );
 }
 
+// ─── Mini MACD / StochRSI indicator badges ───────────────────────────────────
+
+function MiniIndicators({ token, darkMode }) {
+  const { signals, stochRsi } = token;
+  if (!signals) return null;
+
+  const badges = [];
+
+  if (signals.macdBullishCross) {
+    badges.push(
+      <span key="macd-bull" title="MACD Bullish Cross"
+        className="inline-flex items-center px-1 py-0.5 rounded text-[9px] font-bold leading-none bg-green-500/20 text-green-400">
+        MACD↑
+      </span>
+    );
+  } else if (signals.macdBearishCross) {
+    badges.push(
+      <span key="macd-bear" title="MACD Bearish Cross"
+        className="inline-flex items-center px-1 py-0.5 rounded text-[9px] font-bold leading-none bg-red-500/20 text-red-400">
+        MACD↓
+      </span>
+    );
+  }
+
+  if (stochRsi) {
+    if (stochRsi.oversold) {
+      badges.push(
+        <span key="stoch-os" title={`Stoch RSI Oversold (K:${stochRsi.k})`}
+          className="inline-flex items-center px-1 py-0.5 rounded text-[9px] font-bold leading-none bg-orange-500/20 text-orange-400">
+          SK:{stochRsi.k}
+        </span>
+      );
+    } else if (stochRsi.overbought) {
+      badges.push(
+        <span key="stoch-ob" title={`Stoch RSI Overbought (K:${stochRsi.k})`}
+          className="inline-flex items-center px-1 py-0.5 rounded text-[9px] font-bold leading-none bg-blue-500/20 text-blue-400">
+          SK:{stochRsi.k}
+        </span>
+      );
+    }
+  }
+
+  if (badges.length === 0) return null;
+  return <span className="flex items-center gap-0.5 flex-wrap">{badges}</span>;
+}
+
 // ─── Token row ────────────────────────────────────────────────────────────────
 
 function TokenRow({ token: t, index, isSelected, watched, darkMode, toggleWatch, openTokenPage }) {
