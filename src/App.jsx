@@ -130,6 +130,9 @@ export default function App() {
   const [tablePage, setTablePage] = useState(1);
   const [rowsPerPage, setRowsPerPage] = useState(50);
   const [showBackToTop, setShowBackToTop] = useState(false);
+  const [showShortcutsModal, setShowShortcutsModal] = useState(false);
+  const [selectedRowIndex, setSelectedRowIndex] = useState(-1);
+  const searchInputRef = useRef(null);
   const [darkMode, setDarkMode] = useState(() => {
     const saved = localStorage.getItem('oversold_darkMode');
     return saved !== null ? JSON.parse(saved) : true;
@@ -228,6 +231,139 @@ export default function App() {
   const scrollToTop = () => {
     window.scrollTo({ top: 0, behavior: 'smooth' });
   };
+
+  // Keyboard shortcuts
+  useEffect(() => {
+    const handleKeyDown = (e) => {
+      // Don't trigger shortcuts when typing in inputs
+      const isTyping = e.target.tagName === 'INPUT' || e.target.tagName === 'TEXTAREA' || e.target.tagName === 'SELECT';
+      
+      // Escape always works - close modals or clear selection
+      if (e.key === 'Escape') {
+        if (showShortcutsModal) {
+          setShowShortcutsModal(false);
+        } else if (showLoginModal) {
+          setShowLoginModal(false);
+        } else if (selectedRowIndex >= 0) {
+          setSelectedRowIndex(-1);
+        } else if (isTyping) {
+          e.target.blur();
+        }
+        return;
+      }
+      
+      // Don't process other shortcuts while typing
+      if (isTyping) return;
+      
+      // Only work on home page
+      if (currentPage !== 'home') return;
+      
+      switch (e.key) {
+        case '/':
+          e.preventDefault();
+          searchInputRef.current?.focus();
+          break;
+        case '?':
+          e.preventDefault();
+          setShowShortcutsModal(true);
+          break;
+        case 'w':
+        case 'W':
+          if (user) {
+            setShowWL(prev => !prev);
+          } else {
+            setShowLoginModal(true);
+          }
+          break;
+        case 'd':
+        case 'D':
+          setDarkMode(prev => !prev);
+          break;
+        case 'r':
+        case 'R':
+          if (!e.ctrlKey && !e.metaKey) {
+            fetchData();
+          }
+          break;
+        case 'j':
+        case 'J':
+        case 'ArrowDown':
+          e.preventDefault();
+          setSelectedRowIndex(prev => {
+            const maxIndex = paginatedTokens.length - 1;
+            if (prev < maxIndex) return prev + 1;
+            return prev;
+          });
+          break;
+        case 'k':
+        case 'K':
+        case 'ArrowUp':
+          e.preventDefault();
+          setSelectedRowIndex(prev => {
+            if (prev > 0) return prev - 1;
+            if (prev === -1) return 0;
+            return prev;
+          });
+          break;
+        case 'Enter':
+          if (selectedRowIndex >= 0 && selectedRowIndex < paginatedTokens.length) {
+            const token = paginatedTokens[selectedRowIndex];
+            window.location.hash = `#/token/${token.id}`;
+          }
+          break;
+        case 'o':
+        case 'O':
+          if (selectedRowIndex >= 0 && selectedRowIndex < paginatedTokens.length) {
+            const token = paginatedTokens[selectedRowIndex];
+            window.open(`${window.location.pathname}#/token/${token.id}`, '_blank');
+          }
+          break;
+        case 's':
+        case 'S':
+          if (selectedRowIndex >= 0 && selectedRowIndex < paginatedTokens.length && user) {
+            const token = paginatedTokens[selectedRowIndex];
+            setWatchlist(prev => {
+              const newWL = new Set(prev);
+              if (newWL.has(token.id)) {
+                newWL.delete(token.id);
+              } else {
+                newWL.add(token.id);
+              }
+              return newWL;
+            });
+          }
+          break;
+        case '[':
+          if (tablePage > 1) {
+            setTablePage(prev => prev - 1);
+            setSelectedRowIndex(-1);
+          }
+          break;
+        case ']':
+          if (tablePage < totalPages) {
+            setTablePage(prev => prev + 1);
+            setSelectedRowIndex(-1);
+          }
+          break;
+        case 'g':
+          // gg to go to top (first press sets up, handled by second)
+          break;
+        case 'G':
+          setSelectedRowIndex(paginatedTokens.length - 1);
+          break;
+        default:
+          break;
+      }
+    };
+    
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, [currentPage, showShortcutsModal, showLoginModal, selectedRowIndex, paginatedTokens, user, tablePage, totalPages]);
+
+  // Reset selected row when page or filters change
+  useEffect(() => {
+    setSelectedRowIndex(-1);
+  }, [tablePage, cat, rsiFilter, preset, signalFilters, search]);
 
   // Load user from localStorage
   useEffect(() => {
@@ -1114,8 +1250,9 @@ if (signalFilters.size > 0) {
           <div className="flex gap-2">
             <div className="relative flex-1 min-w-0">
               <input
+                ref={searchInputRef}
                 type="text"
-                placeholder="Search tokens..."
+                placeholder="Search tokens... (press /)"
                 value={search}
                 onChange={(e) => setSearch(e.target.value)}
                 className={`w-full ${
@@ -1553,8 +1690,9 @@ if (signalFilters.size > 0) {
                   </p>
                 </div>
               ) : (
-                paginatedTokens.map((t) => {
+                paginatedTokens.map((t, index) => {
                   const watched = watchlist.has(t.id);
+                  const isSelected = index === selectedRowIndex;
                   const sparkColor =
                     t.sparkline?.length > 1
                       ? t.sparkline[t.sparkline.length - 1] >= t.sparkline[0]
@@ -1571,6 +1709,12 @@ if (signalFilters.size > 0) {
                           : 'border-gray-100 hover:bg-gray-50'
                       } border-b ${
                         watched ? (darkMode ? 'bg-yellow-500/[0.04]' : 'bg-yellow-50') : ''
+                      } ${
+                        isSelected 
+                          ? darkMode 
+                            ? 'ring-2 ring-inset ring-orange-500/50 bg-orange-500/10' 
+                            : 'ring-2 ring-inset ring-orange-500 bg-orange-50'
+                          : ''
                       }`}
                     >
                       {/* Desktop: grid row */}
@@ -1882,6 +2026,144 @@ if (signalFilters.size > 0) {
       {showLoginModal && (
         <LoginModal onClose={() => setShowLoginModal(false)} onLogin={handleLogin} darkMode={darkMode} />
       )}
+
+      {/* Keyboard Shortcuts Modal */}
+      {showShortcutsModal && (
+        <div
+          className="fixed inset-0 bg-black/80 backdrop-blur-sm z-50 flex items-center justify-center p-4"
+          onClick={() => setShowShortcutsModal(false)}
+        >
+          <div
+            className={`rounded-2xl p-6 max-w-lg w-full shadow-2xl border ${
+              darkMode 
+                ? 'bg-[#1a1a24] border-white/10' 
+                : 'bg-white border-gray-200'
+            }`}
+            onClick={(e) => e.stopPropagation()}
+          >
+            <div className="flex items-center justify-between mb-6">
+              <h2 className={`text-xl font-bold ${darkMode ? 'text-white' : 'text-gray-900'}`}>
+                ⌨️ Keyboard Shortcuts
+              </h2>
+              <button
+                onClick={() => setShowShortcutsModal(false)}
+                className={`p-2 rounded-lg transition-colors ${
+                  darkMode ? 'hover:bg-white/10 text-gray-400' : 'hover:bg-gray-100 text-gray-500'
+                }`}
+              >
+                <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                </svg>
+              </button>
+            </div>
+            
+            <div className="space-y-4">
+              {/* Navigation */}
+              <div>
+                <h3 className={`text-xs font-semibold uppercase tracking-wide mb-2 ${darkMode ? 'text-gray-500' : 'text-gray-400'}`}>
+                  Navigation
+                </h3>
+                <div className="space-y-2">
+                  {[
+                    { keys: ['J', '↓'], desc: 'Move down in table' },
+                    { keys: ['K', '↑'], desc: 'Move up in table' },
+                    { keys: ['Enter'], desc: 'Open selected token' },
+                    { keys: ['O'], desc: 'Open in new tab' },
+                    { keys: ['['], desc: 'Previous page' },
+                    { keys: [']'], desc: 'Next page' },
+                    { keys: ['G'], desc: 'Go to last row' },
+                  ].map(({ keys, desc }) => (
+                    <div key={desc} className="flex items-center justify-between">
+                      <span className={`text-sm ${darkMode ? 'text-gray-300' : 'text-gray-700'}`}>{desc}</span>
+                      <div className="flex gap-1">
+                        {keys.map((key, i) => (
+                          <span key={i}>
+                            <kbd className={`px-2 py-1 rounded text-xs font-mono ${
+                              darkMode ? 'bg-white/10 text-gray-300' : 'bg-gray-100 text-gray-700'
+                            }`}>{key}</kbd>
+                            {i < keys.length - 1 && <span className={`mx-1 text-xs ${darkMode ? 'text-gray-600' : 'text-gray-400'}`}>or</span>}
+                          </span>
+                        ))}
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </div>
+
+              {/* Actions */}
+              <div>
+                <h3 className={`text-xs font-semibold uppercase tracking-wide mb-2 ${darkMode ? 'text-gray-500' : 'text-gray-400'}`}>
+                  Actions
+                </h3>
+                <div className="space-y-2">
+                  {[
+                    { keys: ['/'], desc: 'Focus search' },
+                    { keys: ['W'], desc: 'Toggle watchlist view' },
+                    { keys: ['S'], desc: 'Star/unstar selected token' },
+                    { keys: ['D'], desc: 'Toggle dark mode' },
+                    { keys: ['R'], desc: 'Refresh data' },
+                  ].map(({ keys, desc }) => (
+                    <div key={desc} className="flex items-center justify-between">
+                      <span className={`text-sm ${darkMode ? 'text-gray-300' : 'text-gray-700'}`}>{desc}</span>
+                      <div className="flex gap-1">
+                        {keys.map((key, i) => (
+                          <kbd key={i} className={`px-2 py-1 rounded text-xs font-mono ${
+                            darkMode ? 'bg-white/10 text-gray-300' : 'bg-gray-100 text-gray-700'
+                          }`}>{key}</kbd>
+                        ))}
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </div>
+
+              {/* General */}
+              <div>
+                <h3 className={`text-xs font-semibold uppercase tracking-wide mb-2 ${darkMode ? 'text-gray-500' : 'text-gray-400'}`}>
+                  General
+                </h3>
+                <div className="space-y-2">
+                  {[
+                    { keys: ['?'], desc: 'Show this help' },
+                    { keys: ['Esc'], desc: 'Close modal / clear selection' },
+                  ].map(({ keys, desc }) => (
+                    <div key={desc} className="flex items-center justify-between">
+                      <span className={`text-sm ${darkMode ? 'text-gray-300' : 'text-gray-700'}`}>{desc}</span>
+                      <div className="flex gap-1">
+                        {keys.map((key, i) => (
+                          <kbd key={i} className={`px-2 py-1 rounded text-xs font-mono ${
+                            darkMode ? 'bg-white/10 text-gray-300' : 'bg-gray-100 text-gray-700'
+                          }`}>{key}</kbd>
+                        ))}
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            </div>
+
+            <p className={`mt-6 text-xs text-center ${darkMode ? 'text-gray-600' : 'text-gray-400'}`}>
+              Press <kbd className={`px-1.5 py-0.5 rounded text-xs font-mono ${darkMode ? 'bg-white/10' : 'bg-gray-100'}`}>?</kbd> anytime to show this help
+            </p>
+          </div>
+        </div>
+      )}
+
+      {/* Keyboard Shortcuts Help Button */}
+      <button
+        onClick={() => setShowShortcutsModal(true)}
+        className={`fixed bottom-6 left-6 z-40 p-3 rounded-full shadow-lg transition-all duration-300 hidden sm:flex items-center justify-center ${
+          darkMode 
+            ? 'bg-white/10 hover:bg-white/20 text-white border border-white/10 backdrop-blur-sm' 
+            : 'bg-white hover:bg-gray-50 text-gray-700 border border-gray-200 shadow-md'
+        }`}
+        aria-label="Keyboard shortcuts"
+        title="Keyboard shortcuts (?)"
+      >
+        <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M12 6.042A8.967 8.967 0 006 3.75c-1.052 0-2.062.18-3 .512v14.25A8.987 8.987 0 016 18c2.305 0 4.408.867 6 2.292m0-14.25a8.966 8.966 0 016-2.292c1.052 0 2.062.18 3 .512v14.25A8.987 8.987 0 0018 18a8.967 8.967 0 00-6 2.292m0-14.25v14.25" />
+        </svg>
+      </button>
 
       {/* Back to Top Button */}
       <button
