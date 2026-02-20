@@ -12,6 +12,7 @@ export function DashboardHeader({
   stats,
   lastUpdate,
   apiStats,
+  cacheHit,
   onLogoClick,
 }) {
   return (
@@ -58,9 +59,9 @@ export function DashboardHeader({
       <div className="flex items-center justify-between mt-1.5 sm:mt-2">
         <div className="flex items-center gap-2 sm:gap-3">
           <div className="flex items-center gap-1.5">
-            <span className="w-2 h-2 bg-green-500 rounded-full animate-pulse" />
+            <span className={`w-2 h-2 rounded-full animate-pulse ${cacheHit ? 'bg-sky-400' : 'bg-green-500'}`} />
             <span className={`text-xs sm:text-sm ${darkMode ? 'text-gray-400' : 'text-gray-500'}`}>
-              Live
+              {cacheHit ? 'Cached' : 'Live'}
             </span>
           </div>
           <span className={darkMode ? 'text-gray-600' : 'text-gray-400'}>•</span>
