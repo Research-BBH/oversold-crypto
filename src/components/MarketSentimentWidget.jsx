@@ -10,20 +10,20 @@ const GAUGE_R_NEEDLE = 86;
 const NEEDLE_BASE = 8;
 
 const ZONES = [
-  { id: 'extreme_fear',  label: 'Extreme Fear',  startDeg: 180, endDeg: 144, color: '#ef4444', trackColor: '#ef444422' },
-  { id: 'fear',          label: 'Fear',           startDeg: 144, endDeg: 108, color: '#f97316', trackColor: '#f9731622' },
+  { id: 'extreme_fear',  label: 'Extremely Weak', startDeg: 180, endDeg: 144, color: '#ef4444', trackColor: '#ef444422' },
+  { id: 'fear',          label: 'Weak',           startDeg: 144, endDeg: 108, color: '#f97316', trackColor: '#f9731622' },
   { id: 'neutral',       label: 'Neutral',        startDeg: 108, endDeg:  72, color: '#a3a3a3', trackColor: '#a3a3a322' },
-  { id: 'greed',         label: 'Greed',          startDeg:  72, endDeg:  36, color: '#84cc16', trackColor: '#84cc1622' },
-  { id: 'extreme_greed', label: 'Extreme Greed',  startDeg:  36, endDeg:   0, color: '#22c55e', trackColor: '#22c55e22' },
+  { id: 'greed',         label: 'Strong',         startDeg:  72, endDeg:  36, color: '#84cc16', trackColor: '#84cc1622' },
+  { id: 'extreme_greed', label: 'Extremely Strong', startDeg:  36, endDeg:   0, color: '#22c55e', trackColor: '#22c55e22' },
 ];
 
 const SENTIMENT_BANDS = [
-  { max: 20,  label: 'Extreme Fear',  color: '#ef4444' },
-  { max: 35,  label: 'Fear',          color: '#f97316' },
-  { max: 50,  label: 'Mild Fear',     color: '#eab308' },
+  { max: 20,  label: 'Extremely Weak',   color: '#ef4444' },
+  { max: 35,  label: 'Weak',             color: '#f97316' },
+  { max: 50,  label: 'Slightly Weak',    color: '#eab308' },
   { max: 65,  label: 'Neutral',       color: '#a3a3a3' },
-  { max: 80,  label: 'Greed',         color: '#84cc16' },
-  { max: 101, label: 'Extreme Greed', color: '#22c55e' },
+  { max: 80,  label: 'Strong',           color: '#84cc16' },
+  { max: 101, label: 'Extremely Strong', color: '#22c55e' },
 ];
 
 const BREAKDOWN_CARDS = [
@@ -160,8 +160,8 @@ function Gauge({ score, accentColor }) {
         const [gx, gy] = arcPoint(GAUGE_CX, GAUGE_CY, GAUGE_R_OUTER + 16, 0);
         return (
           <>
-            <text x={fx - 2} y={fy + 4} textAnchor="end"   fontSize="10" fill="#ef4444" fontWeight="700" fontFamily="monospace" opacity="0.9">FEAR</text>
-            <text x={gx + 2} y={gy + 4} textAnchor="start" fontSize="10" fill="#22c55e" fontWeight="700" fontFamily="monospace" opacity="0.9">GREED</text>
+            <text x={fx - 2} y={fy + 4} textAnchor="end"   fontSize="10" fill="#ef4444" fontWeight="700" fontFamily="monospace" opacity="0.9">WEAK</text>
+            <text x={gx + 2} y={gy + 4} textAnchor="start" fontSize="10" fill="#22c55e" fontWeight="700" fontFamily="monospace" opacity="0.9">STRONG</text>
           </>
         );
       })()}
@@ -273,7 +273,7 @@ export function MarketSentimentWidget({ stats, darkMode, rsiFilter, setRsiFilter
           <div className="flex items-start justify-between">
             <div>
               <h3 className={`text-xs font-bold uppercase tracking-widest ${darkMode ? 'text-gray-400' : 'text-gray-500'}`}>
-                Market Sentiment
+                RSI Market Health
               </h3>
               <p className={`text-[11px] mt-0.5 ${darkMode ? 'text-gray-600' : 'text-gray-400'}`}>
                 Based on RSI across {total} tokens
