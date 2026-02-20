@@ -1227,6 +1227,16 @@ const getCategoryFromMetadata = (id, name, symbol) => {
   return 'other';
 };
 
+// Simple hash: FNV-1a on a string (fast, no crypto needed)
+const fnv1a = (str) => {
+  let h = 2166136261;
+  for (let i = 0; i < str.length; i++) {
+    h ^= str.charCodeAt(i);
+    h = (h * 16777619) >>> 0;
+  }
+  return h.toString(36);
+};
+
 export default async function handler(req) {
   const CG_API_KEY = process.env.COINGECKO_API_KEY;
   
@@ -1508,16 +1518,38 @@ export default async function handler(req) {
     
     console.log(`✅ Enhanced ${enhancedCount}/${allTokens.length} tokens in ${duration}s (removed ${stablecoinsRemoved} stablecoins)`);
     
+    const timestamp = new Date().toISOString();
+    const withRSI   = allTokens.filter(t => t.rsi !== null).length;
+    
+    // Build a lightweight fingerprint so CDN + clients can use ETags
+    // Fingerprint = hash of: timestamp + token count + sum of first 20 prices (changes when market moves)
+    const priceProbe = allTokens.slice(0, 20).reduce((s, t) => s + (t.price || 0), 0).toFixed(2);
+    const fingerprint = fnv1a(`${timestamp}|${allTokens.length}|${priceProbe}`);
+    const etag = `"${fingerprint}"`;
+
+    // If the client already has this exact version, return 304 (no body)
+    const clientETag = req.headers?.get ? req.headers.get('if-none-match') : (req.headers?.['if-none-match'] ?? null);
+    if (clientETag && clientETag === etag) {
+      return new Response(null, {
+        status: 304,
+        headers: {
+          'ETag': etag,
+          'Cache-Control': 's-maxage=60, stale-while-revalidate=300',
+          'Access-Control-Allow-Origin': '*',
+        }
+      });
+    }
+
     return new Response(
       JSON.stringify({
         tokens: allTokens,
-        timestamp: new Date().toISOString(),
+        timestamp,
         source: 'coingecko+exchanges',
-        version: '2.1-no-stablecoins', // Version indicator
+        version: '2.1-no-stablecoins',
         stats: {
           total: allTokens.length,
           enhanced: enhancedCount,
-          withRSI: allTokens.filter(t => t.rsi !== null).length,
+          withRSI,
           stablecoinsRemoved: stablecoinsRemoved,
           duration: `${duration}s`,
         }
@@ -1526,7 +1558,8 @@ export default async function handler(req) {
         status: 200, 
         headers: { 
           'Content-Type': 'application/json',
-          'Cache-Control': 's-maxage=60, stale-while-revalidate=300', // Cache for 60s, serve stale for 5min
+          'Cache-Control': 's-maxage=60, stale-while-revalidate=300',
+          'ETag': etag,
           'Access-Control-Allow-Origin': '*',
         } 
       }
