@@ -904,6 +904,7 @@ const enhanceToken = async (token) => {
       bearishDivergence: divergence.bearish,
       bearishEngulfing: engulfing.bearish,
       nearATH: nearATH,
+      nearATL: token.atlChange !== undefined && token.atlChange !== null && token.atlChange <= 50,
       highVolMcap: highVolMcap,
       // MACD
       macdBullishCross:  macd ? macd.bullishCross  : null,
@@ -985,6 +986,7 @@ const enhanceToken = async (token) => {
     bearishDivergence: null, // Can't calculate without RSI history
     bearishEngulfing: null, // Can't calculate without OHLC data
     nearATH: nearATH,
+    nearATL: token.atlChange !== undefined && token.atlChange !== null && token.atlChange <= 50,
     highVolMcap: volMcapRatio !== null && volMcapRatio > 10,
   };
   
@@ -1487,6 +1489,7 @@ export default async function handler(req) {
         bearishDivergence: null,
         bearishEngulfing: null,
         nearATH: nearATH,
+        nearATL: token.atlChange !== undefined && token.atlChange !== null && token.atlChange <= 50,
         highVolMcap: volMcapRatio !== null && volMcapRatio > 10,
       };
       
