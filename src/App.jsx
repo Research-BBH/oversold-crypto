@@ -1166,11 +1166,104 @@ if (signalFilters.size > 0) {
 
         {/* Loading / Error States */}
         {loading ? (
-          <div className="text-center py-24">
-            <div className="w-14 h-14 border-4 border-orange-500/30 border-t-orange-500 rounded-full animate-spin mx-auto" />
-            <p className={`mt-5 ${darkMode ? 'text-gray-400' : 'text-gray-500'}`}>
-              Loading market data...
-            </p>
+          /* Skeleton Loading State */
+          <div
+            className={`${
+              darkMode ? 'bg-white/[0.03] border-white/10' : 'bg-white border-gray-200'
+            } backdrop-blur-sm rounded-2xl border overflow-hidden`}
+          >
+            {/* Skeleton Table Header */}
+            <div
+              className={`hidden lg:grid grid-cols-12 gap-4 px-5 py-3 border-b ${
+                darkMode ? 'border-white/10' : 'border-gray-100'
+              }`}
+            >
+              <div className="col-span-2"><div className={`h-3 w-16 rounded ${darkMode ? 'bg-white/10' : 'bg-gray-200'}`} /></div>
+              <div className="col-span-1 flex justify-end"><div className={`h-3 w-12 rounded ${darkMode ? 'bg-white/10' : 'bg-gray-200'}`} /></div>
+              <div className="col-span-1 flex justify-end"><div className={`h-3 w-14 rounded ${darkMode ? 'bg-white/10' : 'bg-gray-200'}`} /></div>
+              <div className="col-span-1 flex justify-end"><div className={`h-3 w-12 rounded ${darkMode ? 'bg-white/10' : 'bg-gray-200'}`} /></div>
+              <div className="col-span-1 flex justify-end"><div className={`h-3 w-8 rounded ${darkMode ? 'bg-white/10' : 'bg-gray-200'}`} /></div>
+              <div className="col-span-1 flex justify-end"><div className={`h-3 w-8 rounded ${darkMode ? 'bg-white/10' : 'bg-gray-200'}`} /></div>
+              <div className="col-span-2 flex justify-end pr-4"><div className={`h-3 w-14 rounded ${darkMode ? 'bg-white/10' : 'bg-gray-200'}`} /></div>
+              <div className="col-span-2 flex justify-center"><div className={`h-3 w-16 rounded ${darkMode ? 'bg-white/10' : 'bg-gray-200'}`} /></div>
+              <div className="col-span-1 flex justify-center"><div className={`h-3 w-14 rounded ${darkMode ? 'bg-white/10' : 'bg-gray-200'}`} /></div>
+            </div>
+            
+            {/* Skeleton Rows */}
+            {[...Array(10)].map((_, i) => (
+              <div
+                key={i}
+                className={`border-b ${darkMode ? 'border-white/5' : 'border-gray-50'}`}
+              >
+                {/* Desktop Skeleton Row */}
+                <div className="hidden lg:grid grid-cols-12 gap-4 px-5 py-4 items-center">
+                  {/* Token */}
+                  <div className="col-span-2 flex items-center gap-3">
+                    <div className={`w-10 h-10 rounded-xl animate-pulse ${darkMode ? 'bg-white/10' : 'bg-gray-200'}`} />
+                    <div className="space-y-2">
+                      <div className={`h-4 w-20 rounded animate-pulse ${darkMode ? 'bg-white/10' : 'bg-gray-200'}`} style={{ animationDelay: `${i * 50}ms` }} />
+                      <div className={`h-3 w-12 rounded animate-pulse ${darkMode ? 'bg-white/5' : 'bg-gray-100'}`} style={{ animationDelay: `${i * 50 + 25}ms` }} />
+                    </div>
+                  </div>
+                  {/* Price */}
+                  <div className="col-span-1 flex justify-end">
+                    <div className={`h-4 w-16 rounded animate-pulse ${darkMode ? 'bg-white/10' : 'bg-gray-200'}`} style={{ animationDelay: `${i * 50}ms` }} />
+                  </div>
+                  {/* Volume */}
+                  <div className="col-span-1 flex justify-end">
+                    <div className={`h-4 w-14 rounded animate-pulse ${darkMode ? 'bg-white/10' : 'bg-gray-200'}`} style={{ animationDelay: `${i * 50}ms` }} />
+                  </div>
+                  {/* MCap */}
+                  <div className="col-span-1 flex justify-end">
+                    <div className={`h-4 w-16 rounded animate-pulse ${darkMode ? 'bg-white/10' : 'bg-gray-200'}`} style={{ animationDelay: `${i * 50}ms` }} />
+                  </div>
+                  {/* 24H */}
+                  <div className="col-span-1 flex justify-end">
+                    <div className={`h-4 w-12 rounded animate-pulse ${darkMode ? 'bg-white/10' : 'bg-gray-200'}`} style={{ animationDelay: `${i * 50}ms` }} />
+                  </div>
+                  {/* 7D */}
+                  <div className="col-span-1 flex justify-end">
+                    <div className={`h-4 w-12 rounded animate-pulse ${darkMode ? 'bg-white/10' : 'bg-gray-200'}`} style={{ animationDelay: `${i * 50}ms` }} />
+                  </div>
+                  {/* Signal */}
+                  <div className="col-span-2 flex justify-end pr-4">
+                    <div className={`h-6 w-24 rounded-lg animate-pulse ${darkMode ? 'bg-white/10' : 'bg-gray-200'}`} style={{ animationDelay: `${i * 50}ms` }} />
+                  </div>
+                  {/* Chart */}
+                  <div className="col-span-2 flex justify-center">
+                    <div className={`h-10 w-full max-w-[120px] rounded animate-pulse ${darkMode ? 'bg-white/5' : 'bg-gray-100'}`} style={{ animationDelay: `${i * 50}ms` }} />
+                  </div>
+                  {/* Actions */}
+                  <div className="col-span-1 flex justify-center gap-1">
+                    <div className={`w-8 h-8 rounded-lg animate-pulse ${darkMode ? 'bg-white/5' : 'bg-gray-100'}`} style={{ animationDelay: `${i * 50}ms` }} />
+                    <div className={`w-8 h-8 rounded-lg animate-pulse ${darkMode ? 'bg-white/5' : 'bg-gray-100'}`} style={{ animationDelay: `${i * 50 + 25}ms` }} />
+                  </div>
+                </div>
+                
+                {/* Mobile Skeleton Row */}
+                <div className="lg:hidden px-3 py-3">
+                  <div className="flex items-center justify-between">
+                    <div className="flex items-center gap-3">
+                      <div className={`w-9 h-9 rounded-xl animate-pulse ${darkMode ? 'bg-white/10' : 'bg-gray-200'}`} />
+                      <div className="space-y-1.5">
+                        <div className={`h-4 w-16 rounded animate-pulse ${darkMode ? 'bg-white/10' : 'bg-gray-200'}`} style={{ animationDelay: `${i * 50}ms` }} />
+                        <div className={`h-3 w-10 rounded animate-pulse ${darkMode ? 'bg-white/5' : 'bg-gray-100'}`} style={{ animationDelay: `${i * 50 + 25}ms` }} />
+                      </div>
+                    </div>
+                    <div className="text-right space-y-1.5">
+                      <div className={`h-4 w-14 rounded animate-pulse ml-auto ${darkMode ? 'bg-white/10' : 'bg-gray-200'}`} style={{ animationDelay: `${i * 50}ms` }} />
+                      <div className={`h-3 w-10 rounded animate-pulse ml-auto ${darkMode ? 'bg-white/5' : 'bg-gray-100'}`} style={{ animationDelay: `${i * 50 + 25}ms` }} />
+                    </div>
+                  </div>
+                </div>
+              </div>
+            ))}
+            
+            {/* Loading indicator at bottom */}
+            <div className={`px-5 py-4 flex items-center justify-center gap-3 ${darkMode ? 'bg-white/[0.02]' : 'bg-gray-50'}`}>
+              <div className="w-5 h-5 border-2 border-orange-500/30 border-t-orange-500 rounded-full animate-spin" />
+              <span className={`text-sm ${darkMode ? 'text-gray-400' : 'text-gray-500'}`}>Loading market data...</span>
+            </div>
           </div>
         ) : error ? (
           <div className="text-center py-20 bg-red-500/10 border border-red-500/20 rounded-2xl">
