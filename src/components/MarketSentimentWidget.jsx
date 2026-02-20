@@ -1,4 +1,4 @@
-import { useMemo } from 'react';
+import { useMemo, useState, useEffect } from 'react';
 
 // ─── Constants ────────────────────────────────────────────────────────────────
 
@@ -10,66 +10,51 @@ const GAUGE_R_NEEDLE = 86;
 const NEEDLE_BASE = 8;
 
 const ZONES = [
-  { id: 'extreme_fear',  label: 'Extremely Weak', startDeg: 180, endDeg: 144, color: '#ef4444', trackColor: '#ef444422' },
-  { id: 'fear',          label: 'Weak',           startDeg: 144, endDeg: 108, color: '#f97316', trackColor: '#f9731622' },
-  { id: 'neutral',       label: 'Neutral',        startDeg: 108, endDeg:  72, color: '#a3a3a3', trackColor: '#a3a3a322' },
-  { id: 'greed',         label: 'Strong',         startDeg:  72, endDeg:  36, color: '#84cc16', trackColor: '#84cc1622' },
-  { id: 'extreme_greed', label: 'Extremely Strong', startDeg:  36, endDeg:   0, color: '#22c55e', trackColor: '#22c55e22' },
+  { id: 'extreme_fear',  label: 'Extremely Weak',   startDeg: 180, endDeg: 144, color: '#ef4444', trackColor: '#ef444422' },
+  { id: 'fear',          label: 'Weak',              startDeg: 144, endDeg: 108, color: '#f97316', trackColor: '#f9731622' },
+  { id: 'neutral',       label: 'Neutral',           startDeg: 108, endDeg:  72, color: '#a3a3a3', trackColor: '#a3a3a322' },
+  { id: 'greed',         label: 'Strong',            startDeg:  72, endDeg:  36, color: '#84cc16', trackColor: '#84cc1622' },
+  { id: 'extreme_greed', label: 'Extremely Strong',  startDeg:  36, endDeg:   0, color: '#22c55e', trackColor: '#22c55e22' },
 ];
 
 const SENTIMENT_BANDS = [
   { max: 20,  label: 'Extremely Weak',   color: '#ef4444' },
   { max: 35,  label: 'Weak',             color: '#f97316' },
   { max: 50,  label: 'Slightly Weak',    color: '#eab308' },
-  { max: 65,  label: 'Neutral',       color: '#a3a3a3' },
+  { max: 65,  label: 'Neutral',          color: '#a3a3a3' },
   { max: 80,  label: 'Strong',           color: '#84cc16' },
   { max: 101, label: 'Extremely Strong', color: '#22c55e' },
 ];
 
+// Fear & Greed API score → color
+const FNG_BANDS = [
+  { max: 25,  color: '#ef4444' },
+  { max: 45,  color: '#f97316' },
+  { max: 55,  color: '#a3a3a3' },
+  { max: 75,  color: '#84cc16' },
+  { max: 101, color: '#22c55e' },
+];
+
 const BREAKDOWN_CARDS = [
   {
-    filterKey: 'extreme',
-    label: 'Extreme',
-    sub: 'RSI < 20',
-    statKey: 'extreme',
-    bgDark: 'bg-red-500/10',
-    bgLight: 'bg-red-50',
-    textClass: 'text-red-500',
-    borderActive: 'border-red-500 shadow-red-500/20',
-    borderInactive: 'border-red-500/20 hover:border-red-500/50',
+    filterKey: 'extreme',   label: 'Extreme',    sub: 'RSI < 20',   statKey: 'extreme',
+    bgDark: 'bg-red-500/10',    bgLight: 'bg-red-50',    textClass: 'text-red-500',
+    borderActive: 'border-red-500 shadow-red-500/20',       borderInactive: 'border-red-500/20 hover:border-red-500/50',
   },
   {
-    filterKey: 'oversold',
-    label: 'Oversold',
-    sub: 'RSI < 30',
-    statKey: 'oversold',
-    bgDark: 'bg-orange-500/10',
-    bgLight: 'bg-orange-50',
-    textClass: 'text-orange-500',
-    borderActive: 'border-orange-500 shadow-orange-500/20',
-    borderInactive: 'border-orange-500/20 hover:border-orange-500/50',
+    filterKey: 'oversold',  label: 'Oversold',   sub: 'RSI < 30',   statKey: 'oversold',
+    bgDark: 'bg-orange-500/10', bgLight: 'bg-orange-50', textClass: 'text-orange-500',
+    borderActive: 'border-orange-500 shadow-orange-500/20', borderInactive: 'border-orange-500/20 hover:border-orange-500/50',
   },
   {
-    filterKey: 'neutral',
-    label: 'Neutral',
-    sub: 'RSI 30–70',
-    statKey: 'neutral',
-    bgDark: 'bg-gray-500/10',
-    bgLight: 'bg-gray-100',
-    textClass: 'text-gray-400',
-    borderActive: 'border-gray-500 shadow-gray-500/20',
-    borderInactive: 'border-gray-500/20 hover:border-gray-500/50',
+    filterKey: 'neutral',   label: 'Neutral',    sub: 'RSI 30–70',  statKey: 'neutral',
+    bgDark: 'bg-gray-500/10',   bgLight: 'bg-gray-100',  textClass: 'text-gray-400',
+    borderActive: 'border-gray-500 shadow-gray-500/20',     borderInactive: 'border-gray-500/20 hover:border-gray-500/50',
   },
   {
-    filterKey: 'overbought',
-    label: 'Overbought',
-    sub: 'RSI > 70',
-    statKey: 'overbought',
-    bgDark: 'bg-green-500/10',
-    bgLight: 'bg-green-50',
-    textClass: 'text-green-500',
-    borderActive: 'border-green-500 shadow-green-500/20',
-    borderInactive: 'border-green-500/20 hover:border-green-500/50',
+    filterKey: 'overbought',label: 'Overbought', sub: 'RSI > 70',   statKey: 'overbought',
+    bgDark: 'bg-green-500/10',  bgLight: 'bg-green-50',  textClass: 'text-green-500',
+    borderActive: 'border-green-500 shadow-green-500/20',   borderInactive: 'border-green-500/20 hover:border-green-500/50',
   },
 ];
 
@@ -100,8 +85,117 @@ function getSentiment(score) {
   return SENTIMENT_BANDS.find((b) => score < b.max) ?? SENTIMENT_BANDS[SENTIMENT_BANDS.length - 1];
 }
 
+function getFngColor(score) {
+  return (FNG_BANDS.find((b) => score < b.max) ?? FNG_BANDS[FNG_BANDS.length - 1]).color;
+}
+
 function rsiToScore(avgRsi) {
   return Math.max(0, Math.min(100, avgRsi));
+}
+
+// ─── Fear & Greed fetch hook ──────────────────────────────────────────────────
+
+function useFearAndGreed() {
+  const [data, setData] = useState(null);   // { value, classification, updatedAt }
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(false);
+
+  useEffect(() => {
+    let cancelled = false;
+    async function fetchFng() {
+      try {
+        const res = await fetch('https://api.alternative.me/fng/?limit=1');
+        if (!res.ok) throw new Error('API error');
+        const json = await res.json();
+        const item = json?.data?.[0];
+        if (!item) throw new Error('No data');
+        if (!cancelled) {
+          setData({
+            value: parseInt(item.value, 10),
+            classification: item.value_classification,
+            updatedAt: item.timestamp
+              ? new Date(parseInt(item.timestamp, 10) * 1000)
+              : null,
+          });
+          setLoading(false);
+        }
+      } catch {
+        if (!cancelled) { setError(true); setLoading(false); }
+      }
+    }
+    fetchFng();
+    // Refresh once per hour — the index only updates daily but no harm polling
+    const interval = setInterval(fetchFng, 60 * 60 * 1000);
+    return () => { cancelled = true; clearInterval(interval); };
+  }, []);
+
+  return { data, loading, error };
+}
+
+// ─── Fear & Greed panel ───────────────────────────────────────────────────────
+
+function FearAndGreedPanel({ darkMode }) {
+  const { data, loading, error } = useFearAndGreed();
+
+  const dividerStyle = {
+    borderColor: darkMode ? 'rgba(255,255,255,0.07)' : 'rgba(0,0,0,0.08)',
+  };
+
+  return (
+    <div className="w-full mt-3 pt-3 border-t" style={dividerStyle}>
+      <div className="flex items-center justify-between">
+        {/* Label + source link */}
+        <div>
+          <p className={`text-[10px] font-bold uppercase tracking-widest ${darkMode ? 'text-gray-500' : 'text-gray-400'}`}>
+            Fear &amp; Greed Index
+          </p>
+          <a
+            href="https://alternative.me/crypto/fear-and-greed-index/"
+            target="_blank"
+            rel="noopener noreferrer"
+            className={`text-[10px] flex items-center gap-0.5 mt-0.5 transition-colors ${
+              darkMode ? 'text-gray-600 hover:text-gray-400' : 'text-gray-400 hover:text-gray-600'
+            }`}
+            onClick={(e) => e.stopPropagation()}
+          >
+            alternative.me
+            <svg className="w-2.5 h-2.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14" />
+            </svg>
+          </a>
+        </div>
+
+        {/* Score display */}
+        {loading ? (
+          <div className={`h-8 w-20 rounded-lg animate-pulse ${darkMode ? 'bg-white/10' : 'bg-gray-200'}`} />
+        ) : error ? (
+          <span className={`text-xs ${darkMode ? 'text-gray-600' : 'text-gray-400'}`}>Unavailable</span>
+        ) : (
+          <div className="flex items-baseline gap-2">
+            <span
+              className="text-3xl font-black tabular-nums tracking-tight"
+              style={{ color: getFngColor(data.value) }}
+            >
+              {data.value}
+            </span>
+            <div className="text-right">
+              <p
+                className="text-[11px] font-bold leading-tight"
+                style={{ color: getFngColor(data.value) }}
+              >
+                {data.classification}
+              </p>
+              {data.updatedAt && (
+                <p className={`text-[9px] mt-0.5 ${darkMode ? 'text-gray-600' : 'text-gray-400'}`}>
+                  {data.updatedAt.toLocaleDateString()}
+                </p>
+              )}
+            </div>
+          </div>
+        )}
+      </div>
+    </div>
+  );
 }
 
 // ─── SVG Gauge ────────────────────────────────────────────────────────────────
@@ -135,9 +229,9 @@ function Gauge({ score, accentColor }) {
       ))}
 
       {ZONES.map((z) => {
-        const zoneScore = ((180 - z.startDeg) / 180) * 100;
-        const zoneEndScore = ((180 - z.endDeg) / 180) * 100;
-        const isActive = score >= zoneScore;
+        const zoneScore    = ((180 - z.startDeg) / 180) * 100;
+        const zoneEndScore = ((180 - z.endDeg)   / 180) * 100;
+        const isActive  = score >= zoneScore;
         const isPartial = score > zoneScore && score < zoneEndScore;
         if (!isActive && !isPartial) return null;
         const endDeg = isPartial ? 180 - (score / 100) * 180 : z.endDeg;
@@ -157,7 +251,7 @@ function Gauge({ score, accentColor }) {
 
       {(() => {
         const [fx, fy] = arcPoint(GAUGE_CX, GAUGE_CY, GAUGE_R_OUTER + 16, 180);
-        const [gx, gy] = arcPoint(GAUGE_CX, GAUGE_CY, GAUGE_R_OUTER + 16, 0);
+        const [gx, gy] = arcPoint(GAUGE_CX, GAUGE_CY, GAUGE_R_OUTER + 16,   0);
         return (
           <>
             <text x={fx - 2} y={fy + 4} textAnchor="end"   fontSize="10" fill="#ef4444" fontWeight="700" fontFamily="monospace" opacity="0.9">WEAK</text>
@@ -222,9 +316,9 @@ function DistributionBar({ stats, total, darkMode }) {
 // ─── Main widget ──────────────────────────────────────────────────────────────
 
 export function MarketSentimentWidget({ stats, darkMode, rsiFilter, setRsiFilter, setPreset }) {
-  const score = useMemo(() => rsiToScore(stats.avgRsi), [stats.avgRsi]);
+  const score     = useMemo(() => rsiToScore(stats.avgRsi), [stats.avgRsi]);
   const sentiment = useMemo(() => getSentiment(score), [score]);
-  const total = stats.withRSI;
+  const total     = stats.withRSI;
 
   const dominantZone = useMemo(() => {
     const zones = [
@@ -245,11 +339,12 @@ export function MarketSentimentWidget({ stats, darkMode, rsiFilter, setRsiFilter
     <div className={`rounded-2xl border mb-4 sm:mb-5 overflow-hidden ${darkMode ? 'bg-white/[0.03] border-white/10' : 'bg-white border-gray-200'}`}>
       <div className="flex flex-col sm:flex-row">
 
-        {/* ── Left: Gauge ── */}
+        {/* ── Left: RSI gauge + F&G panel ── */}
         <div
           className="flex flex-col items-center justify-center px-5 pt-5 pb-4 sm:px-8 sm:py-6 sm:border-r sm:w-[320px] sm:shrink-0 border-b sm:border-b-0"
           style={{ borderColor: darkMode ? 'rgba(255,255,255,0.06)' : 'rgba(0,0,0,0.07)' }}
         >
+          {/* RSI gauge */}
           <div className="w-full max-w-[230px] sm:max-w-[260px]">
             <Gauge score={score} accentColor={sentiment.color} />
           </div>
@@ -264,12 +359,17 @@ export function MarketSentimentWidget({ stats, darkMode, rsiFilter, setRsiFilter
               {sentiment.label}
             </div>
           </div>
+
+          {/* Fear & Greed index — below divider */}
+          <div className="w-full">
+            <FearAndGreedPanel darkMode={darkMode} />
+          </div>
         </div>
 
         {/* ── Right: Details ── */}
         <div className="flex flex-col justify-between flex-1 px-4 py-4 sm:px-6 sm:py-5 gap-4">
 
-          {/* Title + avg RSI */}
+          {/* Title + avg RSI pill */}
           <div className="flex items-start justify-between">
             <div>
               <h3 className={`text-xs font-bold uppercase tracking-widest ${darkMode ? 'text-gray-400' : 'text-gray-500'}`}>
