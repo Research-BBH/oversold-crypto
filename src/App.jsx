@@ -2,7 +2,7 @@
 // FILE: src/App.jsx - Fully Refactored
 // ==================================================
 
-import { useState, useEffect, useMemo, useCallback } from 'react';
+import { useState, useEffect, useMemo, useCallback, useRef } from 'react';
 import {
   formatNumber,
   formatPrice,
@@ -23,6 +23,86 @@ import { PrivacyPage } from './pages/PrivacyPage';
 import { MethodologyPage } from './pages/MethodologyPage';
 import { WatchlistPage } from './pages/WatchlistPage';
 import { TokenDetailPage } from './pages/TokenDetailPage';
+
+// Scrollable row with fade gradients to indicate more content
+const ScrollableRow = ({ children, darkMode, className = '', wrapperClassName = '' }) => {
+  const scrollRef = useRef(null);
+  const [showLeftFade, setShowLeftFade] = useState(false);
+  const [showRightFade, setShowRightFade] = useState(false);
+
+  const checkScroll = useCallback(() => {
+    const el = scrollRef.current;
+    if (!el) return;
+    
+    const { scrollLeft, scrollWidth, clientWidth } = el;
+    setShowLeftFade(scrollLeft > 10);
+    setShowRightFade(scrollLeft < scrollWidth - clientWidth - 10);
+  }, []);
+
+  useEffect(() => {
+    const el = scrollRef.current;
+    if (!el) return;
+    
+    checkScroll();
+    el.addEventListener('scroll', checkScroll, { passive: true });
+    window.addEventListener('resize', checkScroll);
+    
+    // Check again after a short delay (for dynamic content)
+    const timeout = setTimeout(checkScroll, 100);
+    
+    return () => {
+      el.removeEventListener('scroll', checkScroll);
+      window.removeEventListener('resize', checkScroll);
+      clearTimeout(timeout);
+    };
+  }, [checkScroll, children]);
+
+  // Extract display classes (hidden, sm:flex, etc.) for the wrapper
+  const displayClasses = className.split(' ').filter(c => 
+    c.startsWith('hidden') || c.includes(':flex') || c.includes(':block') || c.includes(':hidden')
+  ).join(' ');
+  
+  // Keep other classes for the inner scrollable div
+  const innerClasses = className.split(' ').filter(c => 
+    !c.startsWith('hidden') && !c.includes(':flex') && !c.includes(':block') && !c.includes(':hidden')
+  ).join(' ');
+
+  return (
+    <div className={`relative flex-1 min-w-0 ${displayClasses}`}>
+      {/* Left fade gradient */}
+      <div 
+        className={`absolute left-0 top-0 bottom-0 w-8 pointer-events-none z-10 transition-opacity duration-200 ${
+          showLeftFade ? 'opacity-100' : 'opacity-0'
+        }`}
+        style={{
+          background: darkMode 
+            ? 'linear-gradient(to right, rgb(10, 10, 15) 0%, transparent 100%)'
+            : 'linear-gradient(to right, rgb(243, 244, 246) 0%, transparent 100%)'
+        }}
+      />
+      
+      {/* Scrollable content */}
+      <div 
+        ref={scrollRef}
+        className={`flex gap-2 overflow-x-auto pb-1 scrollbar-hide ${innerClasses}`}
+      >
+        {children}
+      </div>
+      
+      {/* Right fade gradient */}
+      <div 
+        className={`absolute right-0 top-0 bottom-0 w-8 pointer-events-none z-10 transition-opacity duration-200 ${
+          showRightFade ? 'opacity-100' : 'opacity-0'
+        }`}
+        style={{
+          background: darkMode 
+            ? 'linear-gradient(to left, rgb(10, 10, 15) 0%, transparent 100%)'
+            : 'linear-gradient(to left, rgb(243, 244, 246) 0%, transparent 100%)'
+        }}
+      />
+    </div>
+  );
+};
 
 export default function App() {
   // State management
@@ -915,7 +995,7 @@ if (signalFilters.size > 0) {
             {/* Row 1: RSI */}
             <div className="flex gap-2 mb-2">
               <span className={`w-16 flex-shrink-0 text-[10px] font-semibold px-2 py-2 rounded-lg text-center ${darkMode ? 'bg-purple-500/10 text-purple-400' : 'bg-purple-50 text-purple-600'}`}>RSI</span>
-              <div className="flex gap-2 flex-1 overflow-x-auto pb-1 scrollbar-hide">
+              <ScrollableRow darkMode={darkMode}>
                 {[
                   { id: 'rsi_extreme', label: '🔴 Extreme', desc: 'RSI below 20' },
                   { id: 'rsi_oversold', label: '🟠 Oversold', desc: 'RSI below 25' },
@@ -936,13 +1016,13 @@ if (signalFilters.size > 0) {
                     </button>
                   );
                 })}
-              </div>
+              </ScrollableRow>
             </div>
 
             {/* Row 2: MOVERS */}
             <div className="flex gap-2 mb-2">
               <span className={`w-16 flex-shrink-0 text-[10px] font-semibold px-2 py-2 rounded-lg text-center ${darkMode ? 'bg-blue-500/10 text-blue-400' : 'bg-blue-50 text-blue-600'}`}>MOVERS</span>
-              <div className="flex gap-2 flex-1 overflow-x-auto pb-1 scrollbar-hide">
+              <ScrollableRow darkMode={darkMode}>
                 {[
                   { id: 'losers24h', label: '📉 24h Losers', desc: 'Biggest 24h drops' },
                   { id: 'losers7d', label: '📉 7d Losers', desc: 'Biggest 7d drops' },
@@ -962,13 +1042,13 @@ if (signalFilters.size > 0) {
                     </button>
                   );
                 })}
-              </div>
+              </ScrollableRow>
             </div>
 
             {/* Row 3: BUY */}
             <div className="flex gap-2 mb-2">
               <span className={`w-16 flex-shrink-0 text-[10px] font-semibold px-2 py-2 rounded-lg text-center ${darkMode ? 'bg-green-500/10 text-green-400' : 'bg-green-50 text-green-600'}`}>BUY</span>
-              <div className="flex gap-2 flex-1 overflow-x-auto pb-1 scrollbar-hide">
+              <ScrollableRow darkMode={darkMode}>
                 {[
                   { id: 'above_sma50', label: '▲ Uptrend', desc: 'Price above SMA50', enhanced: true },
                   { id: 'below_bb', label: '▲ Below BB', desc: 'Below lower Bollinger Band', enhanced: true },
@@ -992,13 +1072,13 @@ if (signalFilters.size > 0) {
                     </button>
                   );
                 })}
-              </div>
+              </ScrollableRow>
             </div>
 
             {/* Row 4: SELL */}
             <div className="flex gap-2">
               <span className={`w-16 flex-shrink-0 text-[10px] font-semibold px-2 py-2 rounded-lg text-center ${darkMode ? 'bg-red-500/10 text-red-400' : 'bg-red-50 text-red-600'}`}>SELL</span>
-              <div className="flex gap-2 flex-1 overflow-x-auto pb-1 scrollbar-hide">
+              <ScrollableRow darkMode={darkMode}>
                 {[
                   { id: 'below_sma50', label: '▼ Downtrend', desc: 'Price below SMA50', enhanced: true },
                   { id: 'above_bb', label: '▼ Above BB', desc: 'Above upper Bollinger Band', enhanced: true },
@@ -1022,7 +1102,7 @@ if (signalFilters.size > 0) {
                     </button>
                   );
                 })}
-              </div>
+              </ScrollableRow>
             </div>
           </div>
 
@@ -1104,7 +1184,7 @@ if (signalFilters.size > 0) {
             </div>
 
             {/* ── DESKTOP: original scrollable pill row ── */}
-            <div className="hidden sm:flex gap-1.5 overflow-x-auto pb-1 scrollbar-hide flex-1 min-w-0">
+            <ScrollableRow darkMode={darkMode} className="hidden sm:flex gap-1.5">
               {CATEGORIES.map((c) => (
                 <button
                   key={c.id}
@@ -1118,7 +1198,7 @@ if (signalFilters.size > 0) {
                   {c.icon} {c.name}
                 </button>
               ))}
-            </div>
+            </ScrollableRow>
 
             <div className="flex items-center gap-2">
               {!showWL && (
