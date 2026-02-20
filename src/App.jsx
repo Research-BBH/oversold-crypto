@@ -19,6 +19,7 @@ import { KeyboardShortcutsModal } from './components/KeyboardShortcutsModal';
 // Dashboard components
 import { DashboardHeader } from './components/DashboardHeader';
 import { StatsCards } from './components/StatsCards';
+import { MarketSentimentWidget } from './components/MarketSentimentWidget';
 import { DashboardFilters } from './components/DashboardFilters';
 import { TokenTable } from './components/TokenTable';
 
@@ -197,6 +198,8 @@ export default function App() {
           stats={filters.stats} rsiFilter={filters.rsiFilter}
           setRsiFilter={filters.setRsiFilter} setPreset={filters.setPreset} darkMode={darkMode}
         />
+
+        <MarketSentimentWidget stats={filters.stats} darkMode={darkMode} />
 
         <DashboardFilters
           search={filters.search} setSearch={filters.setSearch} searchInputRef={searchInputRef}
