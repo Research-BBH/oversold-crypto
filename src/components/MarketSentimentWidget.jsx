@@ -339,11 +339,21 @@ export function MarketSentimentWidget({ stats, darkMode, rsiFilter, setRsiFilter
     <div className={`rounded-2xl border mb-4 sm:mb-5 overflow-hidden ${darkMode ? 'bg-white/[0.03] border-white/10' : 'bg-white border-gray-200'}`}>
       <div className="flex flex-col sm:flex-row">
 
-        {/* ── Left: RSI gauge + F&G panel ── */}
+        {/* ── Left: title + RSI gauge + F&G panel ── */}
         <div
-          className="flex flex-col items-center justify-center px-5 pt-5 pb-4 sm:px-8 sm:py-6 sm:border-r sm:w-[320px] sm:shrink-0 border-b sm:border-b-0"
+          className="flex flex-col items-center px-5 pt-5 pb-4 sm:px-8 sm:py-6 sm:border-r sm:w-[320px] sm:shrink-0 border-b sm:border-b-0"
           style={{ borderColor: darkMode ? 'rgba(255,255,255,0.06)' : 'rgba(0,0,0,0.07)' }}
         >
+          {/* Title sits above the gauge */}
+          <div className="w-full mb-2">
+            <h3 className={`text-xs font-bold uppercase tracking-widest ${darkMode ? 'text-gray-400' : 'text-gray-500'}`}>
+              RSI Market Health
+            </h3>
+            <p className={`text-[11px] mt-0.5 ${darkMode ? 'text-gray-600' : 'text-gray-400'}`}>
+              Based on RSI across {total} tokens
+            </p>
+          </div>
+
           {/* RSI gauge */}
           <div className="w-full max-w-[230px] sm:max-w-[260px]">
             <Gauge score={score} accentColor={sentiment.color} />
@@ -366,27 +376,19 @@ export function MarketSentimentWidget({ stats, darkMode, rsiFilter, setRsiFilter
           </div>
         </div>
 
-        {/* ── Right: Details ── */}
+        {/* ── Right: avg RSI pill + bigger cards + bar ── */}
         <div className="flex flex-col justify-between flex-1 px-4 py-4 sm:px-6 sm:py-5 gap-4">
 
-          {/* Title + avg RSI pill */}
-          <div className="flex items-start justify-between">
-            <div>
-              <h3 className={`text-xs font-bold uppercase tracking-widest ${darkMode ? 'text-gray-400' : 'text-gray-500'}`}>
-                RSI Market Health
-              </h3>
-              <p className={`text-[11px] mt-0.5 ${darkMode ? 'text-gray-600' : 'text-gray-400'}`}>
-                Based on RSI across {total} tokens
-              </p>
-            </div>
+          {/* avg RSI pill — top right */}
+          <div className="flex justify-end">
             <div className={`flex items-center gap-1.5 px-2.5 py-1 rounded-lg border text-xs font-semibold tabular-nums ${darkMode ? 'bg-white/5 border-white/10' : 'bg-gray-50 border-gray-200'}`}>
               <span className={`font-normal ${darkMode ? 'text-gray-500' : 'text-gray-400'}`}>avg RSI</span>
               <span style={{ color: sentiment.color }}>{stats.avgRsi.toFixed(1)}</span>
             </div>
           </div>
 
-          {/* Clickable filter cards */}
-          <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
+          {/* Clickable filter cards — bigger */}
+          <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
             {BREAKDOWN_CARDS.map((card) => {
               const isActive = rsiFilter === card.filterKey;
               return (
@@ -395,18 +397,18 @@ export function MarketSentimentWidget({ stats, darkMode, rsiFilter, setRsiFilter
                   onClick={() => handleCardClick(card.filterKey)}
                   className={`
                     ${darkMode ? card.bgDark : card.bgLight}
-                    border-2 rounded-xl px-3 py-2.5 flex flex-col
+                    border-2 rounded-xl px-4 py-4 flex flex-col
                     cursor-pointer transition-all hover:scale-[1.02]
                     ${isActive ? `${card.borderActive} shadow-lg` : card.borderInactive}
                   `}
                 >
-                  <span className={`text-2xl font-bold tabular-nums ${card.textClass}`}>
+                  <span className={`text-4xl font-bold tabular-nums ${card.textClass}`}>
                     {stats[card.statKey]}
                   </span>
-                  <span className={`text-[11px] font-semibold leading-tight mt-0.5 ${darkMode ? 'text-gray-400' : 'text-gray-600'}`}>
+                  <span className={`text-sm font-semibold leading-tight mt-1 ${darkMode ? 'text-gray-400' : 'text-gray-600'}`}>
                     {card.label}
                   </span>
-                  <span className={`text-[10px] mt-0.5 ${darkMode ? 'text-gray-600' : 'text-gray-400'}`}>
+                  <span className={`text-xs mt-0.5 ${darkMode ? 'text-gray-600' : 'text-gray-400'}`}>
                     {card.sub}
                   </span>
                 </div>
