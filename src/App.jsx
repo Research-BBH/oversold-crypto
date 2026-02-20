@@ -25,29 +25,24 @@ import { WatchlistPage } from './pages/WatchlistPage';
 import { TokenDetailPage } from './pages/TokenDetailPage';
 
 // Scrollable row with fade gradients to indicate more content
-const ScrollableRow = ({ children, darkMode, className = '' }) => {
+function ScrollableRow({ children, darkMode, className = '' }) {
   const scrollRef = useRef(null);
-  const [showLeftFade, setShowLeftFade] = useState(false);
-  const [showRightFade, setShowRightFade] = useState(false);
-
-  const checkScroll = useCallback(() => {
-    const el = scrollRef.current;
-    if (!el) return;
-    
-    const { scrollLeft, scrollWidth, clientWidth } = el;
-    setShowLeftFade(scrollLeft > 10);
-    setShowRightFade(scrollLeft < scrollWidth - clientWidth - 10);
-  }, []);
+  const [showLeft, setShowLeft] = useState(false);
+  const [showRight, setShowRight] = useState(false);
 
   useEffect(() => {
     const el = scrollRef.current;
     if (!el) return;
     
+    function checkScroll() {
+      const { scrollLeft, scrollWidth, clientWidth } = el;
+      setShowLeft(scrollLeft > 10);
+      setShowRight(scrollLeft < scrollWidth - clientWidth - 10);
+    }
+    
     checkScroll();
     el.addEventListener('scroll', checkScroll, { passive: true });
     window.addEventListener('resize', checkScroll);
-    
-    // Check again after a short delay (for dynamic content)
     const timeout = setTimeout(checkScroll, 100);
     
     return () => {
@@ -55,61 +50,40 @@ const ScrollableRow = ({ children, darkMode, className = '' }) => {
       window.removeEventListener('resize', checkScroll);
       clearTimeout(timeout);
     };
-  }, [checkScroll, children]);
+  }, []);
 
-  // Check if this should be hidden on certain breakpoints
-  const hasHiddenClass = className.includes('hidden');
-  const hasSmFlex = className.includes('sm:flex');
+  // Handle responsive classes
+  const isHiddenSm = className.includes('hidden') && className.includes('sm:flex');
+  const wrapperClass = isHiddenSm ? 'relative flex-1 min-w-0 hidden sm:block' : 'relative flex-1 min-w-0';
+  const innerClass = className.replace('hidden', '').replace('sm:flex', '').trim();
+
+  const leftGradient = darkMode 
+    ? 'linear-gradient(to right, rgb(10, 10, 15) 0%, transparent 100%)'
+    : 'linear-gradient(to right, rgb(243, 244, 246) 0%, transparent 100%)';
   
-  // Build wrapper classes
-  let wrapperClasses = 'relative flex-1 min-w-0';
-  if (hasHiddenClass && hasSmFlex) {
-    wrapperClasses += ' hidden sm:block';
-  } else if (hasHiddenClass) {
-    wrapperClasses += ' hidden';
-  }
-  
-  // Filter out display-related classes for inner div
-  const innerClasses = className.split(' ').filter(c => 
-    c !== 'hidden' && !c.includes(':flex') && !c.includes(':block') && !c.includes(':hidden')
-  ).join(' ');
+  const rightGradient = darkMode 
+    ? 'linear-gradient(to left, rgb(10, 10, 15) 0%, transparent 100%)'
+    : 'linear-gradient(to left, rgb(243, 244, 246) 0%, transparent 100%)';
 
   return (
-    <div className={wrapperClasses}>
-      {/* Left fade gradient */}
+    <div className={wrapperClass}>
       <div 
-        className={`absolute left-0 top-0 bottom-0 w-8 pointer-events-none z-10 transition-opacity duration-200 ${
-          showLeftFade ? 'opacity-100' : 'opacity-0'
-        }`}
-        style={{
-          background: darkMode 
-            ? 'linear-gradient(to right, rgb(10, 10, 15) 0%, transparent 100%)'
-            : 'linear-gradient(to right, rgb(243, 244, 246) 0%, transparent 100%)'
-        }}
+        className={`absolute left-0 top-0 bottom-1 w-8 pointer-events-none z-10 transition-opacity duration-200 ${showLeft ? 'opacity-100' : 'opacity-0'}`}
+        style={{ background: leftGradient }}
       />
-      
-      {/* Scrollable content */}
       <div 
         ref={scrollRef}
-        className={`flex overflow-x-auto pb-1 scrollbar-hide ${innerClasses}`}
+        className={`flex gap-2 overflow-x-auto pb-1 scrollbar-hide ${innerClass}`}
       >
         {children}
       </div>
-      
-      {/* Right fade gradient */}
       <div 
-        className={`absolute right-0 top-0 bottom-0 w-8 pointer-events-none z-10 transition-opacity duration-200 ${
-          showRightFade ? 'opacity-100' : 'opacity-0'
-        }`}
-        style={{
-          background: darkMode 
-            ? 'linear-gradient(to left, rgb(10, 10, 15) 0%, transparent 100%)'
-            : 'linear-gradient(to left, rgb(243, 244, 246) 0%, transparent 100%)'
-        }}
+        className={`absolute right-0 top-0 bottom-1 w-8 pointer-events-none z-10 transition-opacity duration-200 ${showRight ? 'opacity-100' : 'opacity-0'}`}
+        style={{ background: rightGradient }}
       />
     </div>
   );
-};
+}
 
 export default function App() {
   // State management
@@ -238,139 +212,6 @@ export default function App() {
   const scrollToTop = () => {
     window.scrollTo({ top: 0, behavior: 'smooth' });
   };
-
-  // Keyboard shortcuts
-  useEffect(() => {
-    const handleKeyDown = (e) => {
-      // Don't trigger shortcuts when typing in inputs
-      const isTyping = e.target.tagName === 'INPUT' || e.target.tagName === 'TEXTAREA' || e.target.tagName === 'SELECT';
-      
-      // Escape always works - close modals or clear selection
-      if (e.key === 'Escape') {
-        if (showShortcutsModal) {
-          setShowShortcutsModal(false);
-        } else if (showLoginModal) {
-          setShowLoginModal(false);
-        } else if (selectedRowIndex >= 0) {
-          setSelectedRowIndex(-1);
-        } else if (isTyping) {
-          e.target.blur();
-        }
-        return;
-      }
-      
-      // Don't process other shortcuts while typing
-      if (isTyping) return;
-      
-      // Only work on home page
-      if (currentPage !== 'home') return;
-      
-      switch (e.key) {
-        case '/':
-          e.preventDefault();
-          searchInputRef.current?.focus();
-          break;
-        case '?':
-          e.preventDefault();
-          setShowShortcutsModal(true);
-          break;
-        case 'w':
-        case 'W':
-          if (user) {
-            setShowWL(prev => !prev);
-          } else {
-            setShowLoginModal(true);
-          }
-          break;
-        case 'd':
-        case 'D':
-          setDarkMode(prev => !prev);
-          break;
-        case 'r':
-        case 'R':
-          if (!e.ctrlKey && !e.metaKey) {
-            fetchData();
-          }
-          break;
-        case 'j':
-        case 'J':
-        case 'ArrowDown':
-          e.preventDefault();
-          setSelectedRowIndex(prev => {
-            const maxIndex = paginatedTokens.length - 1;
-            if (prev < maxIndex) return prev + 1;
-            return prev;
-          });
-          break;
-        case 'k':
-        case 'K':
-        case 'ArrowUp':
-          e.preventDefault();
-          setSelectedRowIndex(prev => {
-            if (prev > 0) return prev - 1;
-            if (prev === -1) return 0;
-            return prev;
-          });
-          break;
-        case 'Enter':
-          if (selectedRowIndex >= 0 && selectedRowIndex < paginatedTokens.length) {
-            const token = paginatedTokens[selectedRowIndex];
-            window.location.hash = `#/token/${token.id}`;
-          }
-          break;
-        case 'o':
-        case 'O':
-          if (selectedRowIndex >= 0 && selectedRowIndex < paginatedTokens.length) {
-            const token = paginatedTokens[selectedRowIndex];
-            window.open(`${window.location.pathname}#/token/${token.id}`, '_blank');
-          }
-          break;
-        case 's':
-        case 'S':
-          if (selectedRowIndex >= 0 && selectedRowIndex < paginatedTokens.length && user) {
-            const token = paginatedTokens[selectedRowIndex];
-            setWatchlist(prev => {
-              const newWL = new Set(prev);
-              if (newWL.has(token.id)) {
-                newWL.delete(token.id);
-              } else {
-                newWL.add(token.id);
-              }
-              return newWL;
-            });
-          }
-          break;
-        case '[':
-          if (tablePage > 1) {
-            setTablePage(prev => prev - 1);
-            setSelectedRowIndex(-1);
-          }
-          break;
-        case ']':
-          if (tablePage < totalPages) {
-            setTablePage(prev => prev + 1);
-            setSelectedRowIndex(-1);
-          }
-          break;
-        case 'g':
-          // gg to go to top (first press sets up, handled by second)
-          break;
-        case 'G':
-          setSelectedRowIndex(paginatedTokens.length - 1);
-          break;
-        default:
-          break;
-      }
-    };
-    
-    window.addEventListener('keydown', handleKeyDown);
-    return () => window.removeEventListener('keydown', handleKeyDown);
-  }, [currentPage, showShortcutsModal, showLoginModal, selectedRowIndex, paginatedTokens, user, tablePage, totalPages]);
-
-  // Reset selected row when page or filters change
-  useEffect(() => {
-    setSelectedRowIndex(-1);
-  }, [tablePage, cat, rsiFilter, preset, signalFilters, search]);
 
   // Load user from localStorage
   useEffect(() => {
@@ -654,6 +495,139 @@ if (signalFilters.size > 0) {
   }, [filtered, tablePage, rowsPerPage]);
 
   const totalPages = Math.ceil(filtered.length / rowsPerPage);
+
+  // Keyboard shortcuts
+  useEffect(() => {
+    const handleKeyDown = (e) => {
+      // Don't trigger shortcuts when typing in inputs
+      const isTyping = e.target.tagName === 'INPUT' || e.target.tagName === 'TEXTAREA' || e.target.tagName === 'SELECT';
+      
+      // Escape always works - close modals or clear selection
+      if (e.key === 'Escape') {
+        if (showShortcutsModal) {
+          setShowShortcutsModal(false);
+        } else if (showLoginModal) {
+          setShowLoginModal(false);
+        } else if (selectedRowIndex >= 0) {
+          setSelectedRowIndex(-1);
+        } else if (isTyping) {
+          e.target.blur();
+        }
+        return;
+      }
+      
+      // Don't process other shortcuts while typing
+      if (isTyping) return;
+      
+      // Only work on home page
+      if (currentPage !== 'home') return;
+      
+      switch (e.key) {
+        case '/':
+          e.preventDefault();
+          searchInputRef.current?.focus();
+          break;
+        case '?':
+          e.preventDefault();
+          setShowShortcutsModal(true);
+          break;
+        case 'w':
+        case 'W':
+          if (user) {
+            setShowWL(prev => !prev);
+          } else {
+            setShowLoginModal(true);
+          }
+          break;
+        case 'd':
+        case 'D':
+          setDarkMode(prev => !prev);
+          break;
+        case 'r':
+        case 'R':
+          if (!e.ctrlKey && !e.metaKey) {
+            fetchData();
+          }
+          break;
+        case 'j':
+        case 'J':
+        case 'ArrowDown':
+          e.preventDefault();
+          setSelectedRowIndex(prev => {
+            const maxIndex = paginatedTokens.length - 1;
+            if (prev < maxIndex) return prev + 1;
+            return prev;
+          });
+          break;
+        case 'k':
+        case 'K':
+        case 'ArrowUp':
+          e.preventDefault();
+          setSelectedRowIndex(prev => {
+            if (prev > 0) return prev - 1;
+            if (prev === -1) return 0;
+            return prev;
+          });
+          break;
+        case 'Enter':
+          if (selectedRowIndex >= 0 && selectedRowIndex < paginatedTokens.length) {
+            const token = paginatedTokens[selectedRowIndex];
+            window.location.hash = `#/token/${token.id}`;
+          }
+          break;
+        case 'o':
+        case 'O':
+          if (selectedRowIndex >= 0 && selectedRowIndex < paginatedTokens.length) {
+            const token = paginatedTokens[selectedRowIndex];
+            window.open(`${window.location.pathname}#/token/${token.id}`, '_blank');
+          }
+          break;
+        case 's':
+        case 'S':
+          if (selectedRowIndex >= 0 && selectedRowIndex < paginatedTokens.length && user) {
+            const token = paginatedTokens[selectedRowIndex];
+            setWatchlist(prev => {
+              const newWL = new Set(prev);
+              if (newWL.has(token.id)) {
+                newWL.delete(token.id);
+              } else {
+                newWL.add(token.id);
+              }
+              return newWL;
+            });
+          }
+          break;
+        case '[':
+          if (tablePage > 1) {
+            setTablePage(prev => prev - 1);
+            setSelectedRowIndex(-1);
+          }
+          break;
+        case ']':
+          if (tablePage < totalPages) {
+            setTablePage(prev => prev + 1);
+            setSelectedRowIndex(-1);
+          }
+          break;
+        case 'g':
+          // gg to go to top (first press sets up, handled by second)
+          break;
+        case 'G':
+          setSelectedRowIndex(paginatedTokens.length - 1);
+          break;
+        default:
+          break;
+      }
+    };
+    
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, [currentPage, showShortcutsModal, showLoginModal, selectedRowIndex, paginatedTokens, user, tablePage, totalPages, fetchData]);
+
+  // Reset selected row when page or filters change
+  useEffect(() => {
+    setSelectedRowIndex(-1);
+  }, [tablePage, cat, rsiFilter, preset, signalFilters, search]);
 
   const stats = useMemo(() => {
     const withRSI = tokens.filter((t) => t.rsi !== null);
