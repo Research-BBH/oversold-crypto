@@ -25,7 +25,7 @@ import { WatchlistPage } from './pages/WatchlistPage';
 import { TokenDetailPage } from './pages/TokenDetailPage';
 
 // Scrollable row with fade gradients to indicate more content
-const ScrollableRow = ({ children, darkMode, className = '', wrapperClassName = '' }) => {
+const ScrollableRow = ({ children, darkMode, className = '' }) => {
   const scrollRef = useRef(null);
   const [showLeftFade, setShowLeftFade] = useState(false);
   const [showRightFade, setShowRightFade] = useState(false);
@@ -57,18 +57,25 @@ const ScrollableRow = ({ children, darkMode, className = '', wrapperClassName = 
     };
   }, [checkScroll, children]);
 
-  // Extract display classes (hidden, sm:flex, etc.) for the wrapper
-  const displayClasses = className.split(' ').filter(c => 
-    c.startsWith('hidden') || c.includes(':flex') || c.includes(':block') || c.includes(':hidden')
-  ).join(' ');
+  // Check if this should be hidden on certain breakpoints
+  const hasHiddenClass = className.includes('hidden');
+  const hasSmFlex = className.includes('sm:flex');
   
-  // Keep other classes for the inner scrollable div
+  // Build wrapper classes
+  let wrapperClasses = 'relative flex-1 min-w-0';
+  if (hasHiddenClass && hasSmFlex) {
+    wrapperClasses += ' hidden sm:block';
+  } else if (hasHiddenClass) {
+    wrapperClasses += ' hidden';
+  }
+  
+  // Filter out display-related classes for inner div
   const innerClasses = className.split(' ').filter(c => 
-    !c.startsWith('hidden') && !c.includes(':flex') && !c.includes(':block') && !c.includes(':hidden')
+    c !== 'hidden' && !c.includes(':flex') && !c.includes(':block') && !c.includes(':hidden')
   ).join(' ');
 
   return (
-    <div className={`relative flex-1 min-w-0 ${displayClasses}`}>
+    <div className={wrapperClasses}>
       {/* Left fade gradient */}
       <div 
         className={`absolute left-0 top-0 bottom-0 w-8 pointer-events-none z-10 transition-opacity duration-200 ${
@@ -84,7 +91,7 @@ const ScrollableRow = ({ children, darkMode, className = '', wrapperClassName = 
       {/* Scrollable content */}
       <div 
         ref={scrollRef}
-        className={`flex gap-2 overflow-x-auto pb-1 scrollbar-hide ${innerClasses}`}
+        className={`flex overflow-x-auto pb-1 scrollbar-hide ${innerClasses}`}
       >
         {children}
       </div>
