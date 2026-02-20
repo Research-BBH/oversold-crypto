@@ -188,7 +188,7 @@ export default function App() {
           preset={filters.preset} setPreset={filters.setPreset}
           rsiFilter={filters.rsiFilter} setRsiFilter={filters.setRsiFilter}
           rsiSortDir={filters.rsiSortDir} setRsiSortDir={filters.setRsiSortDir}
-          useEnhancedAPI={useEnhancedAPI}
+          useEnhancedAPI={true}
           showMobileFilters={showMobileFilters} setShowMobileFilters={setShowMobileFilters}
           darkMode={darkMode}
         />
