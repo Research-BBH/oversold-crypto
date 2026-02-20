@@ -5,21 +5,21 @@
 import { useState, useEffect, useCallback } from 'react';
 import { GOOGLE_CLIENT_ID } from '../utils';
 
-export const LoginModal = ({ onClose, onLogin }) => {
+export const LoginModal = ({ onClose, onLogin, darkMode = true }) => {
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState(null);
 
   const googleButtonRef = useCallback((node) => {
     if (node && window.google?.accounts?.id) {
       window.google.accounts.id.renderButton(node, {
-        theme: 'filled_black',
+        theme: darkMode ? 'filled_black' : 'outline',
         size: 'large',
         width: 320,
         text: 'continue_with',
         shape: 'rectangular',
       });
     }
-  }, []);
+  }, [darkMode]);
 
   useEffect(() => {
     const script = document.createElement('script');
@@ -36,7 +36,7 @@ export const LoginModal = ({ onClose, onLogin }) => {
         const btnContainer = document.getElementById('google-signin-btn');
         if (btnContainer) {
           window.google.accounts.id.renderButton(btnContainer, {
-            theme: 'filled_black',
+            theme: darkMode ? 'filled_black' : 'outline',
             size: 'large',
             width: 320,
             text: 'continue_with',
@@ -49,7 +49,7 @@ export const LoginModal = ({ onClose, onLogin }) => {
     return () => {
       document.body.removeChild(script);
     };
-  }, []);
+  }, [darkMode]);
 
   const handleCredentialResponse = (response) => {
     setIsLoading(true);
@@ -75,21 +75,37 @@ export const LoginModal = ({ onClose, onLogin }) => {
 
   return (
     <div
-      className="fixed inset-0 bg-black/90 backdrop-blur-sm z-50 flex items-center justify-center p-4"
+      className={`fixed inset-0 backdrop-blur-sm z-50 flex items-center justify-center p-4 ${
+        darkMode ? 'bg-black/90' : 'bg-black/50'
+      }`}
       onClick={onClose}
     >
       <div
-        className="bg-[#1a1a24] border border-white/10 rounded-2xl p-8 max-w-md w-full shadow-2xl"
+        className={`rounded-2xl p-8 max-w-md w-full shadow-2xl border ${
+          darkMode 
+            ? 'bg-[#1a1a24] border-white/10' 
+            : 'bg-white border-gray-200'
+        }`}
         onClick={(e) => e.stopPropagation()}
       >
         <div className="text-center mb-8">
-          <h2 className="text-2xl font-bold mb-2">Sign in to Oversold</h2>
-          <p className="text-gray-400">Create a watchlist to track your favorite assets</p>
+          <h2 className={`text-2xl font-bold mb-2 ${darkMode ? 'text-white' : 'text-gray-900'}`}>
+            Sign in to Oversold
+          </h2>
+          <p className={darkMode ? 'text-gray-400' : 'text-gray-600'}>
+            Create a watchlist to track your favorite assets
+          </p>
         </div>
         {!isConfigured ? (
-          <div className="bg-yellow-500/10 border border-yellow-500/30 rounded-xl p-4 mb-4">
-            <p className="text-yellow-400 text-sm font-medium mb-2">⚠️ Setup Required</p>
-            <p className="text-gray-400 text-xs">
+          <div className={`rounded-xl p-4 mb-4 ${
+            darkMode 
+              ? 'bg-yellow-500/10 border border-yellow-500/30' 
+              : 'bg-yellow-50 border border-yellow-300'
+          }`}>
+            <p className={`text-sm font-medium mb-2 ${darkMode ? 'text-yellow-400' : 'text-yellow-700'}`}>
+              ⚠️ Setup Required
+            </p>
+            <p className={`text-xs ${darkMode ? 'text-gray-400' : 'text-gray-600'}`}>
               To enable Google Sign-In, configure your GOOGLE_CLIENT_ID.
             </p>
           </div>
@@ -105,7 +121,7 @@ export const LoginModal = ({ onClose, onLogin }) => {
             {error && <p className="text-red-400 text-sm text-center mt-4">{error}</p>}
           </>
         )}
-        <p className="text-center text-gray-500 text-sm mt-6">
+        <p className={`text-center text-sm mt-6 ${darkMode ? 'text-gray-500' : 'text-gray-500'}`}>
           By signing in, you agree to our{' '}
           <a href="#/terms" className="text-orange-400 hover:underline">
             Terms of Service
@@ -113,7 +129,11 @@ export const LoginModal = ({ onClose, onLogin }) => {
         </p>
         <button
           onClick={onClose}
-          className="w-full mt-4 py-2 text-gray-400 hover:text-white transition-colors text-sm"
+          className={`w-full mt-4 py-2 transition-colors text-sm ${
+            darkMode 
+              ? 'text-gray-400 hover:text-white' 
+              : 'text-gray-500 hover:text-gray-900'
+          }`}
         >
           Cancel
         </button>

@@ -549,20 +549,50 @@ if (signalFilters.size > 0) {
             { k: 'oversold', color: 'orange', label: 'OVERSOLD', sub: 'RSI < 30' },
             { k: 'neutral', color: 'gray', label: 'NEUTRAL', sub: 'RSI 30-70' },
             { k: 'overbought', color: 'green', label: 'OVERBOUGHT', sub: 'RSI > 70' },
-          ].map((s) => (
+          ].map((s) => {
+            // Color mapping to avoid Tailwind dynamic class purging issues
+            const colorClasses = {
+              red: {
+                bg: 'bg-red-500/10',
+                text: 'text-red-500',
+                borderActive: 'border-red-500 shadow-lg shadow-red-500/20',
+                borderInactive: 'border-red-500/20 hover:border-red-500/50',
+              },
+              orange: {
+                bg: 'bg-orange-500/10',
+                text: 'text-orange-500',
+                borderActive: 'border-orange-500 shadow-lg shadow-orange-500/20',
+                borderInactive: 'border-orange-500/20 hover:border-orange-500/50',
+              },
+              gray: {
+                bg: 'bg-gray-500/10',
+                text: 'text-gray-500',
+                borderActive: 'border-gray-500 shadow-lg shadow-gray-500/20',
+                borderInactive: 'border-gray-500/20 hover:border-gray-500/50',
+              },
+              green: {
+                bg: 'bg-green-500/10',
+                text: 'text-green-500',
+                borderActive: 'border-green-500 shadow-lg shadow-green-500/20',
+                borderInactive: 'border-green-500/20 hover:border-green-500/50',
+              },
+            };
+            const colors = colorClasses[s.color];
+            
+            return (
             <div
               key={s.k}
               onClick={() => {
                 setRsiFilter(rsiFilter === s.k ? null : s.k);
                 setPreset(null);
               }}
-              className={`bg-${s.color}-500/10 border-2 rounded-xl p-4 text-center transition-all cursor-pointer hover:scale-[1.02] ${
+              className={`${colors.bg} border-2 rounded-xl p-4 text-center transition-all cursor-pointer hover:scale-[1.02] ${
                 rsiFilter === s.k
-                  ? `border-${s.color}-500 shadow-lg shadow-${s.color}-500/20`
-                  : `border-${s.color}-500/20 hover:border-${s.color}-500/50`
+                  ? colors.borderActive
+                  : colors.borderInactive
               }`}
             >
-              <p className={`text-3xl font-bold text-${s.color}-500`}>{stats[s.k]}</p>
+              <p className={`text-3xl font-bold ${colors.text}`}>{stats[s.k]}</p>
               <p
                 className={`text-xs mt-1 font-medium ${
                   darkMode ? 'text-gray-400' : 'text-gray-600'
@@ -574,7 +604,7 @@ if (signalFilters.size > 0) {
                 {s.sub}
               </p>
             </div>
-          ))}
+          )})}
         </div>
 
         {/* RSI Filter indicator */}
@@ -1579,7 +1609,7 @@ if (signalFilters.size > 0) {
       </div>
 
       {showLoginModal && (
-        <LoginModal onClose={() => setShowLoginModal(false)} onLogin={handleLogin} />
+        <LoginModal onClose={() => setShowLoginModal(false)} onLogin={handleLogin} darkMode={darkMode} />
       )}
     </div>
   );
