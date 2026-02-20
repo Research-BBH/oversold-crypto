@@ -53,6 +53,76 @@ export default function App() {
     const saved = localStorage.getItem('oversold_darkMode');
     return saved !== null ? JSON.parse(saved) : true;
   });
+  
+  // Track if we've initialized from URL (to prevent overwriting URL on first render)
+  const [urlInitialized, setUrlInitialized] = useState(false);
+
+  // Parse filter params from URL hash
+  const parseFiltersFromUrl = useCallback(() => {
+    const hash = window.location.hash;
+    // Only parse filters for home page (hash is empty, "#", or "#/?...")
+    if (hash.startsWith('#/token/') || hash === '#/methodology' || hash === '#/watchlist' || hash === '#/terms' || hash === '#/privacy') {
+      return null;
+    }
+    
+    const queryStart = hash.indexOf('?');
+    if (queryStart === -1) return {};
+    
+    const params = new URLSearchParams(hash.slice(queryStart + 1));
+    const filters = {};
+    
+    if (params.has('rsi')) filters.rsi = params.get('rsi');
+    if (params.has('cat')) filters.cat = params.get('cat');
+    if (params.has('preset')) filters.preset = params.get('preset');
+    if (params.has('sort')) filters.sort = params.get('sort');
+    if (params.has('signals')) {
+      filters.signals = params.get('signals').split(',').filter(Boolean);
+    }
+    
+    return filters;
+  }, []);
+
+  // Update URL with current filters
+  const updateUrlWithFilters = useCallback(() => {
+    // Don't update URL if we're on a subpage
+    if (currentPage !== 'home') return;
+    
+    const params = new URLSearchParams();
+    
+    if (rsiFilter) params.set('rsi', rsiFilter);
+    if (cat && cat !== 'all') params.set('cat', cat);
+    if (preset) params.set('preset', preset);
+    if (sortBy && sortBy !== 'rsi_asc') params.set('sort', sortBy);
+    if (signalFilters.size > 0) params.set('signals', Array.from(signalFilters).join(','));
+    
+    const queryString = params.toString();
+    const newHash = queryString ? `#/?${queryString}` : '#/';
+    
+    // Only update if different to avoid unnecessary history entries
+    if (window.location.hash !== newHash && window.location.hash !== '' || queryString) {
+      window.history.replaceState(null, '', newHash || window.location.pathname);
+    }
+  }, [rsiFilter, cat, preset, sortBy, signalFilters, currentPage]);
+
+  // Initialize filters from URL on mount
+  useEffect(() => {
+    const filters = parseFiltersFromUrl();
+    if (filters && Object.keys(filters).length > 0) {
+      if (filters.rsi) setRsiFilter(filters.rsi);
+      if (filters.cat) setCat(filters.cat);
+      if (filters.preset) setPreset(filters.preset);
+      if (filters.sort) setSortBy(filters.sort);
+      if (filters.signals) setSignalFilters(new Set(filters.signals));
+    }
+    setUrlInitialized(true);
+  }, []);
+
+  // Update URL when filters change (after initial load)
+  useEffect(() => {
+    if (urlInitialized) {
+      updateUrlWithFilters();
+    }
+  }, [rsiFilter, cat, preset, sortBy, signalFilters, urlInitialized, updateUrlWithFilters]);
 
   // Dark mode persistence
   useEffect(() => {
@@ -101,19 +171,21 @@ export default function App() {
   useEffect(() => {
     const parseHash = () => {
       const hash = window.location.hash;
-      if (hash.startsWith('#/token/')) {
-        setPageTokenId(hash.replace('#/token/', ''));
+      const hashPath = hash.split('?')[0]; // Get path without query params
+      
+      if (hashPath.startsWith('#/token/')) {
+        setPageTokenId(hashPath.replace('#/token/', ''));
         setCurrentPage('token');
-      } else if (hash === '#/methodology') {
+      } else if (hashPath === '#/methodology') {
         setPageTokenId(null);
         setCurrentPage('methodology');
-      } else if (hash === '#/watchlist') {
+      } else if (hashPath === '#/watchlist') {
         setPageTokenId(null);
         setCurrentPage('watchlist');
-      } else if (hash === '#/terms') {
+      } else if (hashPath === '#/terms') {
         setPageTokenId(null);
         setCurrentPage('terms');
-      } else if (hash === '#/privacy') {
+      } else if (hashPath === '#/privacy') {
         setPageTokenId(null);
         setCurrentPage('privacy');
       } else {
@@ -134,7 +206,8 @@ export default function App() {
   };
 
   const goBack = () => {
-    window.location.hash = '';
+    // Return to home with current filters preserved
+    window.location.hash = '#/';
   };
 
   // Fetch crypto data
