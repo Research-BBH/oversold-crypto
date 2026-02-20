@@ -146,8 +146,10 @@ function SortHeader({ label, field, sortBy, setSortBy, setPreset, setRsiFilter, 
 // ─── Desktop table header ─────────────────────────────────────────────────────
 
 function TableHeader({ sortBy, setSortBy, setPreset, setRsiFilter, darkMode }) {
-  const headerClass = `hidden lg:grid grid-cols-12 gap-4 px-5 py-3 border-b ${
-    darkMode ? 'border-white/10' : 'border-gray-100'
+  const headerClass = `hidden lg:grid grid-cols-12 gap-4 px-5 py-3 border-b sticky top-0 z-10 rounded-t-2xl ${
+    darkMode
+      ? 'border-white/10 bg-[#0d0d14] backdrop-blur-sm'
+      : 'border-gray-100 bg-gray-50 backdrop-blur-sm'
   } text-[11px] text-gray-500 font-semibold uppercase tracking-wider`;
 
   const sh = { sortBy, setSortBy, setPreset, setRsiFilter };
@@ -205,7 +207,10 @@ function TokenRow({ token: t, index, isSelected, watched, darkMode, toggleWatch,
               {t.rsi !== null && t.rsi < 25 && <span className="text-xs">🔴</span>}
               {t.rsi !== null && t.rsi > 75 && <span className="text-xs">🟢</span>}
             </div>
-            <p className="text-xs text-gray-500 truncate max-w-[120px]">{t.name}</p>
+            <div className="flex items-center gap-1 mt-0.5">
+              <p className="text-xs text-gray-500 truncate max-w-[80px]">{t.name}</p>
+              <MiniIndicators token={t} darkMode={darkMode} />
+            </div>
           </div>
         </div>
         {/* Price */}
@@ -315,7 +320,7 @@ function Pagination({ tablePage, totalPages, rowsPerPage, filteredCount, showWL,
   }`;
 
   return (
-    <div className={`px-4 py-3 border-t ${darkMode ? 'border-white/10 bg-white/[0.02]' : 'border-gray-100 bg-gray-50'} flex flex-col sm:flex-row items-center justify-between gap-3`}>
+    <div className={`px-4 py-3 border-t rounded-b-2xl ${darkMode ? 'border-white/10 bg-white/[0.02]' : 'border-gray-100 bg-gray-50'} flex flex-col sm:flex-row items-center justify-between gap-3`}>
       <div className="text-xs text-gray-500 text-center sm:text-left">
         {start}–{end} of {filteredCount} tokens
         {!showWL && !showLowVolume && <span className="ml-1 text-orange-500">• Vol &gt;$200K</span>}
@@ -398,7 +403,7 @@ export function TokenTable({
     );
   }
 
-  const tableClass = `${darkMode ? 'bg-white/[0.03] border-white/10' : 'bg-white border-gray-200'} backdrop-blur-sm rounded-2xl border overflow-hidden`;
+  const tableClass = `${darkMode ? 'bg-white/[0.03] border-white/10' : 'bg-white border-gray-200'} backdrop-blur-sm rounded-2xl border`;
 
   return (
     <div className={tableClass}>
@@ -406,7 +411,7 @@ export function TokenTable({
 
       <div>
         {/* Mobile column subheader */}
-        <div className={`lg:hidden grid px-2 py-1.5 border-b gap-x-2 ${darkMode ? 'border-white/10 bg-white/[0.02]' : 'border-gray-100 bg-gray-50'}`} style={{ gridTemplateColumns: '1fr auto' }}>
+        <div className={`lg:hidden grid px-2 py-1.5 border-b gap-x-2 sticky top-0 z-10 rounded-t-2xl ${darkMode ? 'border-white/10 bg-[#0d0d14]' : 'border-gray-100 bg-gray-50'}`} style={{ gridTemplateColumns: '1fr auto' }}>
           <div
             className={`text-[10px] font-semibold uppercase tracking-wide cursor-pointer ${darkMode ? 'text-gray-500 hover:text-gray-300' : 'text-gray-400 hover:text-gray-700'}`}
             onClick={() => { setSortBy(sortBy === 'rank_asc' ? 'rank_desc' : 'rank_asc'); setPreset(null); setRsiFilter(null); }}
