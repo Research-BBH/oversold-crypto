@@ -401,10 +401,10 @@ export const FullSignalAnalysis = ({ analysis, darkMode }) => {
                   }`}>
                     {pair.bullish?.label || '—'}
                   </span>
-                  <span className={`font-bold ml-2 ${
-                    pair.bullish?.active ? 'text-green-400' : 'text-gray-500'
+                  <span className={`ml-2 ${
+                    pair.bullish?.active ? 'font-bold text-green-400' : 'font-normal text-gray-600/40'
                   }`}>
-                    +{pair.bullish?.points || pair.bullish?.weight || 0}
+                    {pair.bullish?.active ? `+${Math.round(pair.bullish.points)}` : `+${pair.bullish?.weight || 0}`}
                   </span>
                 </div>
                 
@@ -423,10 +423,10 @@ export const FullSignalAnalysis = ({ analysis, darkMode }) => {
                     ? (darkMode ? 'bg-white/5 opacity-40' : 'bg-gray-100 opacity-50')
                     : (darkMode ? 'bg-white/5 border border-transparent' : 'bg-white border border-gray-200')
                 }`}>
-                  <span className={`font-bold mr-2 ${
-                    pair.bearish?.active ? 'text-red-400' : 'text-gray-500'
+                  <span className={`mr-2 ${
+                    pair.bearish?.active ? 'font-bold text-red-400' : 'font-normal text-gray-600/40'
                   }`}>
-                    -{pair.bearish?.points || pair.bearish?.weight || 0}
+                    {pair.bearish?.active ? `-${Math.round(pair.bearish.points)}` : `-${pair.bearish?.weight || 0}`}
                   </span>
                   <span className={`truncate text-right ${
                     pair.bearish?.active 
