@@ -3,7 +3,7 @@
 // ==================================================
 
 import { useState, useEffect, useCallback } from 'react';
-import { API_URL, API_URL_ENHANCED, REFRESH_INTERVAL } from './utils';
+import { useDataFetcher } from './hooks/useDataFetcher';
 
 // Hooks
 import { useRouter } from './hooks/useRouter';
@@ -66,42 +66,17 @@ export default function App() {
     setWatchlist,
   } = useAuth();
 
-  // API data
-  const [tokens, setTokens] = useState([]);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState(null);
-  const [lastUpdate, setLastUpdate] = useState(null);
-  const [apiStats, setApiStats] = useState(null);
-  const [useEnhancedAPI] = useState(true);
+  // API data — smart fetching with ETag/304, visibility pause, error backoff
+  const {
+    tokens,
+    loading,
+    error,
+    lastUpdate,
+    apiStats,
+    cacheHit,
+    fetchData,
+  } = useDataFetcher({ useEnhancedAPI: true });
   const [showWL, setShowWL] = useState(false);
-
-  const fetchData = useCallback(async () => {
-    try {
-      setError(null);
-      const url = useEnhancedAPI ? API_URL_ENHANCED : API_URL;
-      const res = await fetch(url);
-      if (!res.ok) throw new Error(`API Error: ${res.status}`);
-      const data = await res.json();
-      if (data.error) throw new Error(data.error);
-      const processed = data.tokens.map((t) => ({
-        ...t,
-        volMcap: t.mcap ? (t.volume / t.mcap) * 100 : 0,
-      }));
-      setTokens(processed);
-      setLastUpdate(new Date(data.timestamp));
-      setApiStats(data.stats);
-      setLoading(false);
-    } catch (e) {
-      setError(e.message);
-      setLoading(false);
-    }
-  }, [useEnhancedAPI]);
-
-  useEffect(() => {
-    fetchData();
-    const interval = setInterval(fetchData, REFRESH_INTERVAL);
-    return () => clearInterval(interval);
-  }, [fetchData]);
 
   // Filters, sorting, pagination
   const filters = useTokenFilters({ tokens, watchlist, showWL });
@@ -190,7 +165,7 @@ export default function App() {
           darkMode={darkMode} setDarkMode={setDarkMode}
           user={user} handleLogout={handleLogout} setShowLoginModal={setShowLoginModal}
           watchlistCount={watchlist.size} stats={filters.stats}
-          lastUpdate={lastUpdate} apiStats={apiStats} onLogoClick={resetFilters}
+          lastUpdate={lastUpdate} apiStats={apiStats} cacheHit={cacheHit} onLogoClick={resetFilters}
         />
 
         <MarketSentimentWidget
