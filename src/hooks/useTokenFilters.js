@@ -215,6 +215,32 @@ export function useTokenFilters({ tokens, watchlist, showWL }) {
             case 'high_vol_mcap':
               if (!token.signals || token.signals.highVolMcap !== true) return false;
               break;
+            // ── MACD ──────────────────────────────────────────────────────────
+            case 'macd_bullish_cross':
+              if (!token.signals || token.signals.macdBullishCross !== true) return false;
+              break;
+            case 'macd_bearish_cross':
+              if (!token.signals || token.signals.macdBearishCross !== true) return false;
+              break;
+            case 'macd_hist_positive':
+              if (!token.signals || token.signals.macdHistPositive !== true) return false;
+              break;
+            case 'macd_hist_negative':
+              if (!token.signals || token.signals.macdHistNegative !== true) return false;
+              break;
+            // ── Stochastic RSI ─────────────────────────────────────────────────
+            case 'stoch_oversold':
+              if (!token.signals || token.signals.stochOversold !== true) return false;
+              break;
+            case 'stoch_overbought':
+              if (!token.signals || token.signals.stochOverbought !== true) return false;
+              break;
+            case 'stoch_bullish_cross':
+              if (!token.signals || token.signals.stochBullishCross !== true) return false;
+              break;
+            case 'stoch_bearish_cross':
+              if (!token.signals || token.signals.stochBearishCross !== true) return false;
+              break;
             default:
               break;
           }
